@@ -6,6 +6,7 @@ import { triageRoutes } from '../routes/triage.js';
 import { subscriptionRoutes } from '../routes/subscription.js';
 import { billingRoutes } from '../routes/billing.js';
 import { tracesRoutes } from '../traces/routes.js';
+import { handoffRoutes } from '../routes/handoff.js';
 import { db, pool } from '../db/index.js';
 
 const corsOrigin = process.env['CORS_ORIGIN'] || 'http://localhost:3000';
@@ -34,9 +35,9 @@ export async function buildServer(): Promise<FastifyInstance> {
   server.register(conversationsRoutes, { prefix: '/api/conversations' });
   server.register(triageRoutes, { prefix: '/api' });
   server.register(subscriptionRoutes, { prefix: '/api' });
-  server.register(subscriptionRoutes, { prefix: '/api' });
-server.register(billingRoutes, { prefix: '/api' });
-server.register(tracesRoutes, { prefix: '/api' });
+  server.register(billingRoutes, { prefix: '/api' });
+  server.register(tracesRoutes, { prefix: '/api' });
+  server.register(handoffRoutes, { prefix: '/api/handoffs' });
 
   server.setErrorHandler((error: unknown, request, reply) => {
     request.log.error(error, 'Unhandled error');

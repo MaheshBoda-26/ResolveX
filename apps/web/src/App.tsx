@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/lib/theme';
 import { ChatPage } from '@/pages/ChatPage';
 import { TracePage } from '@/pages/TracePage';
+import { HandoffPage } from '@/pages/HandoffPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,6 +22,8 @@ function AppRoutes() {
     <Routes>
       <Route path="/chat" element={<ChatPage />} />
       <Route path="/trace" element={<TracePage />} />
+      <Route path="/handoffs" element={<HandoffPage />} />
+      <Route path="/handoffs/:id" element={<HandoffPage />} />
       <Route path="/" element={<ChatPage />} />
       <Route path="*" element={<ChatPage />} />
     </Routes>

@@ -39,6 +39,70 @@ export interface ChatResponse {
   runId: string;
 }
 
+export type HandoffStatus = 'pending' | 'accepted' | 'completed';
+
+export interface Handoff {
+  id: string;
+  customer: {
+    id: string;
+    name: string;
+    email: string;
+    plan: string;
+    status: string;
+  };
+  issueSummary: string;
+  originalRequest: string;
+  reason: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  createdAt: string;
+  updatedAt: string;
+  status: HandoffStatus;
+  evidence: Evidence[];
+  policyExcerpts: PolicyExcerpt[];
+  completedActions: CompletedAction[];
+  escalationReason: string;
+  recommendedNextAction: string;
+}
+
+export interface Evidence {
+  id: string;
+  type: 'transaction' | 'policy' | 'communication' | 'document';
+  description: string;
+  data: Record<string, unknown>;
+  collectedAt: string;
+  verified: boolean;
+}
+
+export interface PolicyExcerpt {
+  id: string;
+  policyId: string;
+  title: string;
+  excerpt: string;
+  relevantSection: string;
+}
+
+export interface CompletedAction {
+  id: string;
+  action: string;
+  description: string;
+  performedAt: string;
+  verificationStatus: 'verified' | 'pending' | 'failed';
+  verificationDetails?: string;
+}
+
+export interface HandoffFilters {
+  status?: HandoffStatus;
+  priority?: Handoff['priority'];
+  search?: string;
+}
+
+export interface HandoffSort {
+  field: 'createdAt' | 'priority' | 'customer';
+  direction: 'asc' | 'desc';
+}
+
+export type { HandoffStatus as HandoffStatusExport } from './api';
+
 class ApiError extends Error {
   status: number;
   constructor(message: string, status: number) {
@@ -105,6 +169,58 @@ export function useConversations() {
   return useQuery({
     queryKey: ['conversations'],
     queryFn: () => fetchJson<Conversation[]>('/api/conversations'),
+  });
+}
+
+export function useHandoffs(filters?: HandoffFilters, sort?: HandoffSort) {
+  const params = new URLSearchParams();
+  if (filters?.status) params.set('status', filters.status);
+  if (filters?.priority) params.set('priority', filters.priority);
+  if (filters?.search) params.set('search', filters.search);
+  if (sort?.field) params.set('sortField', sort.field);
+  if (sort?.direction) params.set('sortDirection', sort.direction);
+
+  return useQuery({
+    queryKey: ['handoffs', filters, sort],
+    queryFn: () => fetchJson<Handoff[]>(`/api/handoffs?${params.toString()}`),
+    refetchInterval: 10000,
+  });
+}
+
+export function useHandoff(handoffId: string | undefined) {
+  return useQuery({
+    queryKey: ['handoff', handoffId],
+    queryFn: () => fetchJson<Handoff>(`/api/handoffs/${handoffId}`),
+    enabled: !!handoffId,
+    refetchInterval: 5000,
+  });
+}
+
+export function useAcceptHandoff() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (handoffId: string) =>
+      fetchJson<Handoff>(`/api/handoffs/${handoffId}/accept`, {
+        method: 'POST',
+      }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['handoffs'] });
+      queryClient.invalidateQueries({ queryKey: ['handoff', data.id] });
+    },
+  });
+}
+
+export function useCompleteHandoff() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (handoffId: string) =>
+      fetchJson<Handoff>(`/api/handoffs/${handoffId}/complete`, {
+        method: 'POST',
+      }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['handoffs'] });
+      queryClient.invalidateQueries({ queryKey: ['handoff', data.id] });
+    },
   });
 }
 
