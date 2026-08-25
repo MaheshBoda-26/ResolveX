@@ -15,6 +15,8 @@
     "format": "prettier --write src"
   },
   "dependencies": {
+    "@radix-ui/react-collapsible": "^1.1.20",
+    "@radix-ui/react-tooltip": "^1.2.16",
     "@resolvex/shared": "file:../../packages/shared",
     "@tanstack/react-query": "^5.50.0",
     "@types/react-router-dom": "^5.3.3",
@@ -37,6 +39,7 @@
     "eslint": "^9.0.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.0",
+    "jsdom": "^30.0.1",
     "playwright": "^1.45.0",
     "prettier": "^3.3.0",
     "prettier-plugin-tailwindcss": "^0.6.0",

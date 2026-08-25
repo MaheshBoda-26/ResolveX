@@ -32,6 +32,24 @@ export interface AgentRunTrace {
   status: 'running' | 'completed' | 'escalated' | 'error';
   startedAt: string;
   completedAt: string | null;
+  handoffs: Array<{
+    id: string;
+    conversationId: string;
+    reason: string;
+    evidence: Record<string, unknown>;
+    recommendedAction: string;
+    status: string;
+    createdAt: string;
+  }>;
+  verifications: Array<{
+    id: string;
+    conversationId: string;
+    actionType: string;
+    expectedState: Record<string, unknown>;
+    observedState: Record<string, unknown> | null;
+    status: 'pending' | 'passed' | 'failed';
+    createdAt: string;
+  }>;
 }
 
 export function useTrace(runId: string | undefined) {

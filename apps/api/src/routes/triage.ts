@@ -20,6 +20,9 @@ export const triageRoutes: FastifyPluginAsync = async (app) => {
       if (!conversationId) {
         const conversation = await createConversation(body.customerId ?? null, body.channel);
         conversationId = conversation.id;
+      } else {
+        // Ensure conversationId is defined after the conditional
+        conversationId = conversationId;
       }
 
       const result = await triageMessage(body);

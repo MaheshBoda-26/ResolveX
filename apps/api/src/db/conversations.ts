@@ -1,18 +1,23 @@
 import { db, DB } from './client';
-import { conversations, agentRuns, type Conversation, type AgentRun } from './schema';
+import { conversations, agentRuns } from './schema';
 import { eq, desc } from 'drizzle-orm';
 import { TriageResult } from '@resolvex/shared';
+import type { InferSelectModel } from 'drizzle-orm';
+
+type Conversation = InferSelectModel<typeof conversations>;
+type AgentRun = InferSelectModel<typeof agentRuns>;
 
 export async function createConversation(
   customerId: string | null,
   channel: 'chat' | 'voice'
 ): Promise<Conversation> {
-  const [conversation] = await db.insert(conversations).values({
+  const result = await db.insert(conversations).values({
     customerId,
     channel,
     status: 'open',
   }).returning();
-  return conversation;
+  if (!result[0]) throw new Error('Failed to create conversation');
+  return result[0];
 }
 
 export async function addMessage(
@@ -55,7 +60,7 @@ export async function createAgentRun(
   decision: Record<string, unknown>,
   status: 'pending' | 'running' | 'completed' | 'failed' = 'completed'
 ): Promise<AgentRun> {
-  const [run] = await db.insert(agentRuns).values({
+  const result = await db.insert(agentRuns).values({
     conversationId,
     agentName,
     input,
@@ -64,7 +69,8 @@ export async function createAgentRun(
     startedAt: new Date(),
     completedAt: status === 'completed' || status === 'failed' ? new Date() : null,
   }).returning();
-  return run;
+  if (!result[0]) throw new Error('Failed to create agent run');
+  return result[0];
 }
 
 export async function getAgentRuns(conversationId: string): Promise<AgentRun[]> {
@@ -77,4 +83,24 @@ export async function createTriageAgentRun(
   result: TriageResult
 ): Promise<AgentRun> {
   return createAgentRun(conversationId, 'triage', request, result as Record<string, unknown>, 'completed');
+}
+
+export async function createToolCall(
+  agentRunId: string,
+  toolName: string,
+  arguments_: Record<string, unknown>,
+  result?: Record<string, unknown>,
+  status: 'pending' | 'success' | 'failed' = 'success',
+  latencyMs?: number | null
+): Promise<void> {
+  const { db } = await import('./client.js');
+  const { toolCalls } = await import('./schema.js');
+  await db.insert(toolCalls).values({
+    agentRunId,
+    toolName,
+    arguments: arguments_,
+    result: result ?? null,
+    status,
+    latencyMs: latencyMs != null ? latencyMs.toString() : null,
+  });
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Volume2, VolumeX, Loader2 } from 'lucide-react';
+import { Mic, MicOff, Volume2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useVoice, UseVoiceOptions } from '@/hooks/useVoice';
@@ -17,21 +17,18 @@ export function VoiceInput({
   onTranscript,
   onAgentResponse,
   onError,
-  onTranscriptFinal,
   className,
 }: VoiceInputProps) {
   const {
     state,
     audioLevel,
-    isConnected,
     start,
     stop,
-    toggle,
   } = useVoice({ config, onTranscript, onAgentResponse, onError });
 
   const [showVisualizer, setShowVisualizer] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | null>(null);
   const audioLevelHistory = useRef<number[]>([]);
 
   useEffect(() => {
@@ -44,7 +41,7 @@ export function VoiceInput({
         cancelAnimationFrame(animationRef.current);
       }
     }
-  }, [state]);
+  }, [state, audioLevel]);
 
   const animateVisualizer = () => {
     const canvas = canvasRef.current;

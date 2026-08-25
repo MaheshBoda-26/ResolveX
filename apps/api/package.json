@@ -11,6 +11,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx src/db/seed.ts",
+    "db:seed:policies": "tsx scripts/ingest-policies.ts",
     "db:studio": "drizzle-kit studio",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -18,27 +19,28 @@
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
-    "@resolvex/shared": "file:../../packages/shared",
-    "fastify": "^5.0.0",
     "@fastify/cors": "^10.0.0",
     "@fastify/websocket": "^11.0.0",
-    "drizzle-orm": "^0.33.0",
-    "pg": "^8.12.0",
-    "zod": "^4.0.0",
+    "@resolvex/shared": "file:../../packages/shared",
+    "@xenova/transformers": "^2.17.2",
     "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.33.0",
+    "fastify": "^5.0.0",
+    "pg": "^8.12.0",
     "pino": "^9.0.0",
-    "pino-pretty": "^11.0.0"
+    "pino-pretty": "^11.0.0",
+    "zod": "^4.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.0.0",
     "@types/node": "^22.0.0",
     "@types/pg": "^8.11.0",
-    "typescript": "^5.5.0",
-    "tsx": "^4.16.0",
-    "tsc-alias": "^1.8.0",
     "drizzle-kit": "^0.23.0",
-    "vitest": "^3.0.0",
     "eslint": "^9.0.0",
-    "@eslint/js": "^9.0.0",
-    "typescript-eslint": "^8.0.0"
+    "tsc-alias": "^1.8.0",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^3.0.0"
   }
 }

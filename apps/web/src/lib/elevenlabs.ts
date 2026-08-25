@@ -1,4 +1,4 @@
-import { VOICE_DEFAULTS } from '@resolvex/shared/constants';
+import { VOICE_DEFAULTS } from '@resolvex/shared';
 
 export interface ElevenLabsConfig {
   agentId: string;
@@ -31,7 +31,7 @@ class ElevenLabsClient {
   private mediaStream: MediaStream | null = null;
   private processor: ScriptProcessorNode | null = null;
   private source: MediaStreamAudioSourceNode | null = null;
-  private config: ElevenLabsConfig | null = null;
+  private _config: ElevenLabsConfig | null = null;
   private callbacks: VoiceCallbacks = {};
   private state: VoiceState = 'idle';
   private reconnectAttempts = 0;
@@ -47,7 +47,7 @@ class ElevenLabsClient {
   }
 
   async connect(config: ElevenLabsConfig): Promise<void> {
-    this.config = config;
+    this._config = config;
     this.setState('connecting');
 
     try {
@@ -66,15 +66,25 @@ class ElevenLabsClient {
       this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
 
       this.processor.onaudioprocess = (e) => {
-        const inputData = e.inputBuffer.getChannelData(0);
-        const level = Math.sqrt(inputData.reduce((sum, val) => sum + val * val, 0) / inputData.length);
+        const inputData: Float32Array = e.inputBuffer.getChannelData(0);
+        let sum = 0;
+        for (let i = 0; i < inputData.length; i++) {
+          const val = inputData[i];
+          if (val !== undefined) {
+            sum += val * val;
+          }
+        }
+        const level = inputData.length > 0 ? Math.sqrt(sum / inputData.length) : 0;
         this.callbacks.onAudioLevel?.(level);
 
         if (this.ws?.readyState === WebSocket.OPEN) {
           const pcm16 = new Int16Array(inputData.length);
           for (let i = 0; i < inputData.length; i++) {
-            const s = Math.max(-1, Math.min(1, inputData[i]));
-            pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+            const val = inputData[i];
+            if (val !== undefined) {
+              const s = Math.max(-1, Math.min(1, val));
+              pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+            }
           }
           this.ws.send(pcm16.buffer);
         }
@@ -103,7 +113,7 @@ class ElevenLabsClient {
         }
       };
 
-      this.ws.onerror = (error) => {
+      this.ws.onerror = () => {
         this.callbacks.onError?.(new Error('WebSocket error'));
       };
 
@@ -111,7 +121,7 @@ class ElevenLabsClient {
         this.cleanup();
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
           this.reconnectAttempts++;
-          setTimeout(() => this.connect(config), 1000 * this.reconnectAttempts);
+          setTimeout(() => this.connect(this._config!), 1000 * this.reconnectAttempts);
         } else {
           this.setState('error');
         }

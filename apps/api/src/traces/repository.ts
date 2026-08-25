@@ -4,16 +4,18 @@ import {
   toolCalls,
   verifications,
   handoffs,
-  type AgentRun,
-  type ToolCall,
-  type Verification,
-  type Handoff,
-  type InsertAgentRun,
-  type InsertToolCall,
-  type InsertVerification,
-  type InsertHandoff,
 } from '../db/schema';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
+
+type AgentRun = InferSelectModel<typeof agentRuns>;
+type ToolCall = InferSelectModel<typeof toolCalls>;
+type Verification = InferSelectModel<typeof verifications>;
+type Handoff = InferSelectModel<typeof handoffs>;
+type InsertAgentRun = InferInsertModel<typeof agentRuns>;
+type InsertToolCall = InferInsertModel<typeof toolCalls>;
+type InsertVerification = InferInsertModel<typeof verifications>;
+type InsertHandoff = InferInsertModel<typeof handoffs>;
 
 export interface AgentRunWithDetails extends AgentRun {
   toolCalls: ToolCall[];
@@ -23,6 +25,7 @@ export interface AgentRunWithDetails extends AgentRun {
 
 export async function createAgentRun(data: InsertAgentRun): Promise<AgentRun> {
   const [run] = await db.insert(agentRuns).values(data).returning();
+  if (!run) throw new Error('Failed to create agent run');
   return run;
 }
 
@@ -47,6 +50,7 @@ export async function updateAgentRunStatus(id: string, status: AgentRun['status'
 
 export async function createToolCall(data: InsertToolCall): Promise<ToolCall> {
   const [call] = await db.insert(toolCalls).values(data).returning();
+  if (!call) throw new Error('Failed to create tool call');
   return call;
 }
 
@@ -59,13 +63,14 @@ export async function getToolCallsByAgentRun(agentRunId: string): Promise<ToolCa
 
 export async function updateToolCallResult(id: string, result: unknown, status: ToolCall['status'], latencyMs?: number): Promise<ToolCall | null> {
   const updateData: Partial<ToolCall> = { result: result as Record<string, unknown>, status };
-  if (latencyMs !== undefined) updateData.latencyMs = latencyMs;
+  if (latencyMs !== undefined) updateData.latencyMs = String(latencyMs);
   const [call] = await db.update(toolCalls).set(updateData).where(eq(toolCalls.id, id)).returning();
   return call ?? null;
 }
 
 export async function createVerification(data: InsertVerification): Promise<Verification> {
   const [verification] = await db.insert(verifications).values(data).returning();
+  if (!verification) throw new Error('Failed to create verification');
   return verification;
 }
 
@@ -85,6 +90,7 @@ export async function updateVerificationStatus(id: string, status: Verification[
 
 export async function createHandoff(data: InsertHandoff): Promise<Handoff> {
   const [handoff] = await db.insert(handoffs).values(data).returning();
+  if (!handoff) throw new Error('Failed to create handoff');
   return handoff;
 }
 
