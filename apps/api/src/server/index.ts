@@ -3,6 +3,7 @@ import Fastify from 'fastify';
 import { fastifyCors } from '@fastify/cors';
 import { conversationsRoutes } from '../routes/conversations.js';
 import { triageRoutes } from '../routes/triage.js';
+import { tracesRoutes } from '../traces/routes.js';
 import { db, pool } from '../db/index.js';
 
 const corsOrigin = process.env['CORS_ORIGIN'] || 'http://localhost:3000';
@@ -29,6 +30,7 @@ server.get('/health', async () => ({
 
 server.register(conversationsRoutes, { prefix: '/api/conversations' });
 server.register(triageRoutes, { prefix: '/api' });
+server.register(tracesRoutes, { prefix: '/api' });
 
 server.setErrorHandler((error: unknown, request, reply) => {
   request.log.error(error, 'Unhandled error');

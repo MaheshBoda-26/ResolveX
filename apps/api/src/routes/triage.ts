@@ -1,6 +1,8 @@
 import { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { ChatRequestSchema, TriageResultSchema } from '@resolvex/shared';
+import { triageMessage } from '../agents/triage';
+import { createConversation, createTriageAgentRun } from '../db/conversations';
 
 export const triageRoutes: FastifyPluginAsync = async (app) => {
   app.post('/triage', {
@@ -13,18 +15,16 @@ export const triageRoutes: FastifyPluginAsync = async (app) => {
     async handler(request, reply) {
       const body = request.body as z.infer<typeof ChatRequestSchema>;
 
-      // Placeholder implementation - returns a basic triage result
-      const result = {
-        intents: [
-          {
-            type: 'general' as const,
-            confidence: 0.5,
-            entities: {},
-          },
-        ],
-        tasks: [],
-        summary: `Triage placeholder for: ${body.message.slice(0, 100)}`,
-      };
+      let conversationId = body.conversationId;
+
+      if (!conversationId) {
+        const conversation = await createConversation(body.customerId ?? null, body.channel);
+        conversationId = conversation.id;
+      }
+
+      const result = await triageMessage(body);
+
+      await createTriageAgentRun(conversationId, body, result);
 
       return reply.send(result);
     },
