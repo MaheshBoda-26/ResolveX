@@ -1,0 +1,124 @@
+import 'dotenv/config';
+import { db, pool } from './index';
+import { customers, transactions, subscriptions, knowledgeDocuments } from './schema';
+
+async function seed() {
+  console.log('Seeding database...');
+
+  const [customer1] = await db
+    .insert(customers)
+    .values({
+      id: '00000000-0000-0000-0000-000000000001',
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+      planId: 'basic',
+      status: 'active',
+    })
+    .onConflictDoNothing()
+    .returning();
+
+  const [customer2] = await db
+    .insert(customers)
+    .values({
+      id: '00000000-0000-0000-0000-000000000002',
+      name: 'Jane Smith',
+      email: 'jane.smith@example.com',
+      planId: 'pro',
+      status: 'active',
+    })
+    .onConflictDoNothing()
+    .returning();
+
+  console.log('Customers seeded');
+
+  await db
+    .insert(transactions)
+    .values([
+      {
+        customerId: '00000000-0000-0000-0000-000000000001',
+        invoiceId: 'INV-001',
+        amount: '29.99',
+        currency: 'USD',
+        status: 'completed',
+        chargedAt: new Date('2024-01-15'),
+        metadata: { description: 'Monthly subscription' },
+      },
+      {
+        customerId: '00000000-0000-0000-0000-000000000001',
+        invoiceId: 'INV-002',
+        amount: '29.99',
+        currency: 'USD',
+        status: 'completed',
+        chargedAt: new Date('2024-02-15'),
+        metadata: { description: 'Monthly subscription' },
+      },
+      {
+        customerId: '00000000-0000-0000-0000-000000000002',
+        invoiceId: 'INV-003',
+        amount: '99.99',
+        currency: 'USD',
+        status: 'completed',
+        chargedAt: new Date('2024-01-10'),
+        metadata: { description: 'Pro plan subscription' },
+      },
+    ])
+    .onConflictDoNothing();
+
+  console.log('Transactions seeded');
+
+  await db
+    .insert(subscriptions)
+    .values([
+      {
+        customerId: '00000000-0000-0000-0000-000000000001',
+        planId: 'basic',
+        status: 'active',
+        price: '29.99',
+        renewalAt: new Date('2024-03-15'),
+      },
+      {
+        customerId: '00000000-0000-0000-0000-000000000002',
+        planId: 'pro',
+        status: 'active',
+        price: '99.99',
+        renewalAt: new Date('2024-02-10'),
+      },
+    ])
+    .onConflictDoNothing();
+
+  console.log('Subscriptions seeded');
+
+  await db
+    .insert(knowledgeDocuments)
+    .values([
+      {
+        title: 'Refund Policy',
+        source: 'internal',
+        content: 'Customers may request refunds for duplicate charges within 30 days. Refunds under $50 are automatically approved. Refunds between $50-$500 require manager approval. Refunds over $500 require director approval.',
+        metadata: { category: 'billing', tags: ['refund', 'duplicate'] },
+      },
+      {
+        title: 'Subscription Upgrade Policy',
+        source: 'internal',
+        content: 'Customers can upgrade their plan at any time. Upgrades within the same tier (e.g., basic to pro) are automatic. Downgrades take effect at the next billing cycle. Price differences are prorated.',
+        metadata: { category: 'subscription', tags: ['upgrade', 'downgrade', 'proration'] },
+      },
+      {
+        title: 'Plan Comparison',
+        source: 'internal',
+        content: 'Basic: $29.99/month - Core features, email support. Pro: $99.99/month - All features, priority support, API access. Enterprise: Custom pricing - Dedicated support, SLA, custom integrations.',
+        metadata: { category: 'subscription', tags: ['plans', 'pricing', 'features'] },
+      },
+    ])
+    .onConflictDoNothing();
+
+  console.log('Knowledge documents seeded');
+  console.log('Seeding complete!');
+
+  await pool.end();
+}
+
+seed().catch((err) => {
+  console.error('Seeding failed:', err);
+  process.exit(1);
+});

@@ -1,0 +1,136 @@
+import { TriageResult, Intent, Task, ChatRequest } from '@resolvex/shared';
+
+const FRESHWORKS_DOMAIN = process.env['FRESHWORKS_DOMAIN'];
+const FRESHWORKS_API_KEY = process.env['FRESHWORKS_API_KEY'];
+const FRESHWORKS_AGENT_STUDIO_URL = process.env['FRESHWORKS_AGENT_STUDIO_URL'];
+
+export interface FreshworksTriageResponse {
+  intents: Array<{
+    name: string;
+    confidence: number;
+    entities: Record<string, unknown>;
+  }>;
+  tasks: Array<{
+    agent: string;
+    type: string;
+    payload: Record<string, unknown>;
+    priority: 'high' | 'normal' | 'low';
+  }>;
+  summary: string;
+}
+
+function mapIntentType(name: string): Intent['type'] {
+  const lower = name.toLowerCase();
+  if (lower.includes('billing') || lower.includes('payment') || lower.includes('invoice') || lower.includes('refund')) {
+    return 'billing';
+  }
+  if (lower.includes('subscription') || lower.includes('plan') || lower.includes('upgrade') || lower.includes('downgrade') || lower.includes('cancel')) {
+    return 'subscription';
+  }
+  return 'general';
+}
+
+function mapAgentType(agent: string): Task['agent'] {
+  const lower = agent.toLowerCase();
+  if (lower.includes('billing')) return 'billing';
+  if (lower.includes('subscription')) return 'subscription';
+  return 'triage';
+}
+
+function mapPriority(priority: string): Task['priority'] {
+  const lower = priority.toLowerCase();
+  if (lower === 'high' || lower === 'urgent' || lower === 'critical') return 'high';
+  if (lower === 'low') return 'low';
+  return 'normal';
+}
+
+export async function callFreshworksTriage(message: string): Promise<FreshworksTriageResponse | null> {
+  if (!FRESHWORKS_DOMAIN || !FRESHWORKS_API_KEY || !FRESHWORKS_AGENT_STUDIO_URL) {
+    console.warn('Freshworks credentials not configured, skipping intent detection');
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${FRESHWORKS_AGENT_STUDIO_URL}/api/triage`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${FRESHWORKS_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message }),
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!response.ok) {
+      console.error(`Freshworks API error: ${response.status} ${response.statusText}`);
+      return null;
+    }
+
+    return await response.json() as FreshworksTriageResponse;
+  } catch (error) {
+    console.error('Freshworks triage call failed:', error);
+    return null;
+  }
+}
+
+export function fallbackTriage(message: string): TriageResult {
+  const lower = message.toLowerCase();
+  const intents: Intent[] = [];
+  const tasks: Task[] = [];
+
+  if (lower.includes('bill') || lower.includes('payment') || lower.includes('invoice') || lower.includes('refund') || lower.includes('charge')) {
+    intents.push({ type: 'billing', confidence: 0.7, entities: {} });
+    tasks.push({
+      id: crypto.randomUUID(),
+      agent: 'billing',
+      type: 'investigate_billing_issue',
+      payload: { message },
+      priority: 'normal',
+    });
+  }
+
+  if (lower.includes('subscript') || lower.includes('plan') || lower.includes('upgrade') || lower.includes('downgrade') || lower.includes('cancel')) {
+    intents.push({ type: 'subscription', confidence: 0.7, entities: {} });
+    tasks.push({
+      id: crypto.randomUUID(),
+      agent: 'subscription',
+      type: 'investigate_subscription_issue',
+      payload: { message },
+      priority: 'normal',
+    });
+  }
+
+  if (intents.length === 0) {
+    intents.push({ type: 'general', confidence: 0.5, entities: {} });
+  }
+
+  return {
+    intents,
+    tasks,
+    summary: `Triage analysis for: ${message.slice(0, 100)}`,
+  };
+}
+
+export async function triageMessage(request: ChatRequest): Promise<TriageResult> {
+  const freshworksResult = await callFreshworksTriage(request.message);
+
+  if (freshworksResult) {
+    return {
+      intents: freshworksResult.intents.map(i => ({
+        type: mapIntentType(i.name),
+        confidence: i.confidence,
+        entities: i.entities,
+      })),
+      tasks: freshworksResult.tasks.map(t => ({
+        id: crypto.randomUUID(),
+        agent: mapAgentType(t.agent),
+        type: t.type,
+        payload: t.payload,
+        priority: mapPriority(t.priority),
+      })),
+      summary: freshworksResult.summary,
+    };
+  }
+
+  return fallbackTriage(request.message);
+}
