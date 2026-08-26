@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ResolveX - Operations Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-fixed": "#ffddb6",
+                        "outline-variant": "#d7c3af",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "primary": "#845400",
+                        "primary-fixed-dim": "#ffb95a",
+                        "on-tertiary-container": "#003a55",
+                        "on-primary-container": "#4d2f00",
+                        "on-surface": "#141b2b",
+                        "on-tertiary-fixed-variant": "#004c6e",
+                        "primary-container": "#d98f16",
+                        "tertiary-fixed": "#c8e6ff",
+                        "surface-container-high": "#e1e8fd",
+                        "surface-variant": "#dce2f7",
+                        "inverse-surface": "#293040",
+                        "surface-container-highest": "#dce2f7",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#316bf3",
+                        "surface-tint": "#845400",
+                        "tertiary-container": "#2fa8e8",
+                        "on-background": "#141b2b",
+                        "inverse-on-surface": "#edf0ff",
+                        "on-secondary-fixed-variant": "#003ea8",
+                        "surface-bright": "#f9f9ff",
+                        "on-primary": "#ffffff",
+                        "background": "#f9f9ff",
+                        "secondary": "#0051d5",
+                        "on-primary-fixed": "#2a1800",
+                        "on-surface-variant": "#524435",
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#ffb95a",
+                        "on-secondary": "#ffffff",
+                        "surface-container-low": "#f1f3ff",
+                        "tertiary-fixed-dim": "#88ceff",
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "on-secondary-fixed": "#00174b",
+                        "on-tertiary-fixed": "#001e2f",
+                        "on-secondary-container": "#fefcff",
+                        "on-error-container": "#93000a",
+                        "surface": "#f9f9ff",
+                        "outline": "#857463",
+                        "secondary-fixed": "#dbe1ff",
+                        "tertiary": "#006590",
+                        "surface-container": "#e9edff",
+                        "on-primary-fixed-variant": "#643f00",
+                        "surface-dim": "#d3daef"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px"
+                    },
+                    spacing: {
+                        sidebar_width: "260px",
+                        table_row_height: "48px",
+                        lg: "24px",
+                        xs: "4px",
+                        sm: "8px",
+                        xl: "40px",
+                        base: "4px",
+                        md: "16px"
+                    },
+                    fontFamily: {
+                        h1: ["Inter"],
+                        h3: ["Inter"],
+                        display: ["Inter"],
+                        h2: ["Inter"],
+                        "body-lg": ["Inter"],
+                        trace: ["JetBrains Mono"],
+                        label: ["Inter"],
+                        caption: ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    fontSize: {
+                        h1: ["30px", { lineHeight: "38px", letterSpacing: "-0.01em", fontWeight: "700" }],
+                        h3: ["20px", { lineHeight: "28px", fontWeight: "600" }],
+                        display: ["36px", { lineHeight: "44px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        h2: ["24px", { lineHeight: "32px", fontWeight: "700" }],
+                        "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                        trace: ["12px", { lineHeight: "18px", fontWeight: "400" }],
+                        label: ["13px", { lineHeight: "16px", fontWeight: "500" }],
+                        caption: ["12px", { lineHeight: "16px", fontWeight: "400" }],
+                        "body-sm": ["14px", { lineHeight: "20px", fontWeight: "400" }]
+                    }
+                }
+            }
+        };
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-sm h-full flex overflow-hidden">
+<!-- TopNavBar (Mobile Only) -->
+<header class="md:hidden fixed top-0 w-full z-50 flex justify-between items-center px-lg h-table_row_height bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline">
+<div class="flex items-center gap-sm">
+<span class="font-h2 text-h2 text-primary dark:text-primary-fixed-dim">ResolveX</span>
+</div>
+<div class="flex gap-sm">
+<button class="text-primary dark:text-primary-fixed-dim hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors rounded p-xs">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-primary dark:text-primary-fixed-dim hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors rounded p-xs">
+<span class="material-symbols-outlined">dark_mode</span>
+</button>
+<img alt="User avatar" class="w-8 h-8 rounded-full object-cover border border-outline-variant" data-alt="A professional corporate headshot of a user against a neutral grey background, soft studio lighting, sharp focus, capturing a confident and trustworthy appearance suitable for an enterprise software avatar." src="https://lh3.googleusercontent.com/aida-public/AB6AXuByvNbYTuOQ4OFG1cYIquCK_aiHQsRmMjNPygNsTMKqTS9vh1iKYIlQGwTDsDRPylWXM6MQIAoy5iuQJlmooFlqFGmnDZ3xU7yQsKAi3brztnjJoxWf4gwCERFerfEFhP4_2_F2zindGg5ZwbgOXZokz8A-H4Nflsp-OXf0nhfJdfLjP-qWKLeHf1qnYoYILuC7pOcWLF39gsEhg7s9gLfqzzEHHOynQRI6mxKJbygE5TTxd2LSUpAT"/>
+</div>
+</header>
+<!-- SideNavBar (Desktop) -->
+<nav class="hidden md:flex fixed left-0 top-0 h-full w-sidebar_width flex-col z-40 bg-surface-bright dark:bg-inverse-surface border-r border-outline-variant dark:border-outline">
+<div class="p-lg flex items-center gap-sm border-b border-outline-variant/30">
+<div>
+<div class="font-h3 text-h3 text-primary dark:text-primary-fixed-dim tracking-tight">ResolveX</div>
+<div class="font-caption text-caption text-on-surface-variant">Enterprise AI</div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto py-sm">
+<ul class="space-y-xs px-sm">
+<!-- Active Navigation Item -->
+<li>
+<a class="flex items-center gap-md px-md py-sm bg-primary-container text-on-primary-container border-l-4 border-primary font-semibold rounded-r cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined fill">dashboard</span>
+<span class="font-label text-label">Overview</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-variant transition-all rounded cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined">work</span>
+<span class="font-label text-label">Cases</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-variant transition-all rounded cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label text-label">Customers</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-variant transition-all rounded cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="font-label text-label">Knowledge</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-variant transition-all rounded cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span class="font-label text-label">Agents</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-variant transition-all rounded cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label text-label">Evaluations</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-variant transition-all rounded cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label text-label">Settings</span>
+</a>
+</li>
+</ul>
+</div>
+<div class="p-sm border-t border-outline-variant/30">
+<ul class="space-y-xs">
+<li>
+<button class="w-full flex items-center gap-md px-md py-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-variant transition-all rounded cursor-pointer active:scale-95 duration-200">
+<span class="material-symbols-outlined">contrast</span>
+<span class="font-label text-label">Theme Toggle</span>
+</button>
+</li>
+<li>
+<button class="w-full flex items-center gap-md px-md py-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-variant transition-all rounded cursor-pointer active:scale-95 duration-200">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="font-label text-label">Profile</span>
+</button>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-1 md:ml-sidebar_width mt-table_row_height md:mt-0 p-md md:p-lg overflow-y-auto bg-background flex flex-col gap-lg">
+<!-- Header -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md pb-md border-b border-outline-variant/30">
+<div>
+<h1 class="font-h1 text-h1 text-on-background">Resolution Overview</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Operations and AI performance metrics.</p>
+</div>
+<div class="flex items-center gap-sm">
+<div class="flex items-center gap-xs px-sm py-xs border border-outline-variant rounded bg-surface-container-lowest text-on-surface-variant font-label text-label cursor-pointer hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+<span>Last 24 Hours</span>
+<span class="material-symbols-outlined text-[18px]">arrow_drop_down</span>
+</div>
+<button class="flex items-center gap-xs px-sm py-xs border border-outline-variant rounded bg-transparent text-on-background font-label text-label hover:bg-surface-container-lowest transition-colors">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                    Export
+                </button>
+<button class="flex items-center gap-xs px-md py-xs bg-primary-container text-on-primary rounded font-label text-label hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                    Create Case
+                </button>
+</div>
+</div>
+<!-- KPIs -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md">
+<div class="bg-surface border border-outline-variant rounded-lg p-md flex flex-col">
+<div class="flex justify-between items-center mb-sm text-on-surface-variant">
+<span class="font-label text-label uppercase tracking-wider">Active Cases</span>
+<span class="material-symbols-outlined text-[20px]">pending_actions</span>
+</div>
+<div class="font-display text-display text-on-background">24</div>
+<div class="font-caption text-caption text-outline mt-auto pt-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px] text-error">trending_up</span>
+<span>+2 since last hour</span>
+</div>
+</div>
+<div class="bg-surface border border-outline-variant rounded-lg p-md flex flex-col relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-primary-container"></div>
+<div class="flex justify-between items-center mb-sm text-on-surface-variant">
+<span class="font-label text-label uppercase tracking-wider">Autonomous Res</span>
+<span class="material-symbols-outlined text-[20px] text-primary-container">smart_toy</span>
+</div>
+<div class="font-display text-display text-on-background">82%</div>
+<div class="font-caption text-caption text-outline mt-auto pt-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px] text-primary-container">trending_up</span>
+<span>+1.2% this week</span>
+</div>
+</div>
+<div class="bg-surface border border-outline-variant rounded-lg p-md flex flex-col">
+<div class="flex justify-between items-center mb-sm text-on-surface-variant">
+<span class="font-label text-label uppercase tracking-wider">Human Handoffs</span>
+<span class="material-symbols-outlined text-[20px]">person_alert</span>
+</div>
+<div class="font-display text-display text-on-background">18%</div>
+<div class="font-caption text-caption text-outline mt-auto pt-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px] text-tertiary">trending_down</span>
+<span>-0.5% this week</span>
+</div>
+</div>
+<div class="bg-surface border border-outline-variant rounded-lg p-md flex flex-col">
+<div class="flex justify-between items-center mb-sm text-on-surface-variant">
+<span class="font-label text-label uppercase tracking-wider">Avg Res Time</span>
+<span class="material-symbols-outlined text-[20px]">timer</span>
+</div>
+<div class="font-display text-display text-on-background">42s</div>
+<div class="font-caption text-caption text-outline mt-auto pt-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px] text-primary-container">trending_down</span>
+<span>-3s today</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-lg h-[400px]">
+<!-- Chart Panel -->
+<div class="xl:col-span-2 bg-surface border border-outline-variant rounded-lg flex flex-col overflow-hidden">
+<div class="p-md border-b border-outline-variant/30 flex justify-between items-center bg-[#F8FAFC]">
+<h3 class="font-label text-label uppercase text-on-background">Resolution Performance</h3>
+<div class="flex gap-sm">
+<div class="flex items-center gap-xs font-caption text-caption">
+<div class="w-2 h-2 rounded-full bg-primary-container"></div>
+<span class="text-on-surface-variant">Autonomous</span>
+</div>
+<div class="flex items-center gap-xs font-caption text-caption">
+<div class="w-2 h-2 rounded-full bg-tertiary"></div>
+<span class="text-on-surface-variant">Human</span>
+</div>
+</div>
+</div>
+<div class="flex-1 p-md relative bg-surface-container-lowest">
+<!-- Placeholder for Chart -->
+<div class="absolute inset-md border-l border-b border-outline-variant/50">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 100">
+<path d="M0,80 Q20,60 40,70 T80,30 T100,20" fill="none" stroke="#D98F16" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+<path d="M0,90 Q30,85 50,95 T100,85" fill="none" stroke="#006590" stroke-dasharray="4" stroke-width="1.5" vector-effect="non-scaling-stroke"></path>
+</svg>
+</div>
+</div>
+</div>
+<!-- Active Agents Panel -->
+<div class="bg-surface border border-outline-variant rounded-lg flex flex-col overflow-hidden">
+<div class="p-md border-b border-outline-variant/30 bg-[#F8FAFC]">
+<h3 class="font-label text-label uppercase text-on-background">Active AI Agents</h3>
+</div>
+<div class="flex-1 overflow-y-auto">
+<table class="w-full text-left border-collapse">
+<tbody>
+<tr class="border-b border-outline-variant/20 hover:bg-surface-container-lowest transition-colors h-table_row_height">
+<td class="px-md py-sm font-body-sm text-on-background flex items-center gap-sm">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+                                    Triage
+                                </td>
+<td class="px-md py-sm font-trace text-trace text-on-surface-variant text-right">98% SR</td>
+</tr>
+<tr class="border-b border-outline-variant/20 hover:bg-surface-container-lowest transition-colors h-table_row_height">
+<td class="px-md py-sm font-body-sm text-on-background flex items-center gap-sm">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+                                    Billing
+                                </td>
+<td class="px-md py-sm font-trace text-trace text-on-surface-variant text-right">92% SR</td>
+</tr>
+<tr class="border-b border-outline-variant/20 hover:bg-surface-container-lowest transition-colors h-table_row_height">
+<td class="px-md py-sm font-body-sm text-on-background flex items-center gap-sm">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+                                    Subscription
+                                </td>
+<td class="px-md py-sm font-trace text-trace text-on-surface-variant text-right">76% SR</td>
+</tr>
+<tr class="border-b border-outline-variant/20 hover:bg-surface-container-lowest transition-colors h-table_row_height">
+<td class="px-md py-sm font-body-sm text-on-background flex items-center gap-sm">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+                                    Knowledge
+                                </td>
+<td class="px-md py-sm font-trace text-trace text-on-surface-variant text-right">95% SR</td>
+</tr>
+<tr class="border-b border-outline-variant/20 hover:bg-surface-container-lowest transition-colors h-table_row_height">
+<td class="px-md py-sm font-body-sm text-on-background flex items-center gap-sm">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+                                    Verification
+                                </td>
+<td class="px-md py-sm font-trace text-trace text-on-surface-variant text-right">88% SR</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Recent Cases Table -->
+<div class="bg-surface border border-outline-variant rounded-lg flex flex-col overflow-hidden">
+<div class="p-md border-b border-outline-variant/30 flex justify-between items-center bg-[#F8FAFC]">
+<h3 class="font-label text-label uppercase text-on-background">Recent Cases</h3>
+<button class="font-caption text-caption text-primary-container hover:underline">View All</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse min-w-[800px]">
+<thead class="bg-[#F8FAFC] border-b border-outline-variant/30">
+<tr>
+<th class="px-md py-sm font-label text-label uppercase text-on-surface-variant w-[120px]">Case ID</th>
+<th class="px-md py-sm font-label text-label uppercase text-on-surface-variant">Customer</th>
+<th class="px-md py-sm font-label text-label uppercase text-on-surface-variant">Issue</th>
+<th class="px-md py-sm font-label text-label uppercase text-on-surface-variant">Agent</th>
+<th class="px-md py-sm font-label text-label uppercase text-on-surface-variant">Status</th>
+<th class="px-md py-sm font-label text-label uppercase text-on-surface-variant text-right w-[100px]">Time</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-outline-variant/20 hover:bg-surface-container-lowest transition-colors h-[56px]">
+<td class="px-md py-sm font-trace text-trace text-primary-container">#CAS-8092</td>
+<td class="px-md py-sm font-body-sm text-on-background">Acme Corp</td>
+<td class="px-md py-sm font-body-sm text-on-surface-variant truncate max-w-[200px]">API Rate Limit Exceeded</td>
+<td class="px-md py-sm font-body-sm text-on-background">Triage AI</td>
+<td class="px-md py-sm">
+<span class="inline-flex items-center gap-xs px-2 py-1 rounded-full bg-surface-container border border-primary-container/30 text-primary-container font-caption text-caption">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span>
+                                    Resolving
+                                </span>
+</td>
+<td class="px-md py-sm font-trace text-trace text-on-surface-variant text-right">0:12</td>
+</tr>
+<tr class="border-b border-outline-variant/20 hover:bg-surface-container-lowest transition-colors h-[56px]">
+<td class="px-md py-sm font-trace text-trace text-on-surface-variant">#CAS-8091</td>
+<td class="px-md py-sm font-body-sm text-on-background">Globex Inc</td>
+<td class="px-md py-sm font-body-sm text-on-surface-variant truncate max-w-[200px]">Invoice Discrepancy</td>
+<td class="px-md py-sm font-body-sm text-on-background">Billing AI</td>
+<td class="px-md py-sm">
+<span class="inline-flex items-center gap-xs px-2 py-1 rounded-full bg-surface-container border border-outline-variant/50 text-on-surface-variant font-caption text-caption">
+<span class="material-symbols-outlined text-[12px]">check_circle</span>
+                                    Resolved
+                                </span>
+</td>
+<td class="px-md py-sm font-trace text-trace text-on-surface-variant text-right">1:45</td>
+</tr>
+<tr class="border-b border-outline-variant/20 hover:bg-surface-container-lowest transition-colors h-[56px]">
+<td class="px-md py-sm font-trace text-trace text-on-surface-variant">#CAS-8090</td>
+<td class="px-md py-sm font-body-sm text-on-background">Initech</td>
+<td class="px-md py-sm font-body-sm text-on-surface-variant truncate max-w-[200px]">Complex Workflow Setup</td>
+<td class="px-md py-sm font-body-sm text-on-background">Subscription AI</td>
+<td class="px-md py-sm">
+<span class="inline-flex items-center gap-xs px-2 py-1 rounded-full bg-tertiary-fixed border border-tertiary/30 text-tertiary font-caption text-caption">
+<span class="material-symbols-outlined text-[12px]">person</span>
+                                    Human Review
+                                </span>
+</td>
+<td class="px-md py-sm font-trace text-trace text-on-surface-variant text-right">5:20</td>
+</tr>
+<tr class="border-b border-outline-variant/20 hover:bg-surface-container-lowest transition-colors h-[56px]">
+<td class="px-md py-sm font-trace text-trace text-on-surface-variant">#CAS-8089</td>
+<td class="px-md py-sm font-body-sm text-on-background">Soylent Corp</td>
+<td class="px-md py-sm font-body-sm text-on-surface-variant truncate max-w-[200px]">Password Reset Loop</td>
+<td class="px-md py-sm font-body-sm text-on-background">Verification AI</td>
+<td class="px-md py-sm">
+<span class="inline-flex items-center gap-xs px-2 py-1 rounded-full bg-error-container border border-error/30 text-error font-caption text-caption">
+<span class="material-symbols-outlined text-[12px]">error</span>
+                                    Failed
+                                </span>
+</td>
+<td class="px-md py-sm font-trace text-trace text-on-surface-variant text-right">0:45</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) - Suppressed as per instructions for non-top-level or complex layout preference, but included basic structure if needed. Actually, suppressing based on layout complexity. -->
+</body></html>

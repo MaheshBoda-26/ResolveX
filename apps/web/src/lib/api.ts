@@ -101,7 +101,7 @@ export interface HandoffSort {
   direction: 'asc' | 'desc';
 }
 
-export type { HandoffStatus as HandoffStatusExport } from './api';
+export type { HandoffStatus as HandoffStatusExport };
 
 class ApiError extends Error {
   status: number;

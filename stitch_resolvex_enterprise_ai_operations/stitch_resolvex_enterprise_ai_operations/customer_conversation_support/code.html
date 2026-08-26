@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ResolveX - Customer Conversation</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#ffddb6",
+                        "outline-variant": "#d7c3af",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "primary": "#845400",
+                        "primary-fixed-dim": "#ffb95a",
+                        "on-tertiary-container": "#003a55",
+                        "on-primary-container": "#4d2f00",
+                        "on-surface": "#141b2b",
+                        "on-tertiary-fixed-variant": "#004c6e",
+                        "primary-container": "#d98f16",
+                        "tertiary-fixed": "#c8e6ff",
+                        "surface-container-high": "#e1e8fd",
+                        "surface-variant": "#dce2f7",
+                        "inverse-surface": "#293040",
+                        "surface-container-highest": "#dce2f7",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#316bf3",
+                        "surface-tint": "#845400",
+                        "tertiary-container": "#2fa8e8",
+                        "on-background": "#141b2b",
+                        "inverse-on-surface": "#edf0ff",
+                        "on-secondary-fixed-variant": "#003ea8",
+                        "surface-bright": "#f9f9ff",
+                        "on-primary": "#ffffff",
+                        "background": "#f9f9ff",
+                        "secondary": "#0051d5",
+                        "on-primary-fixed": "#2a1800",
+                        "on-surface-variant": "#524435",
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#ffb95a",
+                        "on-secondary": "#ffffff",
+                        "surface-container-low": "#f1f3ff",
+                        "tertiary-fixed-dim": "#88ceff",
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "on-secondary-fixed": "#00174b",
+                        "on-tertiary-fixed": "#001e2f",
+                        "on-secondary-container": "#fefcff",
+                        "on-error-container": "#93000a",
+                        "surface": "#f9f9ff",
+                        "outline": "#857463",
+                        "secondary-fixed": "#dbe1ff",
+                        "tertiary": "#006590",
+                        "surface-container": "#e9edff",
+                        "on-primary-fixed-variant": "#643f00",
+                        "surface-dim": "#d3daef"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sidebar_width": "260px",
+                        "table_row_height": "48px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "sm": "8px",
+                        "xl": "40px",
+                        "base": "4px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "h1": ["Inter"],
+                        "h3": ["Inter"],
+                        "display": ["Inter"],
+                        "h2": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "trace": ["JetBrains Mono"],
+                        "label": ["Inter"],
+                        "caption": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "h1": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "h3": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "display": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "h2": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "trace": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "label": ["13px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "caption": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .timeline-line-done { border-color: #D98F16; }
+        .timeline-line-pending { border-color: #E5E7EB; border-style: dashed; }
+        .pulse-ring {
+            box-shadow: 0 0 0 0 rgba(217, 143, 22, 0.4);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(217, 143, 22, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(217, 143, 22, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(217, 143, 22, 0); }
+        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-lg overflow-hidden flex flex-col h-screen antialiased">
+<!-- TopNavBar (Shared Component) -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-lg h-table_row_height bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed-dim" style="font-variation-settings: 'FILL' 1;">support_agent</span>
+<div class="font-h2 text-h2 text-primary dark:text-primary-fixed-dim cursor-pointer active:opacity-80">ResolveX</div>
+</div>
+<div class="hidden md:flex gap-md absolute left-1/2 -translate-x-1/2">
+<!-- Navigation Items for Canvas -->
+<a class="text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors px-sm py-xs rounded cursor-pointer active:opacity-80 font-label text-label flex items-center gap-xs" href="#">
+<span class="material-symbols-outlined text-[18px]">home</span> Home
+            </a>
+<a class="text-primary font-bold border-b-2 border-primary hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors px-sm py-xs rounded cursor-pointer active:opacity-80 font-label text-label flex items-center gap-xs" href="#">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">chat</span> Customers
+            </a>
+</div>
+<div class="flex items-center gap-sm">
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-2 text-on-surface-variant text-[18px]">search</span>
+<input class="pl-8 pr-3 py-1 bg-surface-container-low dark:bg-surface-container-highest border border-outline-variant rounded focus:border-primary focus:ring-2 focus:ring-primary/10 font-body-sm text-body-sm w-48 transition-all" placeholder="Search..." type="text"/>
+</div>
+<button class="p-xs text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors rounded-full cursor-pointer active:opacity-80 flex items-center justify-center">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-xs text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors rounded-full cursor-pointer active:opacity-80 flex items-center justify-center">
+<span class="material-symbols-outlined">dark_mode</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden ml-2 cursor-pointer border border-outline-variant">
+<img alt="User avatar" class="w-full h-full object-cover" data-alt="A professional headshot portrait of a corporate user for an avatar. Neutral background, well-lit, minimal aesthetic, high resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9ukRGxadlHVPFG0oydm4Bptq8ffhvX_o2eDybz9SLMSnipIQ42nq2UC92x9Ynhdb8ij857M9kEG_PpOAJpk-pkfF6GoQd8vPSrkSKcBGUeGMX4qQYLoSKeVHqN2xLGattp--QRJqW1jv-mn4eRM2LwLL1w9PP-rTVd7M8S11yG5ZXzarmjhPrwipwVesR5Aj79iV3bPbV4eHWCoakAw-vFSFnSGbCW_4E13-MG-_NT73QdnlXi3o9"/>
+</div>
+</div>
+</header>
+<!-- Main Layout Grid -->
+<main class="flex-1 mt-[48px] flex overflow-hidden">
+<!-- SideNavBar (Shared Component) -->
+<nav class="hidden md:flex flex-col fixed left-0 top-[48px] h-[calc(100vh-48px)] w-sidebar_width z-40 bg-surface-bright dark:bg-inverse-surface border-r border-outline-variant dark:border-outline">
+<div class="p-lg border-b border-outline-variant dark:border-outline mb-sm flex items-center gap-sm">
+<div class="w-10 h-10 rounded bg-primary-container flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined">psychiatry</span>
+</div>
+<div>
+<div class="font-h3 text-h3 text-primary dark:text-primary-fixed-dim">ResolveX</div>
+<div class="font-caption text-caption text-on-surface-variant">Enterprise AI</div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto py-sm px-sm space-y-1">
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200 font-label text-label" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span> Overview
+                </a>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200 font-label text-label" href="#">
+<span class="material-symbols-outlined text-[20px]">work</span> Cases
+                </a>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg bg-primary-container text-on-primary-container border-l-4 border-primary font-semibold hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200 font-label text-label" href="#">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">group</span> Customers
+                </a>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200 font-label text-label" href="#">
+<span class="material-symbols-outlined text-[20px]">menu_book</span> Knowledge
+                </a>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200 font-label text-label" href="#">
+<span class="material-symbols-outlined text-[20px]">smart_toy</span> Agents
+                </a>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200 font-label text-label" href="#">
+<span class="material-symbols-outlined text-[20px]">analytics</span> Evaluations
+                </a>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200 font-label text-label" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span> Settings
+                </a>
+</div>
+<div class="mt-auto p-sm border-t border-outline-variant dark:border-outline space-y-1">
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200 font-label text-label" href="#">
+<span class="material-symbols-outlined text-[20px]">contrast</span> Theme Toggle
+                </a>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200 font-label text-label" href="#">
+<span class="material-symbols-outlined text-[20px]">account_circle</span> Profile
+                </a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col md:ml-sidebar_width bg-surface-bright relative w-full h-[calc(100vh-48px)]">
+<!-- Three Column Layout -->
+<div class="flex-1 flex flex-col lg:flex-row overflow-hidden p-md lg:p-lg gap-md h-full pb-[80px]">
+<!-- Left Column: Conversation History -->
+<div class="flex-1 lg:w-1/3 flex flex-col bg-surface rounded-lg border border-outline-variant shadow-sm overflow-hidden min-w-[300px]">
+<div class="p-sm bg-surface-container-lowest border-b border-outline-variant flex items-center justify-between">
+<div class="font-h3 text-h3 text-on-surface">Conversation</div>
+<div class="font-caption text-caption text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">history</span> History
+                        </div>
+</div>
+<div class="flex-1 overflow-y-auto p-md space-y-md scrollbar-hide flex flex-col">
+<!-- User Message -->
+<div class="flex flex-col items-end">
+<div class="bg-primary-container text-on-primary-container px-md py-sm rounded-t-lg rounded-bl-lg max-w-[85%] font-body-sm text-body-sm shadow-sm">
+                                Hello, I noticed a charge of $49.99 on my account that I don't recognize. Can you please look into this?
+                            </div>
+<span class="font-caption text-caption text-on-surface-variant mt-1">10:42 AM</span>
+</div>
+<!-- AI Message -->
+<div class="flex flex-col items-start">
+<div class="bg-surface-container-high text-on-surface px-md py-sm rounded-t-lg rounded-br-lg max-w-[85%] font-body-sm text-body-sm shadow-sm border border-outline-variant">
+                                Hello. I can certainly help investigate that charge for you. Let me pull up your recent billing history to identify the transaction.
+                            </div>
+<span class="font-caption text-caption text-on-surface-variant mt-1">10:42 AM · ResolveX AI</span>
+</div>
+<!-- System Message (Trace) -->
+<div class="flex justify-center my-2">
+<div class="bg-surface-container-low text-on-surface-variant px-sm py-xs rounded font-trace text-trace border border-outline-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">memory</span> Analysing intent: BILLING_DISPUTE
+                             </div>
+</div>
+<!-- AI Message -->
+<div class="flex flex-col items-start">
+<div class="bg-surface-container-high text-on-surface px-md py-sm rounded-t-lg rounded-br-lg max-w-[85%] font-body-sm text-body-sm shadow-sm border border-outline-variant">
+                                I see a charge for an "Annual Premium Subscription Upgrade" processed on Oct 24th. I am currently checking our refund policy regarding this type of upgrade.
+                            </div>
+<span class="font-caption text-caption text-on-surface-variant mt-1">10:43 AM · ResolveX AI</span>
+</div>
+</div>
+</div>
+<!-- Center Column: Resolution Timeline -->
+<div class="flex-1 lg:w-1/3 flex flex-col bg-surface rounded-lg border border-outline-variant shadow-sm overflow-hidden min-w-[300px]">
+<div class="p-sm bg-surface-container-lowest border-b border-outline-variant flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<div class="font-h3 text-h3 text-on-surface">Resolving your request</div>
+</div>
+<div class="flex-1 overflow-y-auto p-lg flex flex-col items-center justify-center">
+<div class="w-full max-w-sm space-y-0 relative">
+<!-- Vertical Timeline Line (Background) -->
+<div class="absolute left-[19px] top-[24px] bottom-[24px] w-[2px] bg-surface-container-high z-0"></div>
+<!-- Step 1: Understand -->
+<div class="flex items-start gap-md relative z-10 pb-xl">
+<div class="absolute left-[19px] top-[24px] h-[calc(100%+40px)] w-[2px] timeline-line-done z-0"></div>
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center flex-shrink-0 z-10 border-2 border-surface">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="pt-2">
+<div class="font-label text-label text-on-surface font-semibold">Understand</div>
+<div class="font-caption text-caption text-on-surface-variant">Intent recognized: Billing Dispute</div>
+</div>
+</div>
+<!-- Step 2: Investigate (Active) -->
+<div class="flex items-start gap-md relative z-10 pb-xl">
+<div class="absolute left-[19px] top-[24px] h-[calc(100%+40px)] w-[2px] timeline-line-pending z-0"></div>
+<div class="w-10 h-10 rounded-full bg-surface text-primary border-2 border-primary flex items-center justify-center flex-shrink-0 z-10 pulse-ring">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<div class="pt-2">
+<div class="font-label text-label text-primary font-bold">Investigate</div>
+<div class="font-caption text-caption text-on-surface-variant">Querying transaction database...</div>
+<div class="mt-2 font-trace text-trace bg-surface-container-low p-2 rounded border border-outline-variant text-on-surface-variant break-all">
+                                        SELECT * FROM transactions WHERE user_id = 'usr_892' AND amount = 49.99
+                                    </div>
+</div>
+</div>
+<!-- Step 3: Check Policy -->
+<div class="flex items-start gap-md relative z-10 pb-xl">
+<div class="absolute left-[19px] top-[24px] h-[calc(100%+40px)] w-[2px] timeline-line-pending z-0"></div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant border-2 border-surface-container-highest flex items-center justify-center flex-shrink-0 z-10">
+<span class="material-symbols-outlined text-[20px]">gavel</span>
+</div>
+<div class="pt-2">
+<div class="font-label text-label text-on-surface-variant">Check Policy</div>
+<div class="font-caption text-caption text-on-surface-variant">Awaiting investigation results</div>
+</div>
+</div>
+<!-- Step 4: Take Action -->
+<div class="flex items-start gap-md relative z-10 pb-xl">
+<div class="absolute left-[19px] top-[24px] h-[calc(100%+40px)] w-[2px] timeline-line-pending z-0"></div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant border-2 border-surface-container-highest flex items-center justify-center flex-shrink-0 z-10">
+<span class="material-symbols-outlined text-[20px]">flash_on</span>
+</div>
+<div class="pt-2">
+<div class="font-label text-label text-on-surface-variant">Take Action</div>
+</div>
+</div>
+<!-- Step 5: Verify -->
+<div class="flex items-start gap-md relative z-10">
+<div class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant border-2 border-surface-container-highest flex items-center justify-center flex-shrink-0 z-10">
+<span class="material-symbols-outlined text-[20px]">done_all</span>
+</div>
+<div class="pt-2">
+<div class="font-label text-label text-on-surface-variant">Verify &amp; Resolve</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Agent Status Cards -->
+<div class="flex-1 lg:w-1/3 flex flex-col bg-surface rounded-lg border border-outline-variant shadow-sm overflow-hidden min-w-[300px]">
+<div class="p-sm bg-surface-container-lowest border-b border-outline-variant flex items-center justify-between">
+<div class="font-h3 text-h3 text-on-surface">Agent Status</div>
+<div class="font-caption text-caption text-primary flex items-center gap-xs bg-primary-fixed/20 px-2 py-1 rounded-full border border-primary/20">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span> Processing
+                        </div>
+</div>
+<div class="flex-1 overflow-y-auto p-md space-y-sm">
+<!-- Triage Agent -->
+<div class="p-sm border border-outline-variant rounded-lg bg-surface-container-lowest shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-xs font-label text-label text-on-surface font-semibold">
+<span class="material-symbols-outlined text-[18px] text-primary">route</span> Triage Agent
+                                </div>
+<span class="font-caption text-caption text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded">Completed</span>
+</div>
+<div class="font-caption text-caption text-on-surface-variant">Routed to Billing Specialist based on "charge" keyword.</div>
+</div>
+<!-- Billing Agent (Active) -->
+<div class="p-sm border-l-2 border-l-primary border-t border-r border-b border-outline-variant rounded-r-lg bg-surface-container-low shadow-sm relative overflow-hidden">
+<!-- Subtle animated background pulse -->
+<div class="absolute inset-0 bg-primary/5 animate-pulse z-0"></div>
+<div class="relative z-10">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-xs font-label text-label text-on-surface font-bold">
+<span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span> Billing Agent
+                                    </div>
+<span class="font-caption text-caption text-primary bg-primary-fixed/30 px-2 py-0.5 rounded flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px] animate-spin">sync</span> Active
+                                    </span>
+</div>
+<div class="font-caption text-caption text-on-surface mb-2">Retrieving transaction details and user subscription tier.</div>
+<div class="space-y-1">
+<div class="flex items-center justify-between font-trace text-trace text-on-surface-variant">
+<span>Stripe API Call</span>
+<span class="text-primary">200 OK</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-1.5 mb-2 overflow-hidden">
+<div class="bg-primary h-1.5 rounded-full" style="width: 75%"></div>
+</div>
+<div class="flex items-center justify-between font-trace text-trace text-on-surface-variant">
+<span>Policy Check: Refunds</span>
+<span>Pending...</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Policy Agent -->
+<div class="p-sm border border-outline-variant rounded-lg bg-surface opacity-60">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-xs font-label text-label text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">policy</span> Policy Agent
+                                </div>
+<span class="font-caption text-caption text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">Waiting</span>
+</div>
+<div class="font-caption text-caption text-on-surface-variant">Will determine eligibility based on Billing Agent findings.</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Fixed Footer Input -->
+<div class="absolute bottom-0 w-full p-md bg-surface border-t border-outline-variant dark:border-outline z-20">
+<div class="max-w-4xl mx-auto flex items-center gap-sm bg-surface-container-low border border-outline-variant rounded-lg p-xs shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all">
+<button class="p-sm text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center rounded cursor-pointer">
+<span class="material-symbols-outlined text-[20px]">attach_file</span>
+</button>
+<input class="flex-1 bg-transparent border-none focus:ring-0 font-body-lg text-body-lg text-on-surface placeholder:text-on-surface-variant px-sm py-2" placeholder="Tell ResolveX what happened..." type="text"/>
+<button class="p-sm text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center rounded cursor-pointer">
+<span class="material-symbols-outlined text-[20px]">mic</span>
+</button>
+<button class="px-md py-sm bg-primary-container text-on-primary-container hover:bg-primary-fixed-dim transition-colors rounded font-label text-label font-semibold flex items-center gap-xs cursor-pointer">
+                        Send <span class="material-symbols-outlined text-[18px]">send</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

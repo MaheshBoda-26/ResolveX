@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ResolveX - Customer Resolution</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed": "#ffddb6",
+                    "outline-variant": "#d7c3af",
+                    "on-tertiary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "primary": "#845400",
+                    "primary-fixed-dim": "#ffb95a",
+                    "on-tertiary-container": "#003a55",
+                    "on-primary-container": "#4d2f00",
+                    "on-surface": "#141b2b",
+                    "on-tertiary-fixed-variant": "#004c6e",
+                    "primary-container": "#d98f16",
+                    "tertiary-fixed": "#c8e6ff",
+                    "surface-container-high": "#e1e8fd",
+                    "surface-variant": "#dce2f7",
+                    "inverse-surface": "#293040",
+                    "surface-container-highest": "#dce2f7",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-container": "#316bf3",
+                    "surface-tint": "#845400",
+                    "tertiary-container": "#2fa8e8",
+                    "on-background": "#141b2b",
+                    "inverse-on-surface": "#edf0ff",
+                    "on-secondary-fixed-variant": "#003ea8",
+                    "surface-bright": "#f9f9ff",
+                    "on-primary": "#ffffff",
+                    "background": "#f9f9ff",
+                    "secondary": "#0051d5",
+                    "on-primary-fixed": "#2a1800",
+                    "on-surface-variant": "#524435",
+                    "error": "#ba1a1a",
+                    "inverse-primary": "#ffb95a",
+                    "on-secondary": "#ffffff",
+                    "surface-container-low": "#f1f3ff",
+                    "tertiary-fixed-dim": "#88ceff",
+                    "secondary-fixed-dim": "#b4c5ff",
+                    "on-secondary-fixed": "#00174b",
+                    "on-tertiary-fixed": "#001e2f",
+                    "on-secondary-container": "#fefcff",
+                    "on-error-container": "#93000a",
+                    "surface": "#f9f9ff",
+                    "outline": "#857463",
+                    "secondary-fixed": "#dbe1ff",
+                    "tertiary": "#006590",
+                    "surface-container": "#e9edff",
+                    "on-primary-fixed-variant": "#643f00",
+                    "surface-dim": "#d3daef"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "sidebar_width": "260px",
+                    "table_row_height": "48px",
+                    "lg": "24px",
+                    "xs": "4px",
+                    "sm": "8px",
+                    "xl": "40px",
+                    "base": "4px",
+                    "md": "16px"
+            },
+            "fontFamily": {
+                    "h1": ["Inter"],
+                    "h3": ["Inter"],
+                    "display": ["Inter"],
+                    "h2": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "trace": ["JetBrains Mono"],
+                    "label": ["Inter"],
+                    "caption": ["Inter"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "h1": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "h3": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "display": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "h2": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "trace": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "label": ["13px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .input-glow:focus-within {
+            box-shadow: 0 0 0 2px rgba(217, 143, 22, 0.1);
+            border-color: #D98F16;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface antialiased min-h-screen flex flex-col font-body-lg text-body-lg">
+<!-- Top Navigation Bar -->
+<nav class="fixed top-0 w-full z-50 flex justify-between items-center px-lg h-table_row_height bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline">
+<div class="flex items-center gap-sm">
+<span class="font-h2 text-h2 text-primary dark:text-primary-fixed-dim cursor-pointer">ResolveX</span>
+</div>
+<div class="flex items-center gap-md text-on-surface-variant dark:text-surface-variant">
+<span class="material-symbols-outlined cursor-pointer hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors active:opacity-80 rounded-full p-1" data-icon="dark_mode">dark_mode</span>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col items-center justify-center pt-xl px-md sm:px-lg pb-xl mt-12">
+<div class="w-full max-w-2xl flex flex-col items-center text-center space-y-md mb-xl">
+<h1 class="font-display text-display text-on-surface">Tell us what went wrong. We'll work on the resolution.</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg">
+                Our autonomous AI engine quickly understands, investigates, and resolves your issues with transparent, policy-grounded decisions.
+            </p>
+</div>
+<!-- Bento Grid / Interaction Card -->
+<div class="w-full max-w-3xl bg-surface-container-lowest border border-outline-variant rounded-xl p-lg sm:p-xl shadow-sm flex flex-col gap-lg">
+<h2 class="font-h2 text-h2 text-on-surface">How can we help?</h2>
+<div class="w-full input-glow border border-outline-variant rounded-lg transition-all duration-200 bg-surface flex flex-col">
+<textarea class="w-full bg-transparent border-none focus:ring-0 resize-none font-body-lg text-body-lg p-md text-on-surface placeholder:text-on-surface-variant/50" placeholder="Briefly describe your issue..." rows="4"></textarea>
+<div class="flex justify-between items-center p-sm border-t border-outline-variant/50 bg-surface-bright">
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" data-icon="attachment">attachment</span>
+<span class="font-caption text-caption">Attach files</span>
+</div>
+<button class="bg-primary-container text-on-primary rounded-lg px-md py-sm font-label text-label hover:opacity-90 transition-opacity flex items-center gap-xs">
+                        Start Resolution
+                        <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+<div class="flex flex-col gap-sm">
+<span class="font-caption text-caption text-on-surface-variant uppercase tracking-wide">Suggested Requests</span>
+<div class="flex flex-wrap gap-sm">
+<button class="bg-transparent border border-outline-variant text-on-surface rounded-full px-md py-xs font-label text-label hover:bg-surface-container transition-colors">I was charged twice</button>
+<button class="bg-transparent border border-outline-variant text-on-surface rounded-full px-md py-xs font-label text-label hover:bg-surface-container transition-colors">Upgrade my plan</button>
+<button class="bg-transparent border border-outline-variant text-on-surface rounded-full px-md py-xs font-label text-label hover:bg-surface-container transition-colors">Missing item in delivery</button>
+</div>
+</div>
+</div>
+<!-- Trust Items -->
+<div class="w-full max-w-3xl mt-xl grid grid-cols-1 md:grid-cols-3 gap-md">
+<div class="flex items-center gap-sm p-md rounded-lg border border-outline-variant/30 bg-surface-bright">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="gavel">gavel</span>
+<span class="font-label text-label text-on-surface">Policy Grounded</span>
+</div>
+<div class="flex items-center gap-sm p-md rounded-lg border border-outline-variant/30 bg-surface-bright">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="verified">verified</span>
+<span class="font-label text-label text-on-surface">Actions Verified</span>
+</div>
+<div class="flex items-center gap-sm p-md rounded-lg border border-outline-variant/30 bg-surface-bright">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="support_agent">support_agent</span>
+<span class="font-label text-label text-on-surface">Human Escalation Available</span>
+</div>
+</div>
+</main>
+</body></html>

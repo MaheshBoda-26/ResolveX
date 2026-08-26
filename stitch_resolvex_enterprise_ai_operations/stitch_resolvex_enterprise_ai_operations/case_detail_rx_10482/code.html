@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ResolveX - Case RX-10482</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#ffddb6",
+                        "outline-variant": "#d7c3af",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "primary": "#845400",
+                        "primary-fixed-dim": "#ffb95a",
+                        "on-tertiary-container": "#003a55",
+                        "on-primary-container": "#4d2f00",
+                        "on-surface": "#141b2b",
+                        "on-tertiary-fixed-variant": "#004c6e",
+                        "primary-container": "#d98f16",
+                        "tertiary-fixed": "#c8e6ff",
+                        "surface-container-high": "#e1e8fd",
+                        "surface-variant": "#dce2f7",
+                        "inverse-surface": "#293040",
+                        "surface-container-highest": "#dce2f7",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#316bf3",
+                        "surface-tint": "#845400",
+                        "tertiary-container": "#2fa8e8",
+                        "on-background": "#141b2b",
+                        "inverse-on-surface": "#edf0ff",
+                        "on-secondary-fixed-variant": "#003ea8",
+                        "surface-bright": "#f9f9ff",
+                        "on-primary": "#ffffff",
+                        "background": "#f9f9ff",
+                        "secondary": "#0051d5",
+                        "on-primary-fixed": "#2a1800",
+                        "on-surface-variant": "#524435",
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#ffb95a",
+                        "on-secondary": "#ffffff",
+                        "surface-container-low": "#f1f3ff",
+                        "tertiary-fixed-dim": "#88ceff",
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "on-secondary-fixed": "#00174b",
+                        "on-tertiary-fixed": "#001e2f",
+                        "on-secondary-container": "#fefcff",
+                        "on-error-container": "#93000a",
+                        "surface": "#f9f9ff",
+                        "outline": "#857463",
+                        "secondary-fixed": "#dbe1ff",
+                        "tertiary": "#006590",
+                        "surface-container": "#e9edff",
+                        "on-primary-fixed-variant": "#643f00",
+                        "surface-dim": "#d3daef"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sidebar_width": "260px",
+                        "table_row_height": "48px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "sm": "8px",
+                        "xl": "40px",
+                        "base": "4px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "h1": ["Inter"],
+                        "h3": ["Inter"],
+                        "display": ["Inter"],
+                        "h2": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "trace": ["JetBrains Mono"],
+                        "label": ["Inter"],
+                        "caption": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "h1": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "h3": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "display": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "h2": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "trace": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "label": ["13px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "caption": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background antialiased flex">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full w-sidebar_width flex flex-col z-40 bg-surface-bright border-r border-outline-variant">
+<div class="flex items-center px-lg h-[72px] border-b border-outline-variant gap-sm">
+<span class="material-symbols-outlined text-primary text-[28px]" data-weight="fill">smart_toy</span>
+<div>
+<h1 class="font-h3 text-h3 text-primary">ResolveX</h1>
+<p class="font-caption text-caption text-on-surface-variant">Enterprise AI</p>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto py-sm">
+<ul class="flex flex-col">
+<li class="px-sm py-xs">
+<a class="flex items-center px-md h-[40px] rounded hover:bg-surface-container transition-all text-on-surface-variant font-label text-label cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined mr-sm">dashboard</span>
+                        Overview
+                    </a>
+</li>
+<li class="px-sm py-xs">
+<a class="flex items-center px-md h-[40px] rounded bg-primary-container text-on-primary-container border-l-4 border-primary font-semibold cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined mr-sm">work</span>
+                        Cases
+                    </a>
+</li>
+<li class="px-sm py-xs">
+<a class="flex items-center px-md h-[40px] rounded hover:bg-surface-container transition-all text-on-surface-variant font-label text-label cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined mr-sm">group</span>
+                        Customers
+                    </a>
+</li>
+<li class="px-sm py-xs">
+<a class="flex items-center px-md h-[40px] rounded hover:bg-surface-container transition-all text-on-surface-variant font-label text-label cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined mr-sm">menu_book</span>
+                        Knowledge
+                    </a>
+</li>
+<li class="px-sm py-xs">
+<a class="flex items-center px-md h-[40px] rounded hover:bg-surface-container transition-all text-on-surface-variant font-label text-label cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined mr-sm">smart_toy</span>
+                        Agents
+                    </a>
+</li>
+<li class="px-sm py-xs">
+<a class="flex items-center px-md h-[40px] rounded hover:bg-surface-container transition-all text-on-surface-variant font-label text-label cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined mr-sm">analytics</span>
+                        Evaluations
+                    </a>
+</li>
+<li class="px-sm py-xs">
+<a class="flex items-center px-md h-[40px] rounded hover:bg-surface-container transition-all text-on-surface-variant font-label text-label cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined mr-sm">settings</span>
+                        Settings
+                    </a>
+</li>
+</ul>
+</div>
+<div class="border-t border-outline-variant p-sm">
+<ul class="flex flex-col">
+<li class="px-sm py-xs">
+<a class="flex items-center px-md h-[40px] rounded hover:bg-surface-container transition-all text-on-surface-variant font-label text-label cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined mr-sm">contrast</span>
+                        Theme Toggle
+                    </a>
+</li>
+<li class="px-sm py-xs">
+<a class="flex items-center px-md h-[40px] rounded hover:bg-surface-container transition-all text-on-surface-variant font-label text-label cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined mr-sm">account_circle</span>
+                        Profile
+                    </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="ml-sidebar_width flex-1 min-h-screen flex flex-col">
+<!-- Top Nav Replacement (Header) -->
+<header class="h-[72px] bg-surface flex items-center justify-between px-lg border-b border-outline-variant shrink-0">
+<div class="flex items-center gap-sm">
+<nav aria-label="Breadcrumb" class="flex text-on-surface-variant font-label text-label">
+<ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+<li class="inline-flex items-center">
+<a class="hover:text-primary transition-colors" href="#">Cases</a>
+</li>
+<li>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span>
+<span class="text-on-surface font-semibold">RX-10482</span>
+</div>
+</li>
+</ol>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-sm font-medium bg-[#16a34a]/10 text-[#16a34a]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#16a34a]"></span>
+                    Resolved
+                </span>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors">notifications</button>
+</div>
+</header>
+<!-- Canvas -->
+<div class="p-lg flex-1 overflow-y-auto space-y-lg">
+<div class="grid grid-cols-12 gap-lg">
+<!-- Left Column: Context & Evidence -->
+<div class="col-span-12 xl:col-span-8 flex flex-col gap-lg">
+<!-- Customer Summary Bento -->
+<div class="bg-surface border border-outline-variant rounded-lg p-lg flex items-start justify-between relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-surface-container-low to-transparent opacity-50 pointer-events-none"></div>
+<div class="relative z-10 flex gap-md items-center">
+<img alt="Sarah Chen" class="w-[60px] h-[60px] rounded-full object-cover border-2 border-surface-container-high" data-alt="A professional headshot of an Asian woman in her late 20s, bright natural lighting, soft corporate background, smiling subtly, wearing a navy blazer, high quality, light mode aesthetic, crisp focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOVRLg2L3neF8wWkpvLPY_SXOOhs0PyzmLKg-iDMAKH5NKOKP1e2Bm9_wJGvdmsPxhW-ESj-GzuZQdbmMCQYXGdKM2S2Mv7DeuFb4pRMh2YVyqosHGLmKtiDLOpuQiFlhlNph3harczwhpYtKU2BiyRG3g94Jbpf0ozlxFuVY33RKyaWJ9WzvGaVs1avxYIsMQHrGev8KBoN72ldxciB95pUjgVFNZvl-oH8VeVqym_OCWHzug0dFQ"/>
+<div>
+<h2 class="font-h2 text-h2 text-on-surface">Sarah Chen</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">mail</span> sarah@example.com
+                                </p>
+</div>
+</div>
+<div class="relative z-10 text-right">
+<div class="inline-flex flex-col items-end">
+<span class="font-caption text-caption text-on-surface-variant uppercase tracking-wider mb-xs">Current Plan</span>
+<span class="font-h3 text-h3 text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[20px]">workspace_premium</span> Pro Plan</span>
+</div>
+</div>
+</div>
+<!-- Evidence & Tool Execution -->
+<div class="grid grid-cols-2 gap-md">
+<div class="bg-surface border border-outline-variant rounded-lg p-md hover:border-outline transition-colors group">
+<div class="flex items-center gap-2 mb-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-tertiary text-[20px]">policy</span>
+<span class="font-label text-label uppercase tracking-wider">Policy Match</span>
+</div>
+<h3 class="font-h3 text-h3 text-on-surface mb-2">Refund Policy v2.4</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4">"Duplicate charges processed within 24 hours of an upgrade event are eligible for immediate automated refund."</p>
+<div class="flex items-center gap-2 font-trace text-trace text-secondary">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Confidence Score: 99.8%
+                            </div>
+</div>
+<div class="bg-surface border border-outline-variant rounded-lg p-md hover:border-outline transition-colors">
+<div class="flex items-center justify-between mb-sm text-on-surface-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">api</span>
+<span class="font-label text-label uppercase tracking-wider">Tool Execution</span>
+</div>
+<span class="font-trace text-trace">412ms</span>
+</div>
+<h3 class="font-h3 text-h3 text-on-surface mb-2">Freshworks Action</h3>
+<div class="bg-surface-container-low border border-outline-variant rounded p-sm font-trace text-trace text-on-surface overflow-x-auto mb-4">
+<pre><code>POST /api/v2/refunds
+{
+  "charge_id": "ch_987654321",
+  "amount": 29.00,
+  "reason": "duplicate_upgrade"
+}</code></pre>
+</div>
+<div class="flex items-center gap-2 font-trace text-trace text-[#16a34a]">
+<span class="material-symbols-outlined text-[14px]">done_all</span> Success: 200 OK
+                            </div>
+</div>
+</div>
+<!-- Verification -->
+<div class="bg-surface border border-outline-variant rounded-lg p-lg relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-[#16a34a]"></div>
+<div class="flex items-start justify-between mb-md ml-sm">
+<div>
+<h2 class="font-h2 text-h2 text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-[#16a34a] text-[28px]">verified</span>
+                                    Action Verified
+                                </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">State comparison post-execution.</p>
+</div>
+<span class="font-trace text-trace text-on-surface-variant bg-surface-container-high px-2 py-1 rounded">Delta check complete</span>
+</div>
+<div class="grid grid-cols-2 gap-4 ml-sm">
+<div class="border border-outline-variant rounded bg-surface-container-lowest p-sm">
+<div class="font-label text-label text-on-surface-variant uppercase mb-2">Expected State</div>
+<div class="font-trace text-trace text-on-surface space-y-1">
+<div class="flex justify-between"><span>User.Plan:</span> <span>'Pro'</span></div>
+<div class="flex justify-between"><span>Charge.Status:</span> <span>'Refunded'</span></div>
+<div class="flex justify-between"><span>Balance:</span> <span>$0.00</span></div>
+</div>
+</div>
+<div class="border border-outline-variant rounded bg-surface-container-lowest p-sm relative">
+<div class="font-label text-label text-on-surface-variant uppercase mb-2">Observed State</div>
+<div class="font-trace text-trace text-[#16a34a] space-y-1">
+<div class="flex justify-between"><span>User.Plan:</span> <span>'Pro'</span></div>
+<div class="flex justify-between"><span>Charge.Status:</span> <span>'Refunded'</span></div>
+<div class="flex justify-between"><span>Balance:</span> <span>$0.00</span></div>
+</div>
+<div class="absolute inset-0 bg-[#16a34a]/5 pointer-events-none rounded"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Timeline & Logs -->
+<div class="col-span-12 xl:col-span-4 flex flex-col gap-lg">
+<!-- Vertical Resolution Timeline -->
+<div class="bg-surface border border-outline-variant rounded-lg p-md">
+<h3 class="font-h3 text-h3 text-on-surface mb-lg flex items-center gap-2">
+<span class="material-symbols-outlined">timeline</span> Reasoning Path
+                        </h3>
+<div class="relative pl-sm">
+<!-- Timeline Line -->
+<div class="absolute left-[15px] top-[10px] bottom-[10px] w-0.5 bg-primary rounded-full"></div>
+<!-- Steps -->
+<div class="relative flex items-start mb-md group">
+<div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0 z-10 border-2 border-surface mt-0.5">
+<span class="material-symbols-outlined text-white text-[14px]">done</span>
+</div>
+<div class="ml-md">
+<h4 class="font-label text-label text-on-surface">Understand</h4>
+<p class="font-caption text-caption text-on-surface-variant">Parsed intent: Duplicate charge inquiry.</p>
+</div>
+</div>
+<div class="relative flex items-start mb-md group">
+<div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0 z-10 border-2 border-surface mt-0.5">
+<span class="material-symbols-outlined text-white text-[14px]">done</span>
+</div>
+<div class="ml-md">
+<h4 class="font-label text-label text-on-surface">Investigate</h4>
+<p class="font-caption text-caption text-on-surface-variant">Correlated upgrade event with subsequent charge.</p>
+</div>
+</div>
+<div class="relative flex items-start mb-md group">
+<div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0 z-10 border-2 border-surface mt-0.5">
+<span class="material-symbols-outlined text-white text-[14px]">done</span>
+</div>
+<div class="ml-md">
+<h4 class="font-label text-label text-on-surface">Policy</h4>
+<p class="font-caption text-caption text-on-surface-variant">Validated against Refund Policy v2.4.</p>
+</div>
+</div>
+<div class="relative flex items-start mb-md group">
+<div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0 z-10 border-2 border-surface mt-0.5">
+<span class="material-symbols-outlined text-white text-[14px]">done</span>
+</div>
+<div class="ml-md">
+<h4 class="font-label text-label text-on-surface">Decide</h4>
+<p class="font-caption text-caption text-on-surface-variant">Approved $29.00 refund.</p>
+</div>
+</div>
+<div class="relative flex items-start mb-md group">
+<div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0 z-10 border-2 border-surface mt-0.5">
+<span class="material-symbols-outlined text-white text-[14px]">done</span>
+</div>
+<div class="ml-md">
+<h4 class="font-label text-label text-on-surface">Act</h4>
+<p class="font-caption text-caption text-on-surface-variant">Executed Freshworks API call.</p>
+</div>
+</div>
+<div class="relative flex items-start mb-md group">
+<!-- Pulsing Active Step -->
+<div class="absolute -left-[5px] top-[1px] w-[26px] h-[26px] rounded-full bg-primary-container opacity-30 animate-ping z-0"></div>
+<div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0 z-10 border-2 border-surface mt-0.5">
+<span class="material-symbols-outlined text-white text-[14px]">done</span>
+</div>
+<div class="ml-md">
+<h4 class="font-label text-label text-on-surface">Verify</h4>
+<p class="font-caption text-caption text-on-surface-variant">Confirmed state changes.</p>
+</div>
+</div>
+<div class="relative flex items-start group">
+<div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0 z-10 border-2 border-surface mt-0.5">
+<span class="material-symbols-outlined text-white text-[14px]">task_alt</span>
+</div>
+<div class="ml-md">
+<h4 class="font-label text-label text-on-surface">Resolve</h4>
+<p class="font-caption text-caption text-on-surface-variant">Case closed and user notified.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Agent Activity Log -->
+<div class="bg-surface border border-outline-variant rounded-lg p-md flex-1 flex flex-col">
+<h3 class="font-h3 text-h3 text-on-surface mb-md flex items-center gap-2">
+<span class="material-symbols-outlined">forum</span> Multi-Agent Log
+                        </h3>
+<div class="space-y-sm overflow-y-auto flex-1 font-trace text-trace">
+<div class="border-l-2 border-outline-variant pl-2 py-1">
+<div class="text-on-surface-variant text-[10px] mb-1">Triage Agent • 10:42:01 AM</div>
+<div class="text-on-surface">Classified intent: Billing Issue -&gt; Duplicate Charge. Routing to Billing Agent.</div>
+</div>
+<div class="border-l-2 border-secondary pl-2 py-1">
+<div class="text-secondary text-[10px] mb-1">Billing Agent • 10:42:05 AM</div>
+<div class="text-on-surface">Detected two charges of $29.00 on Dec 12. Requesting context from Subscription Agent.</div>
+</div>
+<div class="border-l-2 border-tertiary pl-2 py-1">
+<div class="text-tertiary text-[10px] mb-1">Subscription Agent • 10:42:08 AM</div>
+<div class="text-on-surface">User upgraded from Basic to Pro on Dec 12 at 09:00 AM. Initial charge failed, secondary succeeded. First charge eventually cleared.</div>
+</div>
+<div class="border-l-2 border-secondary pl-2 py-1 bg-surface-container-low">
+<div class="text-secondary text-[10px] mb-1">Billing Agent • 10:42:15 AM</div>
+<div class="text-on-surface">Confirmed error. Applying Refund Policy v2.4. Initiating refund for charge ID ch_987654321.</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

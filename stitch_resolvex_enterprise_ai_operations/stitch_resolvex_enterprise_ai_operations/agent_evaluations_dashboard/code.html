@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ResolveX - Evaluations</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "primary-fixed": "#ffddb6",
+                            "outline-variant": "#d7c3af",
+                            "on-tertiary": "#ffffff",
+                            "on-error": "#ffffff",
+                            "error-container": "#ffdad6",
+                            "primary": "#845400",
+                            "primary-fixed-dim": "#ffb95a",
+                            "on-tertiary-container": "#003a55",
+                            "on-primary-container": "#4d2f00",
+                            "on-surface": "#141b2b",
+                            "on-tertiary-fixed-variant": "#004c6e",
+                            "primary-container": "#d98f16",
+                            "tertiary-fixed": "#c8e6ff",
+                            "surface-container-high": "#e1e8fd",
+                            "surface-variant": "#dce2f7",
+                            "inverse-surface": "#293040",
+                            "surface-container-highest": "#dce2f7",
+                            "surface-container-lowest": "#ffffff",
+                            "secondary-container": "#316bf3",
+                            "surface-tint": "#845400",
+                            "tertiary-container": "#2fa8e8",
+                            "on-background": "#141b2b",
+                            "inverse-on-surface": "#edf0ff",
+                            "on-secondary-fixed-variant": "#003ea8",
+                            "surface-bright": "#f9f9ff",
+                            "on-primary": "#ffffff",
+                            "background": "#f9f9ff",
+                            "secondary": "#0051d5",
+                            "on-primary-fixed": "#2a1800",
+                            "on-surface-variant": "#524435",
+                            "error": "#ba1a1a",
+                            "inverse-primary": "#ffb95a",
+                            "on-secondary": "#ffffff",
+                            "surface-container-low": "#f1f3ff",
+                            "tertiary-fixed-dim": "#88ceff",
+                            "secondary-fixed-dim": "#b4c5ff",
+                            "on-secondary-fixed": "#00174b",
+                            "on-tertiary-fixed": "#001e2f",
+                            "on-secondary-container": "#fefcff",
+                            "on-error-container": "#93000a",
+                            "surface": "#f9f9ff",
+                            "outline": "#857463",
+                            "secondary-fixed": "#dbe1ff",
+                            "tertiary": "#006590",
+                            "surface-container": "#e9edff",
+                            "on-primary-fixed-variant": "#643f00",
+                            "surface-dim": "#d3daef"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.25rem",
+                            "lg": "0.5rem",
+                            "xl": "0.75rem",
+                            "full": "9999px"
+                    },
+                    "spacing": {
+                            "sidebar_width": "260px",
+                            "table_row_height": "48px",
+                            "lg": "24px",
+                            "xs": "4px",
+                            "sm": "8px",
+                            "xl": "40px",
+                            "base": "4px",
+                            "md": "16px"
+                    },
+                    "fontFamily": {
+                            "h1": ["Inter"],
+                            "h3": ["Inter"],
+                            "display": ["Inter"],
+                            "h2": ["Inter"],
+                            "body-lg": ["Inter"],
+                            "trace": ["JetBrains Mono"],
+                            "label": ["Inter"],
+                            "caption": ["Inter"],
+                            "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                            "h1": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                            "h3": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                            "display": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                            "h2": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                            "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                            "trace": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+                            "label": ["13px", {"lineHeight": "16px", "fontWeight": "500"}],
+                            "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                            "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                },
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: theme('colors.background'); color: theme('colors.on-background'); }
+        .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid theme('colors.outline-variant'); }
+        .data-table-row:hover { background-color: theme('colors.surface-container-low'); }
+    </style>
+</head>
+<body class="flex bg-background h-screen overflow-hidden">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full w-sidebar_width flex flex-col z-40 bg-surface-bright dark:bg-inverse-surface border-r border-outline-variant dark:border-outline flat no shadows hidden md:flex">
+<div class="p-lg flex items-center space-x-sm border-b border-outline-variant dark:border-outline">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed-dim" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+<div>
+<h1 class="font-h3 text-h3 text-primary dark:text-primary-fixed-dim tracking-tight">ResolveX</h1>
+<p class="font-caption text-caption text-on-surface-variant">Enterprise AI</p>
+</div>
+</div>
+<ul class="flex-1 overflow-y-auto py-sm">
+<li class="px-md py-sm">
+<a class="flex items-center space-x-md px-sm py-xs rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label text-label">Overview</span>
+</a>
+</li>
+<li class="px-md py-sm">
+<a class="flex items-center space-x-md px-sm py-xs rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined">work</span>
+<span class="font-label text-label">Cases</span>
+</a>
+</li>
+<li class="px-md py-sm">
+<a class="flex items-center space-x-md px-sm py-xs rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label text-label">Customers</span>
+</a>
+</li>
+<li class="px-md py-sm">
+<a class="flex items-center space-x-md px-sm py-xs rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="font-label text-label">Knowledge</span>
+</a>
+</li>
+<li class="px-md py-sm">
+<a class="flex items-center space-x-md px-sm py-xs rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span class="font-label text-label">Agents</span>
+</a>
+</li>
+<li class="px-md py-sm">
+<a class="flex items-center space-x-md px-sm py-xs rounded-DEFAULT bg-primary-container text-on-primary-container border-l-4 border-primary font-semibold cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="font-label text-label">Evaluations</span>
+</a>
+</li>
+<li class="px-md py-sm">
+<a class="flex items-center space-x-md px-sm py-xs rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label text-label">Settings</span>
+</a>
+</li>
+</ul>
+<div class="p-lg border-t border-outline-variant dark:border-outline">
+<ul class="space-y-sm">
+<li>
+<a class="flex items-center space-x-md px-sm py-xs rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined">contrast</span>
+<span class="font-label text-label">Theme Toggle</span>
+</a>
+</li>
+<li>
+<a class="flex items-center space-x-md px-sm py-xs rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="font-label text-label">Profile</span>
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- TopNavBar (Mobile) -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-lg h-table_row_height bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline flat no shadows md:hidden">
+<div class="flex items-center space-x-sm">
+<span class="material-symbols-outlined text-primary cursor-pointer active:opacity-80">menu</span>
+<span class="font-h2 text-h2 text-primary dark:text-primary-fixed-dim">ResolveX</span>
+</div>
+<div class="flex items-center space-x-md text-on-surface-variant dark:text-surface-variant">
+<span class="material-symbols-outlined cursor-pointer active:opacity-80 hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors rounded-full p-xs">notifications</span>
+<img class="w-8 h-8 rounded-full object-cover border border-outline-variant cursor-pointer active:opacity-80" data-alt="A small circular user avatar showing a professional headshot of a corporate employee in a brightly lit modern office setting. The style is sharp, clean, and professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPm6l_uqIYBbHulm070UOoT5nN4YwPAMp7VMORjJbtgcSRE0YxAaIaDuRwEfLtay2O5sKO0gketLrDzqttueqodEXmyR7FcETPuCLe9eHaghkxjiAsEIUErlmWMGoUNgX9OuWY7HAaHu1PrzZAYjrQ1IgDVJIun_ER9tZYj8IGM589WfAppsYlzXVL66qGLhU01x2DLGwD04Y13B7aM313VCnouZTeTzgZcBdGT1r1L66_vDZwMrhw"/>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 md:ml-sidebar_width h-full overflow-y-auto pt-table_row_height md:pt-0 pb-xl md:pb-lg px-md md:px-lg mt-md md:mt-lg flex flex-col space-y-lg">
+<!-- Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center w-full">
+<div>
+<h2 class="font-display text-display text-on-background">Agent Evaluation</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-xs">Comprehensive safety, accuracy, and policy adherence metrics.</p>
+</div>
+<button class="mt-md md:mt-0 bg-primary-container text-on-tertiary font-label text-label px-lg py-sm rounded-lg hover:bg-surface-tint transition-colors flex items-center space-x-sm shadow-sm">
+<span class="material-symbols-outlined" style="font-size: 18px;">play_arrow</span>
+<span>Run Evaluation</span>
+</button>
+</div>
+<!-- KPI Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-md w-full">
+<div class="bg-surface border border-outline-variant rounded-xl p-md flex flex-col shadow-sm">
+<div class="flex justify-between items-center w-full mb-sm">
+<span class="font-label text-label text-on-surface-variant uppercase tracking-wider">Accuracy</span>
+<span class="material-symbols-outlined text-secondary">target</span>
+</div>
+<div class="font-h1 text-h1 text-on-background">99.2%</div>
+<div class="font-caption text-caption text-tertiary mt-xs flex items-center">
+<span class="material-symbols-outlined mr-1" style="font-size: 14px;">arrow_upward</span>
+<span>+0.4% from last run</span>
+</div>
+</div>
+<div class="bg-surface border border-outline-variant rounded-xl p-md flex flex-col shadow-sm">
+<div class="flex justify-between items-center w-full mb-sm">
+<span class="font-label text-label text-on-surface-variant uppercase tracking-wider">Safe Action Rate</span>
+<span class="material-symbols-outlined text-primary">shield_person</span>
+</div>
+<div class="font-h1 text-h1 text-on-background">100%</div>
+<div class="font-caption text-caption text-on-surface-variant mt-xs">0 critical failures detected</div>
+</div>
+<div class="bg-surface border border-outline-variant rounded-xl p-md flex flex-col shadow-sm">
+<div class="flex justify-between items-center w-full mb-sm">
+<span class="font-label text-label text-on-surface-variant uppercase tracking-wider">Policy Grounding</span>
+<span class="material-symbols-outlined text-tertiary">gavel</span>
+</div>
+<div class="font-h1 text-h1 text-on-background">98.5%</div>
+<div class="font-caption text-caption text-error mt-xs flex items-center">
+<span class="material-symbols-outlined mr-1" style="font-size: 14px;">arrow_downward</span>
+<span>-0.1% drift detected</span>
+</div>
+</div>
+<div class="bg-surface border border-outline-variant rounded-xl p-md flex flex-col shadow-sm">
+<div class="flex justify-between items-center w-full mb-sm">
+<span class="font-label text-label text-on-surface-variant uppercase tracking-wider">Verification Success</span>
+<span class="material-symbols-outlined text-secondary">verified</span>
+</div>
+<div class="font-h1 text-h1 text-on-background">97.8%</div>
+<div class="font-caption text-caption text-on-surface-variant mt-xs">Across 5,420 test cases</div>
+</div>
+</div>
+<!-- Evaluation Table Section -->
+<div class="flex-1 bg-surface border border-outline-variant rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="bg-surface-container-low px-md py-sm border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-h3 text-h3 text-on-background">Recent Test Runs</h3>
+<div class="flex items-center space-x-sm">
+<span class="font-caption text-caption text-on-surface-variant">Filter by:</span>
+<select class="bg-surface border border-outline-variant rounded text-caption text-on-background py-xs px-sm focus:ring-primary focus:border-primary">
+<option>All Statuses</option>
+<option>Passed</option>
+<option>Failed</option>
+</select>
+</div>
+</div>
+<div class="overflow-x-auto w-full">
+<table class="w-full text-left border-collapse">
+<thead class="bg-slate-50 border-b border-outline-variant">
+<tr>
+<th class="px-md py-sm font-label text-label text-on-surface-variant uppercase">Test Case</th>
+<th class="px-md py-sm font-label text-label text-on-surface-variant uppercase">Expected Outcome</th>
+<th class="px-md py-sm font-label text-label text-on-surface-variant uppercase">Actual Outcome</th>
+<th class="px-md py-sm font-label text-label text-on-surface-variant uppercase">Status</th>
+<th class="px-md py-sm font-label text-label text-on-surface-variant uppercase">Duration</th>
+<th class="px-md py-sm"></th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-on-background bg-surface divide-y divide-outline-variant">
+<tr class="data-table-row h-table_row_height cursor-pointer">
+<td class="px-md font-trace text-trace">Duplicate Charge Resolution</td>
+<td class="px-md text-on-surface-variant truncate max-w-xs">Refund issued, Policy 4B cited</td>
+<td class="px-md text-on-surface-variant truncate max-w-xs">Refund issued, Policy 4B cited</td>
+<td class="px-md">
+<div class="flex items-center space-x-xs text-green-700 bg-green-50 px-2 py-1 rounded-full w-fit border border-green-200">
+<span class="material-symbols-outlined" style="font-size: 16px;">check_circle</span>
+<span class="font-caption text-caption font-medium">Passed</span>
+</div>
+</td>
+<td class="px-md font-trace text-trace text-on-surface-variant">1.2s</td>
+<td class="px-md text-right"><span class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">chevron_right</span></td>
+</tr>
+<tr class="data-table-row h-table_row_height cursor-pointer">
+<td class="px-md font-trace text-trace">High-Risk Fraud Flag</td>
+<td class="px-md text-on-surface-variant truncate max-w-xs">Escalate to Human Agent</td>
+<td class="px-md text-on-surface-variant truncate max-w-xs">Escalate to Human Agent</td>
+<td class="px-md">
+<div class="flex items-center space-x-xs text-green-700 bg-green-50 px-2 py-1 rounded-full w-fit border border-green-200">
+<span class="material-symbols-outlined" style="font-size: 16px;">check_circle</span>
+<span class="font-caption text-caption font-medium">Passed</span>
+</div>
+</td>
+<td class="px-md font-trace text-trace text-on-surface-variant">0.8s</td>
+<td class="px-md text-right"><span class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">chevron_right</span></td>
+</tr>
+<tr class="data-table-row h-table_row_height cursor-pointer">
+<td class="px-md font-trace text-trace">Missing Address Data</td>
+<td class="px-md text-on-surface-variant truncate max-w-xs">Request Info from User</td>
+<td class="px-md text-on-surface-variant truncate max-w-xs">Denied Request (Policy Error)</td>
+<td class="px-md">
+<div class="flex items-center space-x-xs text-error bg-error-container px-2 py-1 rounded-full w-fit border border-red-200">
+<span class="material-symbols-outlined" style="font-size: 16px;">cancel</span>
+<span class="font-caption text-caption font-medium">Failed</span>
+</div>
+</td>
+<td class="px-md font-trace text-trace text-on-surface-variant">2.1s</td>
+<td class="px-md text-right"><span class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">chevron_right</span></td>
+</tr>
+<tr class="data-table-row h-table_row_height cursor-pointer">
+<td class="px-md font-trace text-trace">Subscription Cancellation</td>
+<td class="px-md text-on-surface-variant truncate max-w-xs">Cancel &amp; Prorate Refund</td>
+<td class="px-md text-on-surface-variant truncate max-w-xs">Cancel &amp; Prorate Refund</td>
+<td class="px-md">
+<div class="flex items-center space-x-xs text-green-700 bg-green-50 px-2 py-1 rounded-full w-fit border border-green-200">
+<span class="material-symbols-outlined" style="font-size: 16px;">check_circle</span>
+<span class="font-caption text-caption font-medium">Passed</span>
+</div>
+</td>
+<td class="px-md font-trace text-trace text-on-surface-variant">1.5s</td>
+<td class="px-md text-right"><span class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">chevron_right</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-md py-sm border-t border-outline-variant bg-surface flex justify-between items-center text-caption text-on-surface-variant">
+<span>Showing 1-4 of 5,420 test cases</span>
+<div class="flex space-x-sm">
+<button class="hover:text-primary">Prev</button>
+<button class="hover:text-primary">Next</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

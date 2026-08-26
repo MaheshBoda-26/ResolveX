@@ -1,144 +1,95 @@
-'use client';
-
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Menu, X, MessageSquare, List } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { Chat } from '@/components/Chat';
+import { ResolutionTimeline } from '@/components/ResolutionTimeline';
 import { useConversations, Conversation } from '@/lib/api';
-import { useTheme } from '@/lib/theme';
-import { cn } from '@/lib/utils';
 
 export function ChatPage() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const conversationId = searchParams.get('conversation');
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const { theme, toggleTheme } = useTheme();
-  const { data: conversations, isLoading, refetch } = useConversations();
+  const [showTimeline, setShowTimeline] = useState(true);
 
-  const handleNewConversation = () => {
-    navigate('/chat');
-    setMobileSidebarOpen(false);
-  };
+  const { data: conversations, refetch } = useConversations();
+  const initialMsg = location.state?.initialMessage;
 
-  const handleConversationClick = (id: string) => {
-    navigate(`/chat?conversation=${id}`);
-    setMobileSidebarOpen(false);
+  const handleConversationSelect = (id: string) => {
+    setSearchParams({ conversation: id });
   };
 
   const handleConversationCreated = (id: string) => {
-    navigate(`/chat?conversation=${id}`, { replace: true });
+    setSearchParams({ conversation: id }, { replace: true });
     refetch();
   };
 
   return (
-    <div className="min-h-screen bg-background-default dark:bg-background-dark flex">
-      {/* Mobile sidebar overlay */}
-      {mobileSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setMobileSidebarOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          'fixed lg:relative z-50 w-80 bg-surface-default dark:bg-surface-dark border-r border-border-default dark:border-border-dark flex flex-col transition-transform duration-200',
-          mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        )}
-      >
-        <div className="p-4 border-b border-border-default flex items-center justify-between">
-          <h1 className="text-h2 font-bold text-brand-primary">ResolveX</h1>
-          <button
-            className="lg:hidden p-2 rounded-lg hover:bg-secondary-soft"
-            onClick={() => setMobileSidebarOpen(false)}
-            aria-label="Close sidebar"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          <Button
-            variant="primary"
-            className="w-full justify-start gap-2"
-            onClick={handleNewConversation}
-          >
-            <MessageSquare className="h-5 w-5" />
-            New Conversation
-          </Button>
-
-          <Separator className="my-2" />
-
-          <h3 className="text-small font-medium text-text-muted px-2">Recent</h3>
-          {isLoading ? (
-            <div className="space-y-2 px-2">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-12 bg-secondary-soft rounded-lg animate-pulse" />
-              ))}
+    <div className="flex-1 flex flex-col h-[calc(100vh-48px)] overflow-hidden bg-background">
+      {/* Top Support Context Header */}
+      <div className="px-4 py-2.5 bg-surface-container-lowest border-b border-outline-variant/40 flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs">
+            SJ
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-xs text-on-surface">Sarah Jenkins (Gold Tier)</span>
+              <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-primary-container text-on-primary-container">
+                Case RX-10482
+              </span>
             </div>
-          ) : conversations?.length === 0 ? (
-            <p className="text-body text-text-muted px-2 py-4 text-center">No conversations yet</p>
-          ) : (
-            <ul className="space-y-1 px-2" role="list">
-              {conversations?.slice(0, 10).map((conv: Conversation) => (
-                <li key={conv.id}>
-                  <button
-                    onClick={() => handleConversationClick(conv.id)}
-                    className={cn(
-                      'w-full text-left p-3 rounded-lg hover:bg-secondary-soft transition-colors',
-                      conversationId === conv.id && 'bg-brand-primary-soft text-brand-primary'
-                    )}
-                  >
-                    <p className="text-body-medium truncate font-medium">
-                      {conv.messages[0]?.content ?? 'Empty conversation'}
-                    </p>
-                    <p className="text-caption text-text-muted mt-0.5 truncate">
-                      {new Date(conv.updatedAt).toLocaleDateString()}
-                    </p>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </nav>
-
-        <div className="p-4 border-t border-border-default">
-          <Button variant="ghost" className="w-full justify-start gap-2" onClick={toggleTheme}>
-            {theme === 'dark' ? <List className="h-5 w-5" /> : <MessageSquare className="h-5 w-5" />}
-            {theme === 'dark' ? 'Light mode' : 'Dark mode'}
-          </Button>
+            <p className="text-[11px] text-on-surface-variant">
+              Issue: Duplicate Charge $120.00 • Autonomous Agent Assigned
+            </p>
+          </div>
         </div>
-      </aside>
 
-      {/* Main content */}
-      <main className="flex-1 flex flex-col lg:ml-0 min-w-0">
-        {/* Mobile header */}
-        <header className="lg:hidden p-4 border-b border-border-default flex items-center justify-between">
-          <button
-            className="p-2 rounded-lg hover:bg-secondary-soft"
-            onClick={() => setMobileSidebarOpen(true)}
-            aria-label="Open sidebar"
+        <div className="flex items-center gap-2">
+          {/* History selector */}
+          <select
+            value={conversationId || ''}
+            onChange={(e) => e.target.value && handleConversationSelect(e.target.value)}
+            className="px-2.5 py-1 text-xs border border-outline-variant/60 rounded-lg bg-surface text-on-surface font-medium outline-none"
           >
-            <Menu className="h-5 w-5" />
-          </button>
-          <h1 className="text-h3 font-bold text-brand-primary">ResolveX</h1>
-          <Button variant="ghost" size="sm" onClick={toggleTheme} aria-label="Toggle theme">
-            {theme === 'dark' ? <List className="h-5 w-5" /> : <MessageSquare className="h-5 w-5" />}
-          </Button>
-        </header>
+            <option value="">+ New Conversation</option>
+            {conversations?.map((conv: Conversation) => (
+              <option key={conv.id} value={conv.id}>
+                {conv.messages[0]?.content.slice(0, 30) || 'Active Chat'} ({new Date(conv.updatedAt).toLocaleTimeString()})
+              </option>
+            ))}
+          </select>
 
-        <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
+          <button
+            onClick={() => setShowTimeline(!showTimeline)}
+            className={`px-3 py-1 text-xs font-semibold rounded-lg border transition-colors flex items-center gap-1 ${
+              showTimeline
+                ? 'bg-primary-container/20 border-primary text-primary'
+                : 'border-outline-variant text-on-surface-variant hover:bg-surface-container-low'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[16px]">timeline</span>
+            {showTimeline ? 'Hide Timeline' : 'Show Timeline'}
+          </button>
+        </div>
+      </div>
+
+      {/* Split Main Content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden border-r border-outline-variant/30">
           <Chat
             conversationId={conversationId ?? undefined}
             onConversationCreated={handleConversationCreated}
+            initialMessage={initialMsg}
           />
         </div>
-      </main>
+
+        {/* Resolution Timeline Panel (Right side) */}
+        {showTimeline && (
+          <div className="hidden lg:block w-[360px] xl:w-[400px] h-full overflow-y-auto p-4 bg-surface-bright/50 border-l border-outline-variant/40 scrollbar-thin">
+            <ResolutionTimeline caseId="RX-10482" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

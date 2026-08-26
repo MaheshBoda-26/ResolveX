@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Human Handoff - ResolveX</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Config injected from system -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#ffddb6",
+                        "outline-variant": "#d7c3af",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "primary": "#845400",
+                        "primary-fixed-dim": "#ffb95a",
+                        "on-tertiary-container": "#003a55",
+                        "on-primary-container": "#4d2f00",
+                        "on-surface": "#141b2b",
+                        "on-tertiary-fixed-variant": "#004c6e",
+                        "primary-container": "#d98f16",
+                        "tertiary-fixed": "#c8e6ff",
+                        "surface-container-high": "#e1e8fd",
+                        "surface-variant": "#dce2f7",
+                        "inverse-surface": "#293040",
+                        "surface-container-highest": "#dce2f7",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#316bf3",
+                        "surface-tint": "#845400",
+                        "tertiary-container": "#2fa8e8",
+                        "on-background": "#141b2b",
+                        "inverse-on-surface": "#edf0ff",
+                        "on-secondary-fixed-variant": "#003ea8",
+                        "surface-bright": "#f9f9ff",
+                        "on-primary": "#ffffff",
+                        "background": "#f9f9ff",
+                        "secondary": "#0051d5",
+                        "on-primary-fixed": "#2a1800",
+                        "on-surface-variant": "#524435",
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#ffb95a",
+                        "on-secondary": "#ffffff",
+                        "surface-container-low": "#f1f3ff",
+                        "tertiary-fixed-dim": "#88ceff",
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "on-secondary-fixed": "#00174b",
+                        "on-tertiary-fixed": "#001e2f",
+                        "on-secondary-container": "#fefcff",
+                        "on-error-container": "#93000a",
+                        "surface": "#f9f9ff",
+                        "outline": "#857463",
+                        "secondary-fixed": "#dbe1ff",
+                        "tertiary": "#006590",
+                        "surface-container": "#e9edff",
+                        "on-primary-fixed-variant": "#643f00",
+                        "surface-dim": "#d3daef"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sidebar_width": "260px",
+                        "table_row_height": "48px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "sm": "8px",
+                        "xl": "40px",
+                        "base": "4px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "h1": ["Inter"],
+                        "h3": ["Inter"],
+                        "display": ["Inter"],
+                        "h2": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "trace": ["JetBrains Mono"],
+                        "label": ["Inter"],
+                        "caption": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "h1": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "h3": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "display": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "h2": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "trace": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "label": ["13px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "caption": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .timeline-node {
+            position: relative;
+        }
+        .timeline-node::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -12px;
+            width: 24px;
+            height: 2px;
+            background-color: theme('colors.primary-container');
+            z-index: -1;
+        }
+        .timeline-node:first-child::before {
+            display: none;
+        }
+        .timeline-node.pending::before {
+            background-color: theme('colors.outline-variant');
+            border-top: 2px dashed theme('colors.outline-variant');
+            height: 0;
+            background-color: transparent;
+        }
+        .pulsing-ring {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.9); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0; }
+            100% { transform: scale(0.9); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-sm min-h-screen flex">
+<!-- SideNavBar (from JSON) -->
+<nav class="fixed left-0 top-0 h-full w-sidebar_width flex flex-col z-40 bg-surface-bright dark:bg-inverse-surface border-r border-outline-variant dark:border-outline hidden md:flex">
+<!-- Header -->
+<div class="h-table_row_height flex items-center px-lg border-b border-outline-variant dark:border-outline bg-surface-bright dark:bg-inverse-surface">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed-dim mr-sm">smart_toy</span>
+<div>
+<div class="font-h3 text-h3 text-primary dark:text-primary-fixed-dim leading-none">ResolveX</div>
+<div class="font-caption text-caption text-on-surface-variant dark:text-surface-variant leading-none">Enterprise AI</div>
+</div>
+</div>
+<!-- Main Tabs -->
+<div class="flex-1 overflow-y-auto py-sm">
+<ul class="space-y-xs px-sm">
+<!-- Overview -->
+<li>
+<a class="flex items-center px-sm py-xs rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined mr-sm font-label text-label">dashboard</span>
+<span class="font-label text-label">Overview</span>
+</a>
+</li>
+<!-- Cases -->
+<li>
+<a class="flex items-center px-sm py-xs rounded-DEFAULT bg-primary-container text-on-primary-container border-l-4 border-primary font-semibold cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined mr-sm font-label text-label">work</span>
+<span class="font-label text-label">Cases</span>
+</a>
+</li>
+<!-- Customers -->
+<li>
+<a class="flex items-center px-sm py-xs rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined mr-sm font-label text-label">group</span>
+<span class="font-label text-label">Customers</span>
+</a>
+</li>
+<!-- Knowledge -->
+<li>
+<a class="flex items-center px-sm py-xs rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined mr-sm font-label text-label">menu_book</span>
+<span class="font-label text-label">Knowledge</span>
+</a>
+</li>
+<!-- Agents -->
+<li>
+<a class="flex items-center px-sm py-xs rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined mr-sm font-label text-label">smart_toy</span>
+<span class="font-label text-label">Agents</span>
+</a>
+</li>
+<!-- Evaluations -->
+<li>
+<a class="flex items-center px-sm py-xs rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined mr-sm font-label text-label">analytics</span>
+<span class="font-label text-label">Evaluations</span>
+</a>
+</li>
+<!-- Settings -->
+<li>
+<a class="flex items-center px-sm py-xs rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined mr-sm font-label text-label">settings</span>
+<span class="font-label text-label">Settings</span>
+</a>
+</li>
+</ul>
+</div>
+<!-- Footer Tabs -->
+<div class="p-sm border-t border-outline-variant dark:border-outline">
+<ul class="space-y-xs">
+<li>
+<a class="flex items-center px-sm py-xs rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined mr-sm font-label text-label">contrast</span>
+<span class="font-label text-label">Theme Toggle</span>
+</a>
+</li>
+<li>
+<a class="flex items-center px-sm py-xs rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined mr-sm font-label text-label">account_circle</span>
+<span class="font-label text-label">Profile</span>
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- TopNavBar (Mobile only) -->
+<nav class="md:hidden fixed top-0 w-full z-50 flex justify-between items-center px-lg h-table_row_height bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline">
+<div class="font-h2 text-h2 text-primary dark:text-primary-fixed-dim">ResolveX</div>
+<div class="flex items-center space-x-sm">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed-dim cursor-pointer active:opacity-80">notifications</span>
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed-dim cursor-pointer active:opacity-80">dark_mode</span>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-sidebar_width mt-table_row_height md:mt-0 p-md md:p-lg">
+<!-- Page Header -->
+<div class="mb-lg flex justify-between items-end">
+<div>
+<h1 class="font-h1 text-h1 text-on-background mb-xs">Human Review</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Review cases requiring human oversight due to policy or threshold triggers.</p>
+</div>
+<!-- Segmented Control -->
+<div class="flex bg-surface-container-low border border-outline-variant rounded-lg p-base">
+<button class="px-md py-xs rounded-DEFAULT bg-surface text-on-surface shadow-[0_1px_2px_rgba(0,0,0,0.05)] font-label text-label border border-outline-variant">Waiting (12)</button>
+<button class="px-md py-xs rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high font-label text-label transition-colors">In Progress</button>
+<button class="px-md py-xs rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high font-label text-label transition-colors">Completed</button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-lg">
+<!-- Left Column: Case List (Narrower) -->
+<div class="xl:col-span-4 flex flex-col gap-sm h-[calc(100vh-160px)] overflow-y-auto pr-xs">
+<!-- Active Case Card -->
+<div class="bg-surface border-l-2 border-primary border border-outline-variant rounded-lg p-md cursor-pointer hover:bg-surface-container-low transition-colors shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+<div class="flex justify-between items-start mb-sm">
+<div class="bg-error-container text-on-error-container font-label text-label px-sm py-base rounded-DEFAULT inline-flex items-center">
+<span class="material-symbols-outlined text-[14px] mr-xs">warning</span>
+                            Threshold Exceeded
+                        </div>
+<span class="font-caption text-caption text-on-surface-variant">2m ago</span>
+</div>
+<h3 class="font-h3 text-h3 text-on-surface mb-xs">High-value refund request ($2,000)</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-sm">Customer requesting immediate refund for enterprise subscription.</p>
+<div class="flex items-center gap-sm font-caption text-caption text-on-surface-variant">
+<span class="flex items-center gap-base"><span class="material-symbols-outlined text-[14px]">tag</span> CASE-8921</span>
+<span class="flex items-center gap-base"><span class="material-symbols-outlined text-[14px]">person</span> Acme Corp</span>
+</div>
+</div>
+<!-- Inactive Case Card 1 -->
+<div class="bg-surface border border-outline-variant rounded-lg p-md cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="flex justify-between items-start mb-sm">
+<div class="bg-surface-container-high text-on-surface font-label text-label px-sm py-base rounded-DEFAULT inline-flex items-center">
+<span class="material-symbols-outlined text-[14px] mr-xs">policy</span>
+                            Ambiguous Policy
+                        </div>
+<span class="font-caption text-caption text-on-surface-variant">15m ago</span>
+</div>
+<h3 class="font-label text-label text-on-surface mb-xs font-semibold">Service Level Agreement dispute</h3>
+<div class="flex items-center gap-sm font-caption text-caption text-on-surface-variant">
+<span class="flex items-center gap-base"><span class="material-symbols-outlined text-[14px]">tag</span> CASE-8919</span>
+</div>
+</div>
+<!-- Inactive Case Card 2 -->
+<div class="bg-surface border border-outline-variant rounded-lg p-md cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="flex justify-between items-start mb-sm">
+<div class="bg-surface-container-high text-on-surface font-label text-label px-sm py-base rounded-DEFAULT inline-flex items-center">
+<span class="material-symbols-outlined text-[14px] mr-xs">shield_person</span>
+                            Identity Verification
+                        </div>
+<span class="font-caption text-caption text-on-surface-variant">42m ago</span>
+</div>
+<h3 class="font-label text-label text-on-surface mb-xs font-semibold">Account recovery without 2FA</h3>
+<div class="flex items-center gap-sm font-caption text-caption text-on-surface-variant">
+<span class="flex items-center gap-base"><span class="material-symbols-outlined text-[14px]">tag</span> CASE-8904</span>
+</div>
+</div>
+</div>
+<!-- Right Column: Case Details (Wider) -->
+<div class="xl:col-span-8 bg-surface border border-outline-variant rounded-lg flex flex-col h-[calc(100vh-160px)] relative overflow-hidden">
+<!-- Detail Header -->
+<div class="p-md border-b border-outline-variant bg-[#F8FAFC]">
+<div class="flex justify-between items-start">
+<div>
+<div class="flex items-center gap-sm mb-xs">
+<span class="font-trace text-trace text-on-surface-variant uppercase bg-surface-container-high px-sm py-base rounded-sm">CASE-8921</span>
+<span class="font-trace text-trace text-error font-semibold flex items-center"><span class="material-symbols-outlined text-[16px] mr-xs">stop_circle</span> HALTED BY AI</span>
+</div>
+<h2 class="font-h2 text-h2 text-on-surface mb-xs">High-value refund request ($2,000)</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Reason for handoff: <span class="text-on-surface font-medium">Refund exceeds autonomous threshold ($500.00).</span></p>
+</div>
+</div>
+</div>
+<!-- Detail Body (Scrollable) -->
+<div class="flex-1 overflow-y-auto p-md grid grid-cols-1 lg:grid-cols-2 gap-lg bg-surface-bright">
+<!-- Left Col in Details: AI Trace & Timeline -->
+<div class="flex flex-col gap-md">
+<!-- AI Resolution Timeline (Signature Pattern) -->
+<div class="bg-surface border border-outline-variant rounded-lg p-md">
+<h3 class="font-label text-label uppercase text-on-surface-variant mb-md border-b border-outline-variant pb-sm">AI Execution Trace</h3>
+<div class="flex flex-col gap-md relative">
+<!-- Vertical line connecting nodes -->
+<div class="absolute left-[11px] top-[12px] bottom-[12px] w-[2px] bg-outline-variant z-0"></div>
+<!-- Node 1: Completed -->
+<div class="flex items-start gap-md relative z-10">
+<div class="w-[24px] h-[24px] rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shrink-0 border-2 border-surface">
+<span class="material-symbols-outlined text-[14px]">check</span>
+</div>
+<div>
+<div class="font-label text-label text-on-surface">Understand</div>
+<div class="font-trace text-trace text-on-surface-variant">Intent: Refund_Request (Conf: 98%)</div>
+</div>
+</div>
+<!-- Node 2: Completed -->
+<div class="flex items-start gap-md relative z-10">
+<div class="w-[24px] h-[24px] rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shrink-0 border-2 border-surface">
+<span class="material-symbols-outlined text-[14px]">check</span>
+</div>
+<div>
+<div class="font-label text-label text-on-surface">Investigate</div>
+<div class="font-trace text-trace text-on-surface-variant">Found transaction TXN-9982 ($2,000)</div>
+</div>
+</div>
+<!-- Node 3: Completed -->
+<div class="flex items-start gap-md relative z-10">
+<div class="w-[24px] h-[24px] rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shrink-0 border-2 border-surface">
+<span class="material-symbols-outlined text-[14px]">check</span>
+</div>
+<div>
+<div class="font-label text-label text-on-surface">Policy</div>
+<div class="font-trace text-trace text-on-surface-variant">Rule: REFUND_LIMIT_500 applied.</div>
+</div>
+</div>
+<!-- Node 4: HALTED (Active) -->
+<div class="flex items-start gap-md relative z-10">
+<div class="relative">
+<div class="absolute inset-0 rounded-full border border-primary-container pulsing-ring"></div>
+<div class="w-[24px] h-[24px] rounded-full bg-surface border-2 border-primary-container text-primary flex items-center justify-center shrink-0 z-10 relative">
+<span class="material-symbols-outlined text-[14px]">front_hand</span>
+</div>
+</div>
+<div>
+<div class="font-label text-label text-on-surface">Decide</div>
+<div class="font-trace text-trace text-error font-medium">Halt: Human override required.</div>
+</div>
+</div>
+<!-- Node 5: Pending -->
+<div class="flex items-start gap-md relative z-10 opacity-50">
+<div class="w-[24px] h-[24px] rounded-full bg-surface border-2 border-outline-variant text-outline flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[14px]">pending</span>
+</div>
+<div>
+<div class="font-label text-label text-on-surface">Act</div>
+<div class="font-trace text-trace text-on-surface-variant">Awaiting input...</div>
+</div>
+</div>
+</div>
+<button class="mt-md w-full py-xs bg-transparent border border-outline-variant text-on-surface-variant rounded-DEFAULT font-label text-label hover:bg-surface-container-low transition-colors">View Full Trace Logs</button>
+</div>
+</div>
+<!-- Right Col in Details: Evidence -->
+<div class="flex flex-col gap-md">
+<!-- Evidence Card -->
+<div class="bg-surface border border-outline-variant rounded-lg overflow-hidden">
+<div class="bg-[#F8FAFC] px-md py-sm border-b border-outline-variant flex items-center justify-between">
+<span class="font-label text-label uppercase text-on-surface-variant">Context &amp; Evidence</span>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">receipt_long</span>
+</div>
+<div class="p-md space-y-md">
+<!-- Data Row -->
+<div>
+<span class="font-caption text-caption text-on-surface-variant block mb-base">Transaction Details</span>
+<div class="flex items-center justify-between bg-surface-container-low p-sm border border-outline-variant rounded-sm font-trace text-trace">
+<span class="text-on-surface">TXN-9982 (Acme Corp Annual)</span>
+<span class="text-on-surface font-semibold">$2,000.00</span>
+</div>
+</div>
+<!-- Data Row -->
+<div>
+<span class="font-caption text-caption text-on-surface-variant block mb-base">Customer Status</span>
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-[18px] text-primary">verified_user</span>
+<span class="font-body-sm text-body-sm text-on-surface">Identity Verified (Level 2)</span>
+</div>
+</div>
+<!-- Data Row -->
+<div>
+<span class="font-caption text-caption text-on-surface-variant block mb-base">Policy Retrieved</span>
+<p class="font-body-sm text-body-sm text-on-surface italic border-l-2 border-outline-variant pl-sm ml-xs text-on-surface-variant">"Refunds exceeding $500.00 USD must be manually reviewed by a Tier 2 agent to prevent fraudulent capital flight."</p>
+</div>
+</div>
+</div>
+<!-- Customer Message context -->
+<div class="bg-surface border border-outline-variant rounded-lg overflow-hidden">
+<div class="bg-[#F8FAFC] px-md py-sm border-b border-outline-variant">
+<span class="font-label text-label uppercase text-on-surface-variant">Customer Prompt</span>
+</div>
+<div class="p-md">
+<p class="font-body-sm text-body-sm text-on-surface">"We accidentally renewed our annual subscription yesterday but meant to cancel it last week. Please refund the $2000 charge immediately as this is affecting our budget."</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Footer -->
+<div class="p-md border-t border-outline-variant bg-surface flex justify-end gap-sm">
+<button class="px-lg py-sm bg-transparent border border-outline-variant text-on-surface font-label text-label rounded-lg hover:bg-surface-container-low transition-colors">Reject Request</button>
+<button class="px-lg py-sm bg-primary-container text-on-tertiary font-label text-label rounded-lg hover:opacity-90 transition-opacity flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+                        Approve &amp; Execute Refund
+                    </button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

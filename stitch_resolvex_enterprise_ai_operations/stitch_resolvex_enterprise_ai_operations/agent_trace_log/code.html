@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Agent Trace - RX-10482</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed": "#ffddb6",
+                      "outline-variant": "#d7c3af",
+                      "on-tertiary": "#ffffff",
+                      "on-error": "#ffffff",
+                      "error-container": "#ffdad6",
+                      "primary": "#845400",
+                      "primary-fixed-dim": "#ffb95a",
+                      "on-tertiary-container": "#003a55",
+                      "on-primary-container": "#4d2f00",
+                      "on-surface": "#141b2b",
+                      "on-tertiary-fixed-variant": "#004c6e",
+                      "primary-container": "#d98f16",
+                      "tertiary-fixed": "#c8e6ff",
+                      "surface-container-high": "#e1e8fd",
+                      "surface-variant": "#dce2f7",
+                      "inverse-surface": "#293040",
+                      "surface-container-highest": "#dce2f7",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-container": "#316bf3",
+                      "surface-tint": "#845400",
+                      "tertiary-container": "#2fa8e8",
+                      "on-background": "#141b2b",
+                      "inverse-on-surface": "#edf0ff",
+                      "on-secondary-fixed-variant": "#003ea8",
+                      "surface-bright": "#f9f9ff",
+                      "on-primary": "#ffffff",
+                      "background": "#f9f9ff",
+                      "secondary": "#0051d5",
+                      "on-primary-fixed": "#2a1800",
+                      "on-surface-variant": "#524435",
+                      "error": "#ba1a1a",
+                      "inverse-primary": "#ffb95a",
+                      "on-secondary": "#ffffff",
+                      "surface-container-low": "#f1f3ff",
+                      "tertiary-fixed-dim": "#88ceff",
+                      "secondary-fixed-dim": "#b4c5ff",
+                      "on-secondary-fixed": "#00174b",
+                      "on-tertiary-fixed": "#001e2f",
+                      "on-secondary-container": "#fefcff",
+                      "on-error-container": "#93000a",
+                      "surface": "#f9f9ff",
+                      "outline": "#857463",
+                      "secondary-fixed": "#dbe1ff",
+                      "tertiary": "#006590",
+                      "surface-container": "#e9edff",
+                      "on-primary-fixed-variant": "#643f00",
+                      "surface-dim": "#d3daef"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sidebar_width": "260px",
+                      "table_row_height": "48px",
+                      "lg": "24px",
+                      "xs": "4px",
+                      "sm": "8px",
+                      "xl": "40px",
+                      "base": "4px",
+                      "md": "16px"
+              },
+              "fontFamily": {
+                      "h1": ["Inter"],
+                      "h3": ["Inter"],
+                      "display": ["Inter"],
+                      "h2": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "trace": ["JetBrains Mono"],
+                      "label": ["Inter"],
+                      "caption": ["Inter"],
+                      "body-sm": ["Inter"]
+              },
+              "fontSize": {
+                      "h1": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                      "h3": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "display": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "h2": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                      "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "trace": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+                      "label": ["13px", {"lineHeight": "16px", "fontWeight": "500"}],
+                      "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .trace-line {
+            position: absolute;
+            left: 23px;
+            top: 40px;
+            bottom: -20px;
+            width: 2px;
+            background-color: #dce2f7; /* surface-variant */
+            z-index: 0;
+        }
+        .trace-line-completed {
+            background-color: #d98f16; /* primary-container */
+        }
+        .trace-node {
+            position: relative;
+            z-index: 1;
+        }
+        .trace-icon-bg {
+            background-color: #f9f9ff; /* surface */
+        }
+        .pulse-ring {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(217, 143, 22, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(217, 143, 22, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(217, 143, 22, 0); }
+        }
+        
+        .expand-content {
+            display: none;
+        }
+        .expanded .expand-content {
+            display: block;
+        }
+        .expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-sm min-h-screen flex antialiased">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-lg h-table_row_height bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline hidden md:flex">
+<div class="flex items-center gap-sm">
+<span class="font-h2 text-h2 text-primary dark:text-primary-fixed-dim tracking-tight">ResolveX</span>
+</div>
+<!-- Search (on_left in JSON, but moved right for layout balance here as per typical nav) -->
+<div class="flex-1 max-w-md mx-lg hidden md:block">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="w-full h-8 pl-8 pr-sm bg-surface-container-low border border-outline-variant rounded focus:border-primary focus:ring-2 focus:ring-primary/10 font-body-sm text-body-sm transition-all outline-none" placeholder="Search cases..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md text-on-surface-variant dark:text-surface-variant">
+<button class="hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors p-xs rounded cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors p-xs rounded cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined" data-icon="dark_mode">dark_mode</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-surface-container-high overflow-hidden cursor-pointer">
+<img alt="User avatar" class="w-full h-full object-cover" data-alt="A small, professional corporate headshot of a user against a neutral gray background, clean lighting, high resolution, soft focus, suitable for a minimalist SaaS application avatar." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDu8oVLVQgNJq9hpRG7TuHlA4UASSQ6fu-K3Sk2AyhQXcD_OKxFDwRYJ3GM0BPY_lx_nP1719OKQ3aa-6pUOKIOBu6BJ2ZVf6Cb4wjwhZLzLJJb8BNj4XwtT1hUlmVYn4wlUAn42LxQwE1mCq99A98fpo_QDziFzE-3on9IFEa4YrvcvwwwiCXGB__X7_SYPT4Dewwx54EkqPfhLIVSI9RjEe6j6hosmNecM3PBCzx_1l8YDm5j-otc"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full w-sidebar_width flex flex-col z-40 bg-surface-bright dark:bg-inverse-surface border-r border-outline-variant dark:border-outline pt-table_row_height hidden md:flex">
+<div class="flex-1 overflow-y-auto py-sm">
+<ul class="flex flex-col gap-xs px-sm">
+<li>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+<span class="font-label text-label">Overview</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg bg-primary-container text-on-primary-container border-l-4 border-primary font-semibold cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="work">work</span>
+<span class="font-label text-label">Cases</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="group">group</span>
+<span class="font-label text-label">Customers</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="menu_book">menu_book</span>
+<span class="font-label text-label">Knowledge</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="smart_toy">smart_toy</span>
+<span class="font-label text-label">Agents</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="analytics">analytics</span>
+<span class="font-label text-label">Evaluations</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+<span class="font-label text-label">Settings</span>
+</a>
+</li>
+</ul>
+</div>
+<div class="p-sm border-t border-outline-variant">
+<ul class="flex flex-col gap-xs">
+<li>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="contrast">contrast</span>
+<span class="font-label text-label">Theme Toggle</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high hover:bg-surface-container dark:hover:bg-surface-variant transition-all cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="account_circle">account_circle</span>
+<span class="font-label text-label">Profile</span>
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-sidebar_width mt-table_row_height p-md md:p-lg max-w-[1600px] mx-auto w-full flex flex-col xl:flex-row gap-lg">
+<!-- Header / Breadcrumb Context -->
+<div class="w-full xl:hidden mb-sm">
+<div class="flex items-center text-on-surface-variant gap-xs font-caption text-caption mb-sm">
+<a class="hover:text-primary transition-colors" href="#">Cases</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">RX-10482</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="font-medium text-on-surface">Agent Trace</span>
+</div>
+<h1 class="font-h1 text-h1 text-on-surface">Execution Trace</h1>
+</div>
+<!-- Left Column: Trace Visualizer -->
+<div class="flex-1 flex flex-col">
+<div class="hidden xl:block mb-lg">
+<div class="flex items-center text-on-surface-variant gap-xs font-caption text-caption mb-sm">
+<a class="hover:text-primary transition-colors" href="#">Cases</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">RX-10482</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="font-medium text-on-surface">Agent Trace</span>
+</div>
+<h1 class="font-h1 text-h1 text-on-surface">Execution Trace</h1>
+</div>
+<div class="bg-surface-bright border border-outline-variant rounded-lg flex-1 overflow-hidden flex flex-col">
+<div class="bg-surface-container-low border-b border-outline-variant px-md py-sm flex justify-between items-center">
+<h2 class="font-h3 text-h3 text-on-surface">Execution Log</h2>
+<div class="flex gap-sm">
+<button class="text-on-surface-variant hover:text-primary font-caption text-caption flex items-center gap-xs px-sm py-xs border border-outline-variant rounded bg-surface transition-colors" onclick="document.querySelectorAll('.trace-node-container').forEach(el =&gt; el.classList.add('expanded'))">
+<span class="material-symbols-outlined text-[16px]">unfold_more</span> Expand All
+                        </button>
+<button class="text-on-surface-variant hover:text-primary font-caption text-caption flex items-center gap-xs px-sm py-xs border border-outline-variant rounded bg-surface transition-colors" onclick="document.querySelectorAll('.trace-node-container').forEach(el =&gt; el.classList.remove('expanded'))">
+<span class="material-symbols-outlined text-[16px]">unfold_less</span> Collapse All
+                        </button>
+</div>
+</div>
+<div class="p-lg relative flex-1 overflow-y-auto" id="trace-container">
+<!-- Trace Node 1: Triage (Completed) -->
+<div class="trace-node-container relative mb-xl expanded">
+<div class="trace-line trace-line-completed"></div>
+<div class="flex items-start gap-md relative z-10 cursor-pointer" onclick="this.parentElement.classList.toggle('expanded')">
+<div class="w-12 h-12 rounded-full border-2 border-primary-container bg-surface flex items-center justify-center text-primary-container z-10 shrink-0">
+<span class="material-symbols-outlined" data-weight="fill">filter_alt</span>
+</div>
+<div class="flex-1 mt-1">
+<div class="flex justify-between items-center mb-xs">
+<div class="flex items-center gap-sm">
+<h3 class="font-label text-label font-bold text-on-surface uppercase tracking-wider">01 Triage &amp; Intent</h3>
+<span class="bg-surface-container-highest text-on-surface-variant font-trace text-trace px-2 py-0.5 rounded text-[10px]">SUCCESS</span>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant font-trace text-trace text-[11px]">
+<span>+0ms</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span>124ms</span>
+<span class="material-symbols-outlined expand-icon transition-transform duration-200">expand_more</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Analyzed initial customer query to determine routing and urgency.</p>
+</div>
+</div>
+<div class="expand-content ml-[60px] mt-sm pl-sm border-l border-outline-variant/50">
+<div class="bg-surface-container p-sm rounded border border-outline-variant mb-xs">
+<div class="font-label text-[11px] text-on-surface-variant uppercase mb-xs flex justify-between">
+<span>Input Payload</span>
+<span class="material-symbols-outlined text-[14px] cursor-pointer hover:text-primary">content_copy</span>
+</div>
+<pre class="font-trace text-[11px] text-on-surface overflow-x-auto whitespace-pre-wrap break-words">{
+  "message_id": "msg_992a8b",
+  "content": "I was double charged for my Pro subscription this month. Please refund.",
+  "channel": "email",
+  "customer_tier": "enterprise"
+}</pre>
+</div>
+<div class="bg-[#f0f9ff] dark:bg-[#0c4a6e]/20 p-sm rounded border border-[#bae6fd] dark:border-[#0369a1] mb-xs">
+<div class="font-label text-[11px] text-[#0369a1] dark:text-[#7dd3fc] uppercase mb-xs">Output Intent</div>
+<pre class="font-trace text-[11px] text-[#0c4a6e] dark:text-[#e0f2fe] overflow-x-auto whitespace-pre-wrap break-words">{
+  "primary_intent": "billing_dispute",
+  "sub_intent": "double_charge",
+  "urgency": "high",
+  "sentiment": "frustrated",
+  "suggested_workflow": "wf_refund_check"
+}</pre>
+</div>
+</div>
+</div>
+<!-- Trace Node 2: Knowledge Retrieval (Completed) -->
+<div class="trace-node-container relative mb-xl">
+<div class="trace-line trace-line-completed"></div>
+<div class="flex items-start gap-md relative z-10 cursor-pointer" onclick="this.parentElement.classList.toggle('expanded')">
+<div class="w-12 h-12 rounded-full border-2 border-primary-container bg-surface flex items-center justify-center text-primary-container z-10 shrink-0">
+<span class="material-symbols-outlined" data-weight="fill">database</span>
+</div>
+<div class="flex-1 mt-1">
+<div class="flex justify-between items-center mb-xs">
+<div class="flex items-center gap-sm">
+<h3 class="font-label text-label font-bold text-on-surface uppercase tracking-wider">02 Knowledge Retrieval</h3>
+<span class="bg-surface-container-highest text-on-surface-variant font-trace text-trace px-2 py-0.5 rounded text-[10px]">SUCCESS</span>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant font-trace text-trace text-[11px]">
+<span>+125ms</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span>342ms</span>
+<span class="material-symbols-outlined expand-icon transition-transform duration-200">expand_more</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Fetched relevant refund policies and billing definitions.</p>
+</div>
+</div>
+<div class="expand-content ml-[60px] mt-sm pl-sm border-l border-outline-variant/50">
+<div class="bg-surface-container p-sm rounded border border-outline-variant mb-xs">
+<div class="font-label text-[11px] text-on-surface-variant uppercase mb-xs">Search Query</div>
+<pre class="font-trace text-[11px] text-on-surface overflow-x-auto whitespace-pre-wrap break-words">"enterprise double charge refund policy 30 days"</pre>
+</div>
+<div class="bg-surface border border-outline-variant p-sm rounded">
+<div class="font-label text-[11px] text-on-surface-variant uppercase mb-xs">Policy Evidence Retrieved (Top 1)</div>
+<div class="flex gap-xs items-start bg-surface-container-low p-2 rounded">
+<span class="material-symbols-outlined text-primary text-[16px] mt-0.5">policy</span>
+<div>
+<div class="font-label text-label text-on-surface">POL-42: Duplicate Charges</div>
+<div class="font-body-sm text-[12px] text-on-surface-variant mt-1">"If a customer on an active Pro or Enterprise tier is charged multiple times within a 24-hour period for the same invoice, a full refund for the duplicate transaction must be issued automatically."</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Trace Node 3: Billing Check (Completed) -->
+<div class="trace-node-container relative mb-xl">
+<div class="trace-line trace-line-completed"></div>
+<div class="flex items-start gap-md relative z-10 cursor-pointer" onclick="this.parentElement.classList.toggle('expanded')">
+<div class="w-12 h-12 rounded-full border-2 border-primary-container bg-surface flex items-center justify-center text-primary-container z-10 shrink-0">
+<span class="material-symbols-outlined" data-weight="fill">receipt_long</span>
+</div>
+<div class="flex-1 mt-1">
+<div class="flex justify-between items-center mb-xs">
+<div class="flex items-center gap-sm">
+<h3 class="font-label text-label font-bold text-on-surface uppercase tracking-wider">03 Billing System API</h3>
+<span class="bg-surface-container-highest text-on-surface-variant font-trace text-trace px-2 py-0.5 rounded text-[10px]">TOOL CALL</span>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant font-trace text-trace text-[11px]">
+<span>+468ms</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span>890ms</span>
+<span class="material-symbols-outlined expand-icon transition-transform duration-200">expand_more</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Verified transaction history in Stripe for Customer ID: CUS-8821.</p>
+</div>
+</div>
+<div class="expand-content ml-[60px] mt-sm pl-sm border-l border-outline-variant/50">
+<div class="bg-surface-container p-sm rounded border border-outline-variant mb-xs">
+<div class="font-label text-[11px] text-on-surface-variant uppercase mb-xs">API Request</div>
+<pre class="font-trace text-[11px] text-on-surface overflow-x-auto whitespace-pre-wrap break-words">GET /v1/customers/CUS-8821/charges?limit=5</pre>
+</div>
+<div class="bg-surface-container p-sm rounded border border-outline-variant">
+<div class="font-label text-[11px] text-on-surface-variant uppercase mb-xs">API Response</div>
+<pre class="font-trace text-[11px] text-on-surface overflow-x-auto whitespace-pre-wrap break-words">[
+  { "id": "ch_1", "amount": 9900, "status": "succeeded", "created": 1698243600 },
+  { "id": "ch_2", "amount": 9900, "status": "succeeded", "created": 1698243615 }
+]
+// Note: Two distinct charges of $99.00 within 15 seconds.</pre>
+</div>
+</div>
+</div>
+<!-- Trace Node 4: Autonomy Gate (Active/Pulsing) -->
+<div class="trace-node-container relative mb-xl expanded">
+<div class="trace-line"></div>
+<div class="flex items-start gap-md relative z-10 cursor-pointer" onclick="this.parentElement.classList.toggle('expanded')">
+<div class="w-12 h-12 rounded-full border-2 border-primary bg-surface flex items-center justify-center text-primary z-10 shrink-0 pulse-ring shadow-[0_0_10px_rgba(217,143,22,0.5)]">
+<span class="material-symbols-outlined" data-weight="fill">gavel</span>
+</div>
+<div class="flex-1 mt-1">
+<div class="flex justify-between items-center mb-xs">
+<div class="flex items-center gap-sm">
+<h3 class="font-label text-label font-bold text-on-surface uppercase tracking-wider">04 Autonomy Gate (Decide)</h3>
+<span class="bg-primary-container text-on-primary-container font-trace text-trace px-2 py-0.5 rounded text-[10px] animate-pulse">PROCESSING</span>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant font-trace text-trace text-[11px]">
+<span>+1359ms</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span>...</span>
+<span class="material-symbols-outlined expand-icon transition-transform duration-200">expand_more</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Evaluating policy conditions against billing evidence to determine next action.</p>
+</div>
+</div>
+<div class="expand-content ml-[60px] mt-sm pl-sm border-l border-primary/30">
+<div class="bg-surface border border-primary/20 p-sm rounded shadow-sm relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+<div class="font-label text-[11px] text-primary uppercase mb-sm">Decision Matrix Evaluation</div>
+<div class="flex flex-col gap-xs font-trace text-[12px]">
+<div class="flex justify-between items-center py-1 border-b border-outline-variant/30">
+<span class="text-on-surface-variant">Condition: Is Duplicate Charge?</span>
+<span class="text-[#16a34a] font-medium flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">check_circle</span> TRUE</span>
+</div>
+<div class="flex justify-between items-center py-1 border-b border-outline-variant/30">
+<span class="text-on-surface-variant">Condition: Under $500 Limit?</span>
+<span class="text-[#16a34a] font-medium flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">check_circle</span> TRUE ($99.00)</span>
+</div>
+<div class="flex justify-between items-center py-1">
+<span class="text-on-surface-variant">Condition: Active Subscription?</span>
+<span class="text-[#16a34a] font-medium flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">check_circle</span> TRUE (Enterprise)</span>
+</div>
+</div>
+<div class="mt-md pt-sm border-t border-outline-variant/30 flex items-center justify-between">
+<span class="font-label text-label text-on-surface">Proposed Action:</span>
+<span class="bg-surface-container px-2 py-1 rounded font-trace text-primary text-[12px] border border-outline-variant/50">Issue Refund (ch_2)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Trace Node 5: Action (Pending) -->
+<div class="trace-node-container relative mb-xl opacity-60">
+<div class="trace-line border-l-2 border-dashed border-outline-variant bg-transparent left-[23px] w-0"></div>
+<div class="flex items-start gap-md relative z-10">
+<div class="w-12 h-12 rounded-full border-2 border-outline-variant bg-surface flex items-center justify-center text-outline-variant z-10 shrink-0">
+<span class="material-symbols-outlined">bolt</span>
+</div>
+<div class="flex-1 mt-1">
+<div class="flex justify-between items-center mb-xs">
+<div class="flex items-center gap-sm">
+<h3 class="font-label text-label font-bold text-on-surface uppercase tracking-wider">05 Action (Execute)</h3>
+<span class="bg-surface-variant text-on-surface-variant font-trace text-trace px-2 py-0.5 rounded text-[10px]">PENDING</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Execute refund via Stripe API and generate customer response.</p>
+</div>
+</div>
+</div>
+<!-- Trace Node 6: Verify (Pending) -->
+<div class="trace-node-container relative opacity-40">
+<div class="flex items-start gap-md relative z-10">
+<div class="w-12 h-12 rounded-full border-2 border-outline-variant bg-surface flex items-center justify-center text-outline-variant z-10 shrink-0">
+<span class="material-symbols-outlined">fact_check</span>
+</div>
+<div class="flex-1 mt-1">
+<div class="flex justify-between items-center mb-xs">
+<div class="flex items-center gap-sm">
+<h3 class="font-label text-label font-bold text-on-surface uppercase tracking-wider">06 Verify &amp; Resolve</h3>
+<span class="bg-surface-variant text-on-surface-variant font-trace text-trace px-2 py-0.5 rounded text-[10px]">PENDING</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Confirm transaction status and close ticket.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Metrics & Context Panel -->
+<div class="w-full xl:w-[320px] shrink-0 flex flex-col gap-md">
+<!-- Execution Metrics -->
+<div class="bg-surface-bright border border-outline-variant rounded-lg p-md">
+<h3 class="font-h3 text-h3 text-on-surface mb-md">Execution Metrics</h3>
+<div class="grid grid-cols-2 gap-sm mb-md">
+<div class="bg-surface-container-low p-sm rounded border border-outline-variant/50">
+<div class="font-caption text-caption text-on-surface-variant mb-1">Total Duration</div>
+<div class="font-trace text-[18px] text-on-surface">1,359 <span class="text-[12px] text-on-surface-variant">ms</span></div>
+</div>
+<div class="bg-surface-container-low p-sm rounded border border-outline-variant/50">
+<div class="font-caption text-caption text-on-surface-variant mb-1">Status</div>
+<div class="font-label text-label text-primary-container flex items-center gap-1">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+                            In Progress
+                        </div>
+</div>
+</div>
+<div class="space-y-sm font-trace text-trace text-on-surface">
+<div class="flex justify-between items-center py-1 border-b border-outline-variant/30">
+<span class="text-on-surface-variant">Model Version</span>
+<span>RX-Engine-v4.2</span>
+</div>
+<div class="flex justify-between items-center py-1 border-b border-outline-variant/30">
+<span class="text-on-surface-variant">Tokens (In/Out)</span>
+<span>1402 / 218</span>
+</div>
+<div class="flex justify-between items-center py-1 border-b border-outline-variant/30">
+<span class="text-on-surface-variant">Tool Calls</span>
+<span>1 (Stripe_GetCharges)</span>
+</div>
+<div class="flex justify-between items-center py-1">
+<span class="text-on-surface-variant">Confidence Score</span>
+<span class="text-[#16a34a]">98.5%</span>
+</div>
+</div>
+</div>
+<!-- Context Info -->
+<div class="bg-surface-bright border border-outline-variant rounded-lg p-md">
+<h3 class="font-h3 text-h3 text-on-surface mb-md">Case Context</h3>
+<div class="flex flex-col gap-sm font-body-sm text-body-sm">
+<div>
+<span class="text-on-surface-variant text-[12px] uppercase font-bold tracking-wider">Customer ID</span>
+<div class="font-trace text-on-surface">CUS-8821</div>
+</div>
+<div>
+<span class="text-on-surface-variant text-[12px] uppercase font-bold tracking-wider">Tier</span>
+<div class="text-on-surface">Enterprise (SLA: 2hr)</div>
+</div>
+<div>
+<span class="text-on-surface-variant text-[12px] uppercase font-bold tracking-wider">Assigned Agent</span>
+<div class="text-on-surface flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px] text-primary">smart_toy</span>
+                            ResolveX Billing Bot
+                        </div>
+</div>
+</div>
+<div class="mt-md pt-md border-t border-outline-variant flex gap-sm">
+<button class="flex-1 bg-surface-container hover:bg-surface-container-high text-on-surface border border-outline-variant py-2 rounded font-label transition-colors">Halt Execution</button>
+<button class="flex-1 bg-primary-container hover:bg-primary/90 text-on-primary-container py-2 rounded font-label transition-colors">Intervene</button>
+</div>
+</div>
+<!-- Minimalist decorative visualization for tech aesthetic -->
+<div class="flex-1 min-h-[150px] relative rounded-lg overflow-hidden border border-outline-variant/30 bg-surface hidden xl:block opacity-50">
+
+</div>
+</div>
+</main>
+</body></html>

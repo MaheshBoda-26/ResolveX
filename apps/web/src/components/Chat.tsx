@@ -12,6 +12,7 @@ import { useSendMessage, Message } from '@/lib/api';
 interface ChatProps {
   conversationId: string | undefined;
   onConversationCreated: (id: string) => void;
+  initialMessage?: string;
 }
 
 export function Chat({ conversationId, onConversationCreated }: ChatProps) {
