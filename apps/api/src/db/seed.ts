@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { db, pool } from './index';
 import { customers, transactions, subscriptions, knowledgeDocuments } from './schema';
 
-async function seed() {
+export async function seed() {
   console.log('Seeding database...');
 
   const [customer1] = await db
@@ -114,11 +114,13 @@ async function seed() {
 
   console.log('Knowledge documents seeded');
   console.log('Seeding complete!');
-
-  await pool.end();
 }
 
-seed().catch((err) => {
-  console.error('Seeding failed:', err);
-  process.exit(1);
-});
+if (import.meta.url === `file://${process.argv[1]}`) {
+  seed().catch((err) => {
+    console.error('Seeding failed:', err);
+    process.exit(1);
+  }).finally(async () => {
+    await pool.end();
+  });
+}

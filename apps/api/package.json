@@ -42,5 +42,10 @@
     "typescript": "^5.5.0",
     "typescript-eslint": "^8.0.0",
     "vitest": "^3.0.0"
+  },
+  "tsc-alias": {
+    "resolvePaths": true,
+    "resolveFullPaths": true,
+    "resolveExtensions": true
   }
 }

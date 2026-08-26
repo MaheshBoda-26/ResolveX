@@ -4,7 +4,7 @@
  */
 
 // Export types from schemas (single source of truth)
-export * from './schemas';
+export * from './schemas/index.js';
 
 // Export constants separately (not types)
-export * from './constants';
+export * from './constants/index.js';

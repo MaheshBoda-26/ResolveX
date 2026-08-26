@@ -17,7 +17,8 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@resolvex/shared/*": ["../packages/shared/src/*"],
+      "@resolvex/shared": ["../packages/shared/dist/index.js"],
+      "@resolvex/shared/*": ["../packages/shared/dist/*"],
       "@/*": ["src/*"]
     },
     "outDir": "dist",

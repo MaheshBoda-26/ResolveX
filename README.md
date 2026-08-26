@@ -2,6 +2,16 @@
 
 Autonomous customer resolution engine for action-heavy support workflows.
 
+## Demo
+
+**Target Scenario**: "I was charged twice and want to upgrade my plan"
+- Triage detects: Billing (duplicate charge) + Subscription (upgrade)
+- Billing Agent: Detects duplicate charge → Auto-refund if <$50
+- Subscription Agent: Checks eligibility → Auto-upgrade
+- Autonomy Gate: Deterministic rules control autonomous actions
+- Verification: Post-action state confirmation
+- Handoff: Escalation with full case brief for high-value/policy exceptions
+
 ## Structure
 
 ```
@@ -39,13 +49,21 @@ npm run db:seed
 npm run dev
 ```
 
+### Demo Data
+
+The seed script creates:
+- 2 customers (John Doe - basic, Jane Smith - pro)
+- 3 transactions (including duplicate charge for John)
+- 2 active subscriptions
+- 3 knowledge documents (Refund Policy, Upgrade Policy, Plan Comparison)
+
 ### Available Scripts
 
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Start both API and web dev servers |
-| `npm run dev:api` | Start API server only |
-| `npm run dev:web` | Start web dev server only |
+| `npm run dev:api` | Start API server only (port 3001) |
+| `npm run dev:web` | Start web dev server only (port 5173) |
 | `npm run build` | Build all packages |
 | `npm run db:push` | Push schema changes to database |
 | `npm run db:generate` | Generate migrations |
@@ -54,11 +72,12 @@ npm run dev
 | `npm run db:studio` | Open Drizzle Studio |
 | `npm run test` | Run all tests |
 | `npm run lint` | Lint all packages |
+| `npm run eval:autonomy` | Run autonomy gate evaluation |
 
 ## Tech Stack
 
 - **Language**: TypeScript 5.x (strict mode)
-- **Frontend**: React 19, Vite 7, Tailwind CSS 4, TanStack Query 5
+- **Frontend**: React 19, Vite 7, Tailwind CSS 4, TanStack Query 5, shadcn/ui
 - **Backend**: Fastify 5, Drizzle ORM, PostgreSQL + pgvector
 - **Validation**: Zod 4.x at all external boundaries
 - **Testing**: Vitest 3.x, Playwright 1.x
@@ -90,6 +109,24 @@ Single source of truth for:
 - Structured handoff display
 - Evaluation dashboard
 
+## API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Health check |
+| POST | `/api/conversations` | Create conversation |
+| GET | `/api/conversations/:id` | Get conversation |
+| POST | `/api/conversations/:id/messages` | Add message |
+| POST | `/api/triage` | Triage message → intents + tasks |
+| POST | `/api/agent/process` | Full workflow (triage → specialists → verify) |
+| GET | `/api/traces/:runId` | Get agent run trace with details |
+| GET | `/api/conversations/:id/trace` | Get conversation traces |
+| GET | `/api/handoffs` | List pending handoffs |
+| GET | `/api/handoffs/:id` | Get handoff case brief |
+| PATCH | `/api/handoffs/:id/accept` | Accept handoff |
+| PATCH | `/api/handoffs/:id/complete` | Complete handoff |
+| POST | `/api/admin/seed-reset` | Reset demo data |
+
 ## Development
 
 ### Adding Shared Types
@@ -105,9 +142,48 @@ Single source of truth for:
 2. Run `npm run db:generate` to create migration
 3. Run `npm run db:migrate` to apply
 
-## Environment Variables
+## Evaluation
 
-See `.env.example` files in each app for required variables.
+Run the autonomy gate evaluation suite:
+```bash
+npm run eval:autonomy
+```
+
+Target: 90%+ accuracy | Current: 100% (33/33 test cases)
+
+## Deployment
+
+### Vercel (Recommended)
+
+1. Push to GitHub
+2. Import in Vercel
+3. Configure environment variables
+4. Deploy
+
+### Environment Variables (Production)
+
+**API** (`apps/api/.env`):
+```
+DATABASE_URL=postgresql://...
+FRESHWORKS_DOMAIN=...
+FRESHWORKS_API_KEY=...
+ELEVENLABS_API_KEY=...
+ELEVENLABS_AGENT_ID=...
+NODE_ENV=production
+```
+
+**Web** (`apps/web/.env`):
+```
+VITE_API_URL=https://your-api.vercel.app
+```
+
+## Demo Flow
+
+1. Open `/chat`
+2. Send: "I was charged twice and want to upgrade my plan"
+3. Watch triage → billing + subscription tasks
+4. View trace at `/trace?runId=...`
+5. High-value refund ($600) → triggers handoff at `/handoffs`
 
 ## License
 
