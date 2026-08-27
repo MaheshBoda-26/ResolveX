@@ -12,8 +12,8 @@ export const CustomerSchema = z.object({
   email: z.email(),
   planId: z.string().min(1).max(100),
   status: z.enum(['active', 'inactive', 'suspended']),
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
 });
 
 export const TransactionSchema = z.object({
@@ -23,7 +23,7 @@ export const TransactionSchema = z.object({
   amount: z.number().positive(),
   currency: z.string().length(3),
   status: z.enum(['completed', 'pending', 'failed', 'refunded']),
-  chargedAt: z.iso.datetime(),
+  chargedAt: z.string().datetime(),
   metadata: z.record(z.string(), z.unknown()),
 });
 
@@ -33,8 +33,8 @@ export const SubscriptionSchema = z.object({
   planId: z.string().min(1).max(100),
   status: z.enum(['active', 'cancelled', 'past_due', 'trialing']),
   price: z.number().positive(),
-  renewalAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
+  renewalAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
 });
 
 export const KnowledgeDocumentSchema = z.object({
@@ -44,17 +44,17 @@ export const KnowledgeDocumentSchema = z.object({
   content: z.string().min(1),
   metadata: z.record(z.string(), z.unknown()),
   embedding: z.array(z.number()).optional(),
-  createdAt: z.iso.datetime(),
+  createdAt: z.string().datetime(),
 });
 
 // Conversation and agent schemas
 export const ConversationSchema = z.object({
   id: z.uuid(),
-  customerId: z.uuid().nullable(),
+  customerId: z.uuid().nullable().optional(),
   channel: z.enum(['chat', 'voice']),
   status: z.enum(['open', 'resolved', 'escalated', 'closed']),
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
 });
 
 export const AgentRunSchema = z.object({
@@ -64,8 +64,8 @@ export const AgentRunSchema = z.object({
   input: z.record(z.string(), z.unknown()),
   decision: z.record(z.string(), z.unknown()),
   status: z.enum(['pending', 'running', 'completed', 'failed']),
-  startedAt: z.iso.datetime(),
-  completedAt: z.iso.datetime().nullable(),
+  startedAt: z.string().datetime(),
+  completedAt: z.string().datetime().nullable(),
 });
 
 export const ToolCallSchema = z.object({
@@ -76,7 +76,7 @@ export const ToolCallSchema = z.object({
   result: z.record(z.string(), z.unknown()).nullable(),
   status: z.enum(['pending', 'success', 'failed']),
   latencyMs: z.number().int().nonnegative().nullable(),
-  createdAt: z.iso.datetime(),
+  createdAt: z.string().datetime(),
 });
 
 export const VerificationSchema = z.object({
@@ -86,7 +86,7 @@ export const VerificationSchema = z.object({
   expectedState: z.record(z.string(), z.unknown()),
   observedState: z.record(z.string(), z.unknown()).nullable(),
   status: z.enum(['pending', 'passed', 'failed']),
-  createdAt: z.iso.datetime(),
+  createdAt: z.string().datetime(),
 });
 
 export const HandoffSchema = z.object({
@@ -96,7 +96,7 @@ export const HandoffSchema = z.object({
   evidence: z.record(z.string(), z.unknown()),
   recommendedAction: z.string().min(1).max(500),
   status: z.enum(['pending', 'accepted', 'completed']),
-  createdAt: z.iso.datetime(),
+  createdAt: z.string().datetime(),
 });
 
 export const EvaluationSchema = z.object({
@@ -106,7 +106,7 @@ export const EvaluationSchema = z.object({
   expectedOutcome: z.record(z.string(), z.unknown()),
   actualOutcome: z.record(z.string(), z.unknown()).nullable(),
   status: z.enum(['pending', 'passed', 'failed']),
-  createdAt: z.iso.datetime(),
+  createdAt: z.string().datetime(),
 });
 
 // Agent workflow schemas
@@ -187,7 +187,7 @@ export const VoiceConfigSchema = z.object({
 export const TraceEventSchema = z.object({
   id: z.uuid(),
   agentRunId: z.uuid(),
-  timestamp: z.iso.datetime(),
+  timestamp: z.string().datetime(),
   type: z.enum(['agent_start', 'agent_decision', 'tool_call', 'tool_result', 'verification', 'handoff', 'error']),
   label: z.string().min(1).max(200),
   data: z.record(z.string(), z.unknown()),
@@ -198,8 +198,8 @@ export const AgentTraceSchema = z.object({
   conversationId: z.uuid(),
   events: z.array(TraceEventSchema),
   status: z.enum(['running', 'completed', 'escalated', 'error']),
-  startedAt: z.iso.datetime(),
-  completedAt: z.iso.datetime().nullable(),
+  startedAt: z.string().datetime(),
+  completedAt: z.string().datetime().nullable(),
 });
 
 // Type exports inferred from schemas

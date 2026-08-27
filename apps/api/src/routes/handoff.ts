@@ -7,6 +7,7 @@ import {
   acceptHandoff,
   completeHandoff,
 } from '../handoff/caseBrief';
+import { toFastifySchema } from '../lib/fastify-schema';
 
 // Extract nested object schemas to avoid Zod v4 type inference issues
 const CustomerSchema = z.object({
@@ -99,9 +100,9 @@ const HandoffResponseSchema = z.object({
 
 const HandoffListResponseSchema = z.array(HandoffResponseSchema) as any;
 
-const HandoffParamsSchema = z.object({
+const HandoffParamsSchema = toFastifySchema(z.object({
   id: z.string().uuid(),
-}) as any;
+}));
 
 const AcceptHandoffBodySchema = z.object({
   operatorId: z.string().min(1),
@@ -115,7 +116,7 @@ export const handoffRoutes: FastifyPluginAsync = async (app) => {
   app.get('/', {
     schema: {
       response: {
-        200: HandoffListResponseSchema,
+        200: toFastifySchema(HandoffListResponseSchema),
       },
     },
     async handler(_request, reply) {
@@ -128,8 +129,8 @@ export const handoffRoutes: FastifyPluginAsync = async (app) => {
     schema: {
       params: HandoffParamsSchema,
       response: {
-        200: HandoffResponseSchema,
-        404: z.object({ error: z.string(), statusCode: z.number() }),
+        200: toFastifySchema(HandoffResponseSchema),
+        404: toFastifySchema(z.object({ error: z.string(), statusCode: z.number() })),
       },
     },
     async handler(request, reply) {
@@ -145,11 +146,11 @@ export const handoffRoutes: FastifyPluginAsync = async (app) => {
   app.patch('/:id/accept', {
     schema: {
       params: HandoffParamsSchema,
-      body: AcceptHandoffBodySchema,
+      body: toFastifySchema(AcceptHandoffBodySchema),
       response: {
-        200: HandoffResponseSchema,
-        404: z.object({ error: z.string(), statusCode: z.number() }),
-        400: z.object({ error: z.string(), statusCode: z.number() }),
+        200: toFastifySchema(HandoffResponseSchema),
+        404: toFastifySchema(z.object({ error: z.string(), statusCode: z.number() })),
+        400: toFastifySchema(z.object({ error: z.string(), statusCode: z.number() })),
       },
     },
     async handler(request, reply) {
@@ -166,11 +167,11 @@ export const handoffRoutes: FastifyPluginAsync = async (app) => {
   app.patch('/:id/complete', {
     schema: {
       params: HandoffParamsSchema,
-      body: CompleteHandoffBodySchema,
+      body: toFastifySchema(CompleteHandoffBodySchema),
       response: {
-        200: HandoffResponseSchema,
-        404: z.object({ error: z.string(), statusCode: z.number() }),
-        400: z.object({ error: z.string(), statusCode: z.number() }),
+        200: toFastifySchema(HandoffResponseSchema),
+        404: toFastifySchema(z.object({ error: z.string(), statusCode: z.number() })),
+        400: toFastifySchema(z.object({ error: z.string(), statusCode: z.number() })),
       },
     },
     async handler(request, reply) {

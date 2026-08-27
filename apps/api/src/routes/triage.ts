@@ -3,13 +3,14 @@ import { z } from 'zod';
 import { ChatRequestSchema, TriageResultSchema } from '@resolvex/shared';
 import { triageMessage } from '../agents/triage';
 import { createConversation, createTriageAgentRun } from '../db/conversations';
+import { toFastifySchema } from '../lib/fastify-schema';
 
 export const triageRoutes: FastifyPluginAsync = async (app) => {
   app.post('/triage', {
     schema: {
-      body: ChatRequestSchema,
+      body: toFastifySchema(ChatRequestSchema),
       response: {
-        200: TriageResultSchema,
+        200: toFastifySchema(TriageResultSchema),
       },
     },
     async handler(request, reply) {

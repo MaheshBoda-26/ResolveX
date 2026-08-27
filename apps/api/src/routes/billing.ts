@@ -4,6 +4,7 @@ import { ChatRequestSchema, BillingDecisionSchema } from '@resolvex/shared';
 import { processBillingTask } from '../agents/billing';
 import { createConversation, createAgentRun } from '../db/conversations';
 import { createAgentRun as createAgentRunTrace, createToolCall, updateToolCallResult } from '../traces/repository';
+import { toFastifySchema } from '../lib/fastify-schema';
 
 const BillingTaskSchema = z.object({
   type: z.enum(['duplicate_charge', 'refund_inquiry']),
@@ -18,9 +19,9 @@ const BillingTaskSchema = z.object({
 export const billingRoutes: FastifyPluginAsync = async (app) => {
   app.post('/billing', {
     schema: {
-      body: BillingTaskSchema,
+      body: toFastifySchema(BillingTaskSchema),
       response: {
-        200: BillingDecisionSchema,
+        200: toFastifySchema(BillingDecisionSchema),
       },
     },
     async handler(request, reply) {

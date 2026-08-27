@@ -7,6 +7,7 @@ import {
 } from '@resolvex/shared';
 import { processSubscriptionTask } from '../agents/subscription';
 import { createAgentRun, createToolCall } from '../db/conversations';
+import { toFastifySchema } from '../lib/fastify-schema';
 
 const SubscriptionTaskSchema = z.object({
   type: z.enum(['upgrade', 'downgrade', 'cancel']),
@@ -25,9 +26,9 @@ const SubscriptionRouteRequestSchema = z.object({
 export const subscriptionRoutes: FastifyPluginAsync = async (app) => {
   app.post('/subscription', {
     schema: {
-      body: SubscriptionRouteRequestSchema,
+      body: toFastifySchema(SubscriptionRouteRequestSchema),
       response: {
-        200: SubscriptionDecisionSchema,
+        200: toFastifySchema(SubscriptionDecisionSchema),
       },
     },
     async handler(request, reply) {

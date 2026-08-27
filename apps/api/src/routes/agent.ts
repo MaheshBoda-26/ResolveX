@@ -5,13 +5,14 @@ import { triageMessage } from '../agents/triage';
 import { orchestrateWorkflow, createAgentContext } from '../agents/orchestrator';
 import { createConversation, createAgentRun, createTriageAgentRun } from '../db/conversations';
 import { createAgentRun as createTraceRun } from '../traces/repository';
+import { toFastifySchema } from '../lib/fastify-schema';
 
 export const agentRoutes: FastifyPluginAsync = async (app) => {
   app.post('/agent/process', {
     schema: {
-      body: ChatRequestSchema,
+      body: toFastifySchema(ChatRequestSchema),
       response: {
-        200: ChatResponseSchema,
+        200: toFastifySchema(ChatResponseSchema),
       },
     },
     async handler(request, reply) {
