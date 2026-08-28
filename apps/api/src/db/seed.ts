@@ -61,6 +61,15 @@ export async function seed() {
         chargedAt: new Date('2024-01-10'),
         metadata: { description: 'Pro plan subscription' },
       },
+      {
+        customerId: '00000000-0000-0000-0000-000000000002',
+        invoiceId: 'INV-004', // Duplicate charge for pro plan
+        amount: '99.99',
+        currency: 'USD',
+        status: 'completed',
+        chargedAt: new Date('2024-08-27'), // Recent duplicate charge
+        metadata: { description: 'Pro plan subscription (DUPLICATE CHARGE)' },
+      },
     ])
     .onConflictDoNothing();
 
