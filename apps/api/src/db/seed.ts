@@ -5,10 +5,14 @@ import { customers, transactions, subscriptions, knowledgeDocuments } from './sc
 export async function seed() {
   console.log('Seeding database...');
 
+  // Use valid version-4 UUIDs (version digit = 4 in the 13th position)
+  const johnDoeId = '11111111-1111-4111-8111-111111111111';
+  const janeSmithId = '22222222-2222-4222-8222-222222222222';
+
   const [customer1] = await db
     .insert(customers)
     .values({
-      id: '00000000-0000-0000-0000-000000000001',
+      id: johnDoeId,
       name: 'John Doe',
       email: 'john.doe@example.com',
       planId: 'basic',
@@ -20,7 +24,7 @@ export async function seed() {
   const [customer2] = await db
     .insert(customers)
     .values({
-      id: '00000000-0000-0000-0000-000000000002',
+      id: janeSmithId,
       name: 'Jane Smith',
       email: 'jane.smith@example.com',
       planId: 'pro',
@@ -35,7 +39,7 @@ export async function seed() {
     .insert(transactions)
     .values([
       {
-        customerId: '00000000-0000-0000-0000-000000000001',
+        customerId: johnDoeId,
         invoiceId: 'INV-001',
         amount: '29.99',
         currency: 'USD',
@@ -44,7 +48,7 @@ export async function seed() {
         metadata: { description: 'Monthly subscription' },
       },
       {
-        customerId: '00000000-0000-0000-0000-000000000001',
+        customerId: johnDoeId,
         invoiceId: 'INV-002',
         amount: '29.99',
         currency: 'USD',
@@ -53,7 +57,7 @@ export async function seed() {
         metadata: { description: 'Monthly subscription' },
       },
       {
-        customerId: '00000000-0000-0000-0000-000000000002',
+        customerId: janeSmithId,
         invoiceId: 'INV-003',
         amount: '99.99',
         currency: 'USD',
@@ -62,7 +66,7 @@ export async function seed() {
         metadata: { description: 'Pro plan subscription' },
       },
       {
-        customerId: '00000000-0000-0000-0000-000000000002',
+        customerId: janeSmithId,
         invoiceId: 'INV-004', // Duplicate charge for pro plan
         amount: '99.99',
         currency: 'USD',
@@ -79,14 +83,14 @@ export async function seed() {
     .insert(subscriptions)
     .values([
       {
-        customerId: '00000000-0000-0000-0000-000000000001',
+        customerId: johnDoeId,
         planId: 'basic',
         status: 'active',
         price: '29.99',
         renewalAt: new Date('2024-03-15'),
       },
       {
-        customerId: '00000000-0000-0000-0000-000000000002',
+        customerId: janeSmithId,
         planId: 'pro',
         status: 'active',
         price: '99.99',
@@ -123,6 +127,7 @@ export async function seed() {
 
   console.log('Knowledge documents seeded');
   console.log('Seeding complete!');
+  console.log(`Jane Smith ID: ${janeSmithId}`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

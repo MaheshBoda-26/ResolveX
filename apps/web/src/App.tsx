@@ -9,6 +9,7 @@ import { HandoffPage } from '@/pages/HandoffPage';
 import { CaseDetailPage } from '@/pages/CaseDetailPage';
 import { TracePage } from '@/pages/TracePage';
 import { EvaluationsPage } from '@/pages/EvaluationsPage';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,7 +45,9 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <BrowserRouter>
-          <AppRoutes />
+          <ErrorBoundary>
+            <AppRoutes />
+          </ErrorBoundary>
         </BrowserRouter>
       </ThemeProvider>
     </QueryClientProvider>
