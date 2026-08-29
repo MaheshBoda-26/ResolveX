@@ -1,6 +1,51 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { elevenLabsClient, VoiceState, VoiceCallbacks, ElevenLabsConfig } from '@/lib/elevenlabs';
 
+// ElevenLabs WebSocket message types
+export interface ElevenLabsUserTranscriptMessage {
+  type: 'user_transcript';
+  transcript: string;
+  is_final: boolean;
+}
+
+export interface ElevenLabsAgentResponseMessage {
+  type: 'agent_response';
+  text: string;
+}
+
+export interface ElevenLabsAgentResponseEndMessage {
+  type: 'agent_response_end';
+}
+
+export interface ElevenLabsErrorMessage {
+  type: 'error';
+  text: string;
+}
+
+export interface ElevenLabsPingMessage {
+  type: 'ping';
+  event_id: number;
+}
+
+export interface ElevenLabsPongMessage {
+  type: 'pong';
+  event_id: number;
+}
+
+export interface ElevenLabsAudioMessage {
+  type: 'audio';
+  audio: ArrayBuffer;
+}
+
+export type ElevenLabsIncomingMessage =
+  | ElevenLabsUserTranscriptMessage
+  | ElevenLabsAgentResponseMessage
+  | ElevenLabsAgentResponseEndMessage
+  | ElevenLabsErrorMessage
+  | ElevenLabsPingMessage
+  | ElevenLabsPongMessage
+  | ElevenLabsAudioMessage;
+
 export interface UseVoiceOptions {
   config: ElevenLabsConfig;
   onTranscript?: (text: string, isFinal: boolean) => void;

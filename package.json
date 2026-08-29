@@ -15,9 +15,9 @@
     "build:api": "npm run build --workspace=apps/api",
     "db:push": "npm run db:push --workspace=apps/api",
     "db:seed": "npm run db:seed --workspace=apps/api",
-    "test": "npm run test --workspaces",
-    "test:unit": "npm run test:unit --workspaces",
-    "test:e2e": "npm run test:e2e --workspaces",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:e2e": "npm run test:e2e --workspaces --if-present",
     "lint": "npm run lint --workspaces",
     "eval:autonomy": "npx vitest run tests/evaluation/autonomy-gate.test.ts tests/evaluation/runner.test.ts"
   },

@@ -479,11 +479,11 @@ export function TraceTimeline({ runId, conversationId }: TraceTimelineProps) {
                       <VerificationBadge status={verification.status} />
                     </div>
                     <p className="mt-2 text-caption text-text-muted">
-                      Expected: {formatJson(verification.expectedState).slice(0, 100)}{formatJson(verification.expectedState).length > 100 ? '...' : ''}
+                      Expected: {String(formatJson(verification.expectedState)).slice(0, 100)}{String(formatJson(verification.expectedState)).length > 100 ? '...' : ''}
                     </p>
                     {verification.observedState && (
                       <p className="mt-1 text-caption text-text-muted">
-                        Observed: {formatJson(verification.observedState).slice(0, 100)}{formatJson(verification.observedState).length > 100 ? '...' : ''}
+                        Observed: {String(formatJson(verification.observedState)).slice(0, 100)}{String(formatJson(verification.observedState)).length > 100 ? '...' : ''}
                       </p>
                     )}
                     <p className="mt-2 text-caption text-text-muted">

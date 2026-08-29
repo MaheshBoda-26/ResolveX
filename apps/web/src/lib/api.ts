@@ -2,6 +2,48 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+    this.name = 'ApiError';
+  }
+}
+
+export async function fetchJson<T>(path: string, options?: RequestInit): Promise<T> {
+  const requestHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...options?.headers as Record<string, string>,
+  };
+
+  // Add auth token if available
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    requestHeaders['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: requestHeaders,
+  });
+
+  // Log API calls in development
+  if (import.meta.env.DEV) {
+    console.log(`[API] ${options?.method || 'GET'} ${path}`, {
+      status: res.status,
+      ok: res.ok,
+    });
+  }
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new ApiError(error || res.statusText, res.status);
+  }
+
+  return res.json();
+}
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant' | 'system';
@@ -103,31 +145,6 @@ export interface HandoffSort {
 
 export type { HandoffStatus as HandoffStatusExport };
 
-class ApiError extends Error {
-  status: number;
-  constructor(message: string, status: number) {
-    super(message);
-    this.status = status;
-  }
-}
-
-async function fetchJson<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-
-  if (!res.ok) {
-    const error = await res.text();
-    throw new ApiError(error || res.statusText, res.status);
-  }
-
-  return res.json();
-}
-
 export function useConversation(conversationId: string | undefined) {
   return useQuery({
     queryKey: ['conversation', conversationId],
@@ -172,6 +189,16 @@ export function useConversations() {
   });
 }
 
+function serializeFilters(filters?: HandoffFilters, sort?: HandoffSort): string {
+  const parts: string[] = [];
+  if (filters?.status) parts.push(`status=${filters.status}`);
+  if (filters?.priority) parts.push(`priority=${filters.priority}`);
+  if (filters?.search) parts.push(`search=${filters.search}`);
+  if (sort?.field) parts.push(`sortField=${sort.field}`);
+  if (sort?.direction) parts.push(`sortDirection=${sort.direction}`);
+  return parts.join('&');
+}
+
 export function useHandoffs(filters?: HandoffFilters, sort?: HandoffSort) {
   const params = new URLSearchParams();
   if (filters?.status) params.set('status', filters.status);
@@ -181,7 +208,7 @@ export function useHandoffs(filters?: HandoffFilters, sort?: HandoffSort) {
   if (sort?.direction) params.set('sortDirection', sort.direction);
 
   return useQuery({
-    queryKey: ['handoffs', filters, sort],
+    queryKey: ['handoffs', serializeFilters(filters, sort)],
     queryFn: () => fetchJson<Handoff[]>(`/api/handoffs?${params.toString()}`),
     refetchInterval: 10000,
   });
@@ -223,5 +250,3 @@ export function useCompleteHandoff() {
     },
   });
 }
-
-export { ApiError };

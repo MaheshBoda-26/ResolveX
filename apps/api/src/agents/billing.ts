@@ -121,7 +121,7 @@ async function callAutonomyGate(input: AutonomyGateInput): Promise<AutonomyGateR
   }
 }
 
-function detectDuplicateCharges(transactions: Transaction[], targetAmount?: number, targetInvoiceId?: string): Transaction[] {
+export function detectDuplicateCharges(transactions: Transaction[], targetAmount?: number, targetInvoiceId?: string): Transaction[] {
   const candidates = transactions.filter(t => t.status === 'completed');
   if (targetAmount !== undefined) {
     return candidates.filter(t => t.amount === targetAmount && t.invoiceId !== targetInvoiceId);
@@ -158,7 +158,7 @@ function detectDuplicateCharges(transactions: Transaction[], targetAmount?: numb
   return result;
 }
 
-async function checkPolicy(action: string, evidence: string[]): Promise<string[]> {
+export async function checkPolicy(action: string, evidence: string[]): Promise<string[]> {
   const refs: string[] = [];
   if (action === 'refund') {
     refs.push('POL-BILL-001', 'POL-BILL-002');

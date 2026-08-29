@@ -1,5 +1,5 @@
-import { TriageResult, Task, ChatRequest, BillingDecision, SubscriptionDecision, AgentName } from '@resolvex/shared';
-import { checkAutonomyGate, determineRiskLevel } from '../verification/autonomyGate';
+import { TriageResult, Task, ChatRequest, BillingDecision, SubscriptionDecision, AgentName, AutonomyGateInput, AutonomyGateResult, RiskLevel } from '@resolvex/shared';
+import { determineRiskLevel } from '../verification/autonomyGate';
 import { handleMutationFailure, escalateToHandoff } from '../verification/failure-handling';
 import { verifyRefund, verifyUpgrade } from '../verification/verify';
 
@@ -23,6 +23,26 @@ export interface OrchestratorResult {
   conversationId: string;
 }
 
+async function callAutonomyGate(input: AutonomyGateInput): Promise<AutonomyGateResult> {
+  const gatewayUrl = process.env['AUTONOMY_GATEWAY_URL'] || 'http://localhost:3002';
+  try {
+    const response = await fetch(`${gatewayUrl}/api/autonomy/gate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) {
+      console.error(`Autonomy gate error: ${response.status}`);
+      return { allowed: false, reason: 'Autonomy gate unavailable', requiredApprovals: [] };
+    }
+    return (await response.json()) as AutonomyGateResult;
+  } catch (error) {
+    console.error('Autonomy gate call failed:', error);
+    return { allowed: false, reason: 'Autonomy gate call failed', requiredApprovals: [] };
+  }
+}
+
 async function routeToBillingAgent(context: AgentContext, task: Task): Promise<BillingDecision> {
   const action = task.type;
   const payload = task.payload as Record<string, unknown>;
@@ -34,7 +54,7 @@ async function routeToBillingAgent(context: AgentContext, task: Task): Promise<B
 
   const permission = context.customerId ? 'customer_owns_account,active_subscription' : 'missing_customer';
 
-  const gateResult = checkAutonomyGate({
+  const gateResult = await callAutonomyGate({
     agent: 'billing',
     action,
     evidence,
@@ -98,7 +118,7 @@ async function routeToSubscriptionAgent(context: AgentContext, task: Task): Prom
 
   const permission = context.customerId ? 'customer_owns_account,active_subscription' : 'missing_customer';
 
-  const gateResult = checkAutonomyGate({
+  const gateResult = await callAutonomyGate({
     agent: 'subscription',
     action,
     evidence,

@@ -62,6 +62,7 @@ export function Sidebar({ mobileOpen = false, onCloseMobile }: SidebarProps) {
         <div
           className="fixed inset-0 z-40 bg-black/40 md:hidden"
           onClick={onCloseMobile}
+          aria-hidden="true"
         />
       )}
 
@@ -69,10 +70,12 @@ export function Sidebar({ mobileOpen = false, onCloseMobile }: SidebarProps) {
         className={`fixed left-0 top-[48px] h-[calc(100vh-48px)] w-[260px] z-40 bg-surface-bright dark:bg-inverse-surface border-r border-outline-variant/60 dark:border-outline flex flex-col transition-transform duration-200 ease-in-out ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
+        role="navigation"
+        aria-label="Main navigation"
       >
         {/* Brand Block */}
         <div className="p-4 border-b border-outline-variant/60 dark:border-outline mb-2 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container shadow-xs">
+          <div className="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container shadow-xs" aria-hidden="true">
             <span className="material-symbols-outlined">psychiatry</span>
           </div>
           <div>
@@ -86,8 +89,8 @@ export function Sidebar({ mobileOpen = false, onCloseMobile }: SidebarProps) {
         </div>
 
         {/* Navigation Items */}
-        <div className="flex-1 overflow-y-auto py-2 px-3 space-y-1 scrollbar-thin">
-          <div className="px-3 py-1.5 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">
+        <nav className="flex-1 overflow-y-auto py-2 px-3 space-y-1 scrollbar-thin" aria-label="Sidebar navigation">
+          <div className="px-3 py-1.5 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider" aria-hidden="true">
             Navigation
           </div>
 
@@ -103,6 +106,7 @@ export function Sidebar({ mobileOpen = false, onCloseMobile }: SidebarProps) {
                     ? 'bg-primary-container/20 text-primary dark:text-primary-fixed-dim border-l-4 border-primary font-semibold shadow-xs'
                     : 'text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant'
                 }`}
+                aria-current={active ? 'page' : undefined}
               >
                 <div className="flex items-center gap-3">
                   <span
@@ -110,26 +114,27 @@ export function Sidebar({ mobileOpen = false, onCloseMobile }: SidebarProps) {
                       active ? 'text-primary dark:text-primary-fixed-dim' : ''
                     }`}
                     style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}
+                    aria-hidden="true"
                   >
                     {item.icon}
                   </span>
                   <span>{item.label}</span>
                 </div>
                 {item.badge && (
-                  <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-primary-container text-on-primary-container">
+                  <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-primary-container text-on-primary-container" aria-label={`${item.badge} items`}>
                     {item.badge}
                   </span>
                 )}
               </Link>
             );
           })}
-        </div>
+        </nav>
 
         {/* Footer Engine Status */}
-        <div className="p-3 border-t border-outline-variant/60 dark:border-outline bg-surface-container-low/40 dark:bg-surface-container-highest/20">
+        <div className="p-3 border-t border-outline-variant/60 dark:border-outline bg-surface-container-low/40 dark:bg-surface-container-highest/20" aria-live="polite">
           <div className="flex items-center justify-between text-xs text-on-surface-variant mb-1">
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true"></span>
               Autonomous Engine
             </span>
             <span className="font-mono text-[10px] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 px-1.5 py-0.5 rounded">

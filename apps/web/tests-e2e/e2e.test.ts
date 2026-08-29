@@ -179,3 +179,234 @@ test.describe('API Integration E2E', () => {
     expect(result).toHaveProperty('intents');
   });
 });
+
+test.describe('Error Scenarios E2E', () => {
+  test('API error handling - 500 response', async ({ page }) => {
+    // Intercept API call and return 500
+    await page.route('/api/triage', async route => {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Internal Server Error' }),
+      });
+    });
+
+    await page.goto('/chat');
+    await page.waitForLoadState('networkidle');
+
+    const input = page.locator('input[placeholder="Type a message..."]');
+    await input.fill('Test message');
+    await page.locator('button[type="submit"]').click();
+
+    // Should show error message or handle gracefully
+    await expect(page.locator('text=Error, text=Failed, text=error, text=failed').first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('API error handling - network failure', async ({ page }) => {
+    // Intercept API call and abort
+    await page.route('/api/triage', async route => {
+      await route.abort('failed');
+    });
+
+    await page.goto('/chat');
+    await page.waitForLoadState('networkidle');
+
+    const input = page.locator('input[placeholder="Type a message..."]');
+    await input.fill('Test message');
+    await page.locator('button[type="submit"]').click();
+
+    // Should show network error message
+    await expect(page.locator('text=Error, text=Network, text=network, text=failed').first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('API error handling - 401 unauthorized', async ({ page }) => {
+    // Intercept API call and return 401
+    await page.route('/api/triage', async route => {
+      await route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Unauthorized' }),
+      });
+    });
+
+    await page.goto('/chat');
+    await page.waitForLoadState('networkidle');
+
+    const input = page.locator('input[placeholder="Type a message..."]');
+    await input.fill('Test message');
+    await page.locator('button[type="submit"]').click();
+
+    // Should show auth error or redirect to login
+    await expect(page.locator('text=Unauthorized, text=Login, text=login, text=auth').first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('API error handling - 403 forbidden', async ({ page }) => {
+    // Intercept API call and return 403
+    await page.route('/api/triage', async route => {
+      await route.fulfill({
+        status: 403,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Forbidden' }),
+      });
+    });
+
+    await page.goto('/chat');
+    await page.waitForLoadState('networkidle');
+
+    const input = page.locator('input[placeholder="Type a message..."]');
+    await input.fill('Test message');
+    await page.locator('button[type="submit"]').click();
+
+    // Should show forbidden error
+    await expect(page.locator('text=Forbidden, text=forbidden, text=Access denied').first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('Empty conversation state', async ({ page }) => {
+    await page.goto('/chat');
+    await page.waitForLoadState('networkidle');
+
+    // Should show empty state or welcome message
+    const emptyState = page.locator('text=Welcome, text=Start a conversation, text=No messages, text=empty').first();
+    await expect(emptyState).toBeVisible({ timeout: 5000 });
+  });
+
+  test('Voice connection failure handling', async ({ page }) => {
+    // Mock ElevenLabs connection failure
+    await page.route('**/elevenlabs.io/**', async route => {
+      await route.abort('failed');
+    });
+
+    await page.goto('/chat');
+    await page.waitForLoadState('networkidle');
+
+    // Click voice button
+    const voiceButton = page.locator('button[aria-label="Start voice input"]');
+    await voiceButton.click();
+
+    // Should show connection error or fallback
+    await expect(page.locator('text=Connection failed, text=Error, text=error, text=unavailable').first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('Mobile edge case - small viewport chat input', async ({ page }) => {
+    // Resize to very small mobile
+    await page.setViewportSize({ width: 320, height: 568 });
+
+    await page.goto('/chat');
+    await page.waitForLoadState('networkidle');
+
+    // Chat input should still be visible and usable
+    const input = page.locator('input[placeholder="Type a message..."]');
+    await expect(input).toBeVisible();
+
+    await input.fill('Mobile test');
+    await page.locator('button[type="submit"]').click();
+
+    // Should handle message
+    await expect(page.locator('text=Mobile test')).toBeVisible({ timeout: 5000 });
+  });
+
+  test('Mobile edge case - sidebar overlay tap closes', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+
+    await page.goto('/chat');
+    await page.waitForLoadState('networkidle');
+
+    // Open sidebar
+    const menuButton = page.locator('button[aria-label="Open sidebar"]');
+    await menuButton.click();
+    await expect(page.locator('aside')).toHaveClass(/translate-x-0/);
+
+    // Tap outside (on overlay) to close
+    await page.locator('fixed.inset-0.bg-black\\/50').tap();
+    await expect(page.locator('aside')).toHaveClass(/-translate-x-full/);
+  });
+
+  test('Long message handling', async ({ page }) => {
+    await page.goto('/chat');
+    await page.waitForLoadState('networkidle');
+
+    // Send a very long message
+    const longMessage = 'A'.repeat(1000);
+    const input = page.locator('input[placeholder="Type a message..."]');
+    await input.fill(longMessage);
+    await page.locator('button[type="submit"]').click();
+
+    // Should handle long message
+    await expect(page.locator(`text=${longMessage}`)).toBeVisible({ timeout: 5000 });
+  });
+
+  test('Rapid message sending', async ({ page }) => {
+    await page.goto('/chat');
+    await page.waitForLoadState('networkidle');
+
+    const input = page.locator('input[placeholder="Type a message..."]');
+    const sendButton = page.locator('button[type="submit"]');
+
+    // Send multiple messages quickly
+    for (let i = 0; i < 3; i++) {
+      await input.fill(`Message ${i + 1}`);
+      await sendButton.click();
+      // Don't wait for response, just verify UI doesn't break
+      await expect(page.locator(`text=Message ${i + 1}`)).toBeVisible({ timeout: 5000 });
+    }
+  });
+
+  test('Page refresh preserves chat state', async ({ page }) => {
+    await page.goto('/chat');
+    await page.waitForLoadState('networkidle');
+
+    const input = page.locator('input[placeholder="Type a message..."]');
+    await input.fill('Test before refresh');
+    await page.locator('button[type="submit"]').click();
+    await expect(page.locator('text=Test before refresh')).toBeVisible({ timeout: 5000 });
+
+    // Refresh page
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+
+    // Chat should still be functional
+    await expect(page.locator('form')).toBeVisible();
+    await input.fill('Test after refresh');
+    await page.locator('button[type="submit"]').click();
+    await expect(page.locator('text=Test after refresh')).toBeVisible({ timeout: 5000 });
+  });
+});
+
+test.describe('Accessibility E2E', () => {
+  test('Keyboard navigation works', async ({ page }) => {
+    await page.goto('/chat');
+    await page.waitForLoadState('networkidle');
+
+    // Tab through elements
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
+
+    // Input should be focusable
+    const input = page.locator('input[placeholder="Type a message..."]');
+    await expect(input).toBeFocused();
+  });
+
+  test('ARIA labels present', async ({ page }) => {
+    await page.goto('/chat');
+    await page.waitForLoadState('networkidle');
+
+    // Check for ARIA labels on interactive elements
+    const sendButton = page.locator('button[type="submit"]');
+    await expect(sendButton).toHaveAttribute('aria-label');
+
+    const voiceButton = page.locator('button[aria-label="Start voice input"]');
+    await expect(voiceButton).toHaveAttribute('aria-label');
+  });
+
+  test('Focus indicators visible', async ({ page }) => {
+    await page.goto('/chat');
+    await page.waitForLoadState('networkidle');
+
+    const input = page.locator('input[placeholder="Type a message..."]');
+    await input.focus();
+
+    // Check focus styles are applied
+    const focusStyles = await input.evaluate(el => getComputedStyle(el).outlineWidth);
+    expect(focusStyles).not.toBe('0px');
+  });
+});

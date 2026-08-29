@@ -10,6 +10,7 @@ import { handoffRoutes } from '../routes/handoff.js';
 import { agentRoutes } from '../routes/agent.js';
 import { adminRoutes } from '../routes/admin.js';
 import { db, pool } from '../db/index.js';
+import { registerAuthMiddleware } from '../lib/auth.js';
 
 const corsOrigin = process.env['CORS_ORIGIN'] || 'http://localhost:3000';
 const port = Number(process.env['PORT']) || 3001;
@@ -28,6 +29,8 @@ export async function buildServer(): Promise<FastifyInstance> {
     origin: corsOrigin,
     credentials: true,
   });
+
+  registerAuthMiddleware(server);
 
   server.get('/health', async () => ({
     status: 'ok',

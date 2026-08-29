@@ -1,4 +1,33 @@
 const EMBEDDING_DIMENSIONS = 1536;
+const EMBEDDING_CACHE_SIZE = 1000;
+
+interface CacheEntry {
+  embedding: number[];
+  tokens: number;
+  timestamp: number;
+}
+
+const embeddingCache = new Map<string, CacheEntry>();
+
+function getCachedEmbedding(text: string): EmbeddingResult | null {
+  const entry = embeddingCache.get(text);
+  if (!entry) return null;
+
+  if (embeddingCache.size > EMBEDDING_CACHE_SIZE) {
+    const oldestKey = embeddingCache.keys().next().value;
+    if (oldestKey) embeddingCache.delete(oldestKey);
+  }
+
+  return { embedding: entry.embedding, tokens: entry.tokens };
+}
+
+function setCachedEmbedding(text: string, result: EmbeddingResult): void {
+  if (embeddingCache.size >= EMBEDDING_CACHE_SIZE) {
+    const oldestKey = embeddingCache.keys().next().value;
+    if (oldestKey) embeddingCache.delete(oldestKey);
+  }
+  embeddingCache.set(text, { ...result, timestamp: Date.now() });
+}
 
 export interface EmbeddingResult {
   embedding: number[];
@@ -8,15 +37,31 @@ export interface EmbeddingResult {
 /**
  * Generate embeddings using OpenAI API or local model (Xenova/transformers.js)
  * Falls back to deterministic hash if neither is available
+ * Uses in-memory LRU cache for performance
  */
 export async function generateEmbedding(text: string): Promise<EmbeddingResult> {
+  const cached = getCachedEmbedding(text);
+  if (cached) return cached;
+
   const apiKey = process.env['OPENAI_API_KEY'] || process.env['EMBEDDING_API_KEY'];
 
+  let result: EmbeddingResult;
   if (apiKey) {
-    return generateOpenAIEmbedding(text, apiKey);
+    result = await generateOpenAIEmbedding(text, apiKey);
+  } else {
+    result = await generateLocalEmbedding(text);
   }
 
-  return generateLocalEmbedding(text);
+  setCachedEmbedding(text, result);
+  return result;
+}
+
+export function clearEmbeddingCache(): void {
+  embeddingCache.clear();
+}
+
+export function getEmbeddingCacheStats(): { size: number; maxSize: number } {
+  return { size: embeddingCache.size, maxSize: EMBEDDING_CACHE_SIZE };
 }
 
 async function generateOpenAIEmbedding(text: string, apiKey: string): Promise<EmbeddingResult> {

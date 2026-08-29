@@ -72,8 +72,8 @@ export async function handleMutationFailure(
 
   const errorMessage = error.message.toLowerCase();
 
-  const isTimeout = errorMessage.includes('timeout') || errorMessage.includes('ETIMEDOUT');
-  const isNetworkError = errorMessage.includes('network') || errorMessage.includes('fetch') || errorMessage.includes('ECONNREFUSED');
+  const isTimeout = errorMessage.includes('timeout') || errorMessage.includes('etimedout');
+  const isNetworkError = errorMessage.includes('network') || errorMessage.includes('fetch') || errorMessage.includes('econnrefused');
   const isRateLimited = errorMessage.includes('429') || errorMessage.includes('rate limit');
   const isServerError = errorMessage.includes('500') || errorMessage.includes('502') || errorMessage.includes('503') || errorMessage.includes('504');
   const isUnknownOutcome = errorMessage.includes('unknown') || errorMessage.includes('no response') || errorMessage.includes('empty');

@@ -81,6 +81,26 @@ const DEFAULT_STEPS: TimelineStep[] = [
   },
 ];
 
+function handleKeyDown(
+  event: React.KeyboardEvent,
+  step: TimelineStep,
+  steps: TimelineStep[],
+  idx: number,
+  setSelectedStep: React.Dispatch<React.SetStateAction<TimelineStep | null>>,
+  selectedStep: TimelineStep | null
+) {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    setSelectedStep(selectedStep?.id === step.id ? null : step);
+  } else if (event.key === 'ArrowDown' && idx < steps.length - 1) {
+    event.preventDefault();
+    // Focus next step - handled by browser focus
+  } else if (event.key === 'ArrowUp' && idx > 0) {
+    event.preventDefault();
+    // Focus previous step - handled by browser focus
+  }
+}
+
 export function ResolutionTimeline({
   steps = DEFAULT_STEPS,
   caseId = 'RX-10482',
@@ -98,6 +118,16 @@ export function ResolutionTimeline({
       case 'Verify': return 'verified';
       case 'Resolve': return 'check_circle';
       default: return 'radio_button_checked';
+    }
+  };
+
+  const getStatusLabel = (status: TimelineStep['status']) => {
+    switch (status) {
+      case 'done': return 'Completed';
+      case 'active': return 'In Progress';
+      case 'pending': return 'Pending';
+      case 'error': return 'Error';
+      default: return '';
     }
   };
 
@@ -119,27 +149,35 @@ export function ResolutionTimeline({
       </div>
 
       {/* Timeline Steps */}
-      <div className="space-y-4 relative">
+      <div className="space-y-4 relative" role="list" aria-label="Resolution timeline steps">
         {steps.map((step, idx) => {
           const isLast = idx === steps.length - 1;
           const isDone = step.status === 'done';
           const isActive = step.status === 'active';
+          const isSelected = selectedStep?.id === step.id;
 
           return (
-            <div key={step.id} className="flex items-start gap-3 group relative">
+            <div key={step.id} className="flex items-start gap-3 group relative" role="listitem">
               {/* Connector line */}
               {!isLast && (
                 <div
                   className={`absolute left-[15px] top-[30px] w-[2px] h-[calc(100%+8px)] ${
                     isDone ? 'timeline-line-done' : 'timeline-line-pending'
                   }`}
+                  aria-hidden="true"
                 />
               )}
 
-              {/* Node Icon */}
+              {/* Node Icon - Keyboard accessible */}
               <div
-                onClick={() => setSelectedStep(selectedStep?.id === step.id ? null : step)}
-                className={`relative z-10 w-[32px] h-[32px] rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 ${
+                tabIndex={0}
+                role="button"
+                aria-label={`${step.name} step, ${getStatusLabel(step.status)}. Press Enter to view details.`}
+                aria-expanded={isSelected}
+                aria-controls={isSelected ? `${step.id}-details` : undefined}
+                onClick={() => setSelectedStep(isSelected ? null : step)}
+                onKeyDown={(e) => handleKeyDown(e, step, steps, idx, setSelectedStep, selectedStep)}
+                className={`relative z-10 w-[32px] h-[32px] rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                   isDone
                     ? 'bg-primary-container text-on-primary-container shadow-xs'
                     : isActive
@@ -148,19 +186,25 @@ export function ResolutionTimeline({
                 }`}
                 title={`Click to view ${step.name} details`}
               >
-                <span className="material-symbols-outlined text-[18px]">
+                <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
                   {getStepIcon(step.name)}
                 </span>
               </div>
 
               {/* Step Info */}
               <div
-                className={`flex-1 min-w-0 p-2.5 rounded-lg transition-colors cursor-pointer ${
-                  selectedStep?.id === step.id
+                tabIndex={0}
+                role="button"
+                aria-label={`${step.name}: ${step.title}. ${step.description}. Press Enter to expand details.`}
+                aria-expanded={isSelected}
+                aria-controls={isSelected ? `${step.id}-details` : undefined}
+                onClick={() => setSelectedStep(isSelected ? null : step)}
+                onKeyDown={(e) => handleKeyDown(e, step, steps, idx, setSelectedStep, selectedStep)}
+                className={`flex-1 min-w-0 p-2.5 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                  isSelected
                     ? 'bg-surface-container'
                     : 'hover:bg-surface-container-low/60'
                 }`}
-                onClick={() => setSelectedStep(selectedStep?.id === step.id ? null : step)}
               >
                 <div className="flex items-center justify-between flex-wrap gap-1">
                   <div className="flex items-center gap-2">
@@ -169,6 +213,13 @@ export function ResolutionTimeline({
                     </span>
                     <span className="text-xs font-semibold text-on-surface">
                       {step.title}
+                    </span>
+                    <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded-full ${
+                      isDone ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
+                      isActive ? 'bg-primary-container text-on-primary-container' :
+                      'bg-surface-container-high text-on-surface-variant'
+                    }`}>
+                      {getStatusLabel(step.status)}
                     </span>
                   </div>
                   {step.timestamp && (
@@ -185,8 +236,13 @@ export function ResolutionTimeline({
                 )}
 
                 {/* Expanded Details */}
-                {selectedStep?.id === step.id && step.details && (
-                  <div className="mt-2.5 p-2.5 bg-inverse-surface text-inverse-on-surface rounded-md text-[11px] font-mono border border-outline/30">
+                {isSelected && step.details && (
+                  <div
+                    id={`${step.id}-details`}
+                    className="mt-2.5 p-2.5 bg-inverse-surface text-inverse-on-surface rounded-md text-[11px] font-mono border border-outline/30"
+                    role="region"
+                    aria-label={`${step.name} execution details`}
+                  >
                     <div className="text-primary-fixed-dim font-bold mb-1 uppercase tracking-wide">
                       {step.name} Execution State
                     </div>

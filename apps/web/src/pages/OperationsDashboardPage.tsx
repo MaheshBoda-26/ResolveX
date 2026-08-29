@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useHandoffs, Handoff, HandoffStatus } from '@/lib/api';
 
 interface CaseItem {
   id: string;
@@ -12,64 +13,51 @@ interface CaseItem {
   category: string;
 }
 
-const CASES_DATA: CaseItem[] = [
-  {
-    id: 'RX-10482',
-    customer: 'Sarah Jenkins (Gold Tier)',
-    issue: 'Duplicate Charge $120.00 on Order #84920',
-    status: 'Handoff Required',
-    priority: 'High',
-    confidence: 64,
-    time: '4 mins ago',
-    category: 'Billing',
-  },
-  {
-    id: 'RX-10481',
-    customer: 'Acme Corp Admin',
-    issue: 'Enterprise Plan Seat License Upgrade',
-    status: 'Autonomous Resolved',
-    priority: 'Medium',
-    confidence: 98,
-    time: '12 mins ago',
-    category: 'Subscription',
-  },
-  {
-    id: 'RX-10480',
-    customer: 'David Chen',
-    issue: 'Missing Express Delivery Package Refund',
-    status: 'Policy Verified',
-    priority: 'High',
-    confidence: 94,
-    time: '25 mins ago',
-    category: 'Shipping',
-  },
-  {
-    id: 'RX-10479',
-    customer: 'Elena Rostova',
-    issue: 'SSO SAML Authentication Lockout',
-    status: 'Autonomous Resolved',
-    priority: 'Low',
-    confidence: 99,
-    time: '41 mins ago',
-    category: 'Account',
-  },
-  {
-    id: 'RX-10478',
-    customer: 'Marcus Vance',
-    issue: 'API Rate Limit Exceeded - Tier 3 Request',
-    status: 'Handoff Required',
-    priority: 'High',
-    confidence: 58,
-    time: '1 hour ago',
-    category: 'API Support',
-  },
-];
+function mapHandoffToCaseItem(handoff: Handoff): CaseItem {
+  const statusMap: Record<HandoffStatus, CaseItem['status']> = {
+    pending: 'Handoff Required',
+    accepted: 'Investigating',
+    completed: 'Autonomous Resolved',
+  };
+
+  const priorityMap: Record<Handoff['priority'], CaseItem['priority']> = {
+    critical: 'High',
+    high: 'High',
+    medium: 'Medium',
+    low: 'Low',
+  };
+
+  const confidence = Math.min(100, Math.max(0, Math.round(
+    handoff.evidence.filter(e => e.verified).length / Math.max(1, handoff.evidence.length) * 100
+  )));
+
+  const timeAgo = new Date(handoff.createdAt);
+  const now = new Date();
+  const diffMs = now.getTime() - timeAgo.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const time = diffMins < 60 ? `${diffMins} mins ago` : `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+
+  return {
+    id: handoff.id,
+    customer: `${handoff.customer.name} (${handoff.customer.plan})`,
+    issue: handoff.issueSummary,
+    status: statusMap[handoff.status],
+    priority: priorityMap[handoff.priority],
+    confidence,
+    time,
+    category: handoff.policyExcerpts[0]?.policyId || 'General',
+  };
+}
 
 export function OperationsDashboardPage() {
   const [filter, setFilter] = useState<'All' | 'Handoff' | 'Resolved'>('All');
   const [timeRange, setTimeRange] = useState('Last 24 Hours');
 
-  const filteredCases = CASES_DATA.filter((c) => {
+  const { data: handoffs } = useHandoffs();
+
+  const cases = handoffs?.map(mapHandoffToCaseItem) || [];
+  const filteredCases = cases.filter((c) => {
     if (filter === 'Handoff') return c.status === 'Handoff Required';
     if (filter === 'Resolved') return c.status === 'Autonomous Resolved' || c.status === 'Policy Verified';
     return true;

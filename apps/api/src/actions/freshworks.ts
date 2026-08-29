@@ -12,6 +12,7 @@ import {
 } from '@resolvex/shared';
 import z from 'zod';
 import { searchPolicies } from '../knowledge';
+import { Pool, setGlobalDispatcher } from 'undici';
 
 const FRESHWORKS_DOMAIN = process.env['FRESHWORKS_DOMAIN'];
 const FRESHWORKS_API_KEY = process.env['FRESHWORKS_API_KEY'];
@@ -21,6 +22,13 @@ if (!FRESHWORKS_DOMAIN || !FRESHWORKS_API_KEY) {
 }
 
 const FRESHWORKS_BASE_URL = `https://${FRESHWORKS_DOMAIN}`;
+
+const freshworksPool = new Pool(FRESHWORKS_BASE_URL, {
+  connections: 10,
+  pipelining: 5,
+});
+
+setGlobalDispatcher(freshworksPool);
 
 const GetCustomerInputSchema = z.object({
   customerId: z.uuid(),
@@ -141,16 +149,20 @@ async function freshworksFetch<T>(
   }
 
   const url = `${FRESHWORKS_BASE_URL}${path}`;
-  const headers = {
+  const baseHeaders: Record<string, string> = {
     'Authorization': `Bearer ${FRESHWORKS_API_KEY}`,
     'Content-Type': 'application/json',
-    ...options.headers,
+  };
+
+  const mergedHeaders: Record<string, string> = {
+    ...baseHeaders,
+    ...(options.headers as Record<string, string> || {}),
   };
 
   try {
     const response = await fetch(url, {
       ...options,
-      headers,
+      headers: mergedHeaders,
       signal: AbortSignal.timeout(15000),
     });
 

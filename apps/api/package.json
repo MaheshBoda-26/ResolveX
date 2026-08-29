@@ -15,20 +15,24 @@
     "db:studio": "drizzle-kit studio",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:unit": "vitest run ../../tests/unit ../../tests/integration",
     "test:watch": "vitest",
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.0",
+    "@fastify/rate-limit": "^11.2.0",
     "@fastify/websocket": "^11.0.0",
     "@resolvex/shared": "file:../../packages/shared",
     "@xenova/transformers": "^2.17.2",
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.33.0",
     "fastify": "^5.0.0",
+    "jose": "^6.2.10",
     "pg": "^8.12.0",
     "pino": "^9.0.0",
     "pino-pretty": "^11.0.0",
+    "undici": "^8.10.0",
     "zod": "^4.0.0"
   },
   "devDependencies": {

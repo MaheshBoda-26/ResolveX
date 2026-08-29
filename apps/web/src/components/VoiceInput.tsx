@@ -30,6 +30,7 @@ export function VoiceInput({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
   const audioLevelHistory = useRef<number[]>([]);
+  const liveRegionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (state === 'listening' || state === 'processing' || state === 'speaking') {
@@ -42,6 +43,12 @@ export function VoiceInput({
       }
     }
   }, [state, audioLevel]);
+
+  useEffect(() => {
+    if (liveRegionRef.current) {
+      liveRegionRef.current.textContent = getStateLabel();
+    }
+  }, [state]);
 
   const animateVisualizer = () => {
     const canvas = canvasRef.current;
@@ -82,17 +89,17 @@ export function VoiceInput({
   const getStateLabel = () => {
     switch (state) {
       case 'idle':
-        return 'Click to start';
+        return 'Click to start voice input';
       case 'connecting':
-        return 'Connecting...';
+        return 'Connecting to voice service...';
       case 'listening':
-        return 'Listening...';
+        return 'Listening... speak now';
       case 'processing':
-        return 'Processing...';
+        return 'Processing your speech...';
       case 'speaking':
-        return 'Speaking...';
+        return 'Agent is responding...';
       case 'error':
-        return 'Error - click to retry';
+        return 'Voice input error - click to retry';
       default:
         return '';
     }
@@ -123,6 +130,14 @@ export function VoiceInput({
 
   return (
     <div className={cn('relative flex flex-col items-center gap-3', className)}>
+      {/* Live region for screen readers */}
+      <div
+        ref={liveRegionRef}
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      />
+
       <div className="relative">
         <Button
           onClick={handleClick}
@@ -148,7 +163,7 @@ export function VoiceInput({
         </Button>
 
         {showVisualizer && (
-          <div className="absolute inset-0 rounded-full border-2 border-brand-primary/30 animate-pulse pointer-events-none" />
+          <div className="absolute inset-0 rounded-full border-2 border-brand-primary/30 animate-pulse pointer-events-none" aria-hidden="true" />
         )}
       </div>
 
@@ -165,8 +180,8 @@ export function VoiceInput({
       </p>
 
       {state === 'listening' && (
-        <div className="flex items-center gap-1 text-caption text-brand-primary">
-          <span className="relative flex h-2 w-2">
+        <div className="flex items-center gap-1 text-caption text-brand-primary" aria-live="polite">
+          <span className="relative flex h-2 w-2" aria-hidden="true">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-primary opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-primary" />
           </span>

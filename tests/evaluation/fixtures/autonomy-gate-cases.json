@@ -1,0 +1,302 @@
+{
+  "LOW_RISK": [
+    {
+      "name": "Low risk + evidence + policy + permission -> allowed",
+      "input": {
+        "agent": "triage",
+        "action": "investigate",
+        "evidence": ["customer_complaint", "transaction_logs"],
+        "policyReferences": ["billing_policy_v1"],
+        "permission": "customer_owns_account",
+        "risk": "low"
+      },
+      "expected": {
+        "allowed": true,
+        "reason": "Low risk action with evidence, policy, and permission",
+        "requiredApprovals": []
+      }
+    },
+    {
+      "name": "Low risk + missing evidence -> escalate",
+      "input": {
+        "agent": "triage",
+        "action": "investigate",
+        "evidence": [],
+        "policyReferences": ["billing_policy_v1"],
+        "permission": "customer_owns_account",
+        "risk": "low"
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "Missing evidence for action",
+        "requiredApprovals": ["evidence_required"]
+      }
+    },
+    {
+      "name": "Low risk + missing policy -> escalate",
+      "input": {
+        "agent": "triage",
+        "action": "investigate",
+        "evidence": ["customer_complaint"],
+        "policyReferences": [],
+        "permission": "customer_owns_account",
+        "risk": "low"
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "Missing policy references for action",
+        "requiredApprovals": ["policy_required"]
+      }
+    },
+    {
+      "name": "Low risk + missing permission -> escalate",
+      "input": {
+        "agent": "triage",
+        "action": "investigate",
+        "evidence": ["customer_complaint"],
+        "policyReferences": ["billing_policy_v1"],
+        "permission": "",
+        "risk": "low"
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "Missing permission check",
+        "requiredApprovals": ["permission_required"]
+      }
+    },
+    {
+      "name": "Low risk + evidence + policy + permission (refund <=$50) -> allowed",
+      "input": {
+        "agent": "billing",
+        "action": "refund",
+        "evidence": ["duplicate_charge_evidence", "invoice_INV-001", "invoice_INV-002"],
+        "policyReferences": ["refund_policy_auto_50"],
+        "permission": "customer_owns_account",
+        "risk": "low"
+      },
+      "expected": {
+        "allowed": true,
+        "reason": "Low risk action with evidence, policy, and permission",
+        "requiredApprovals": []
+      }
+    }
+  ],
+  "MEDIUM_RISK": [
+    {
+      "name": "Medium risk + evidence + policy + permission (upgrade same tier) -> allowed",
+      "input": {
+        "agent": "subscription",
+        "action": "upgrade",
+        "evidence": ["current_plan_basic", "requested_plan_pro"],
+        "policyReferences": ["subscription_change_same_tier"],
+        "permission": "active_subscription",
+        "risk": "medium"
+      },
+      "expected": {
+        "allowed": true,
+        "reason": "Medium risk subscription upgrade allowed within same tier",
+        "requiredApprovals": []
+      }
+    },
+    {
+      "name": "Medium risk + high amount refund ($50-$500) -> requiresApproval",
+      "input": {
+        "agent": "billing",
+        "action": "refund",
+        "evidence": ["partial_service_outage", "customer_complaint"],
+        "policyReferences": ["refund_policy_review_500"],
+        "permission": "customer_owns_account",
+        "risk": "medium"
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "Medium risk refund requires approval (amount exceeds auto threshold)",
+        "requiredApprovals": ["medium_risk_approval"]
+      }
+    },
+    {
+      "name": "Medium risk + downgrade -> requiresApproval",
+      "input": {
+        "agent": "subscription",
+        "action": "downgrade",
+        "evidence": ["customer_request", "current_plan_premium"],
+        "policyReferences": ["subscription_change_cross_tier"],
+        "permission": "active_subscription",
+        "risk": "medium"
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "Medium risk subscription downgrade/cancel requires approval",
+        "requiredApprovals": ["medium_risk_approval"]
+      }
+    }
+  ],
+  "HIGH_RISK": [
+    {
+      "name": "High risk (refund >$500) -> requiresApproval",
+      "input": {
+        "agent": "billing",
+        "action": "refund",
+        "evidence": ["major_service_failure", "customer_escalation"],
+        "policyReferences": ["refund_policy_high_value"],
+        "permission": "customer_owns_account",
+        "risk": "high"
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "High risk action requires human approval",
+        "requiredApprovals": ["human_approval"]
+      }
+    },
+    {
+      "name": "High risk (account deletion) -> requiresApproval",
+      "input": {
+        "agent": "subscription",
+        "action": "delete_account",
+        "evidence": ["customer_request", "gdpr_compliance"],
+        "policyReferences": ["account_deletion_policy"],
+        "permission": "customer_owns_account",
+        "risk": "high"
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "High risk action requires human approval",
+        "requiredApprovals": ["human_approval"]
+      }
+    },
+    {
+      "name": "High risk (policy exception) -> requiresApproval",
+      "input": {
+        "agent": "billing",
+        "action": "policy_exception_refund",
+        "evidence": ["unique_circumstance", "manager_approval_requested"],
+        "policyReferences": ["exception_policy"],
+        "permission": "customer_owns_account",
+        "risk": "high"
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "High risk action requires human approval",
+        "requiredApprovals": ["human_approval"]
+      }
+    },
+    {
+      "name": "High risk (cancel subscription) -> requiresApproval",
+      "input": {
+        "agent": "subscription",
+        "action": "cancel",
+        "evidence": ["customer_request", "churn_risk_high"],
+        "policyReferences": ["cancellation_policy"],
+        "permission": "active_subscription",
+        "risk": "high"
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "High risk action requires human approval",
+        "requiredApprovals": ["human_approval"]
+      }
+    }
+  ],
+  "PERMISSION_FAILURE": [
+    {
+      "name": "Missing permission (not account owner) -> escalate",
+      "input": {
+        "agent": "billing",
+        "action": "refund",
+        "evidence": ["duplicate_charge"],
+        "policyReferences": ["refund_policy"],
+        "permission": "third_party_request",
+        "risk": "low"
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "Permission denied: third_party_request",
+        "requiredApprovals": ["permission_check_failed"]
+      }
+    },
+    {
+      "name": "Conflicting account state -> escalate",
+      "input": {
+        "agent": "billing",
+        "action": "refund",
+        "evidence": ["account_suspended", "recent_charge"],
+        "policyReferences": ["refund_policy"],
+        "permission": "conflicting_state_detected",
+        "risk": "medium"
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "Permission denied: conflicting_state_detected",
+        "requiredApprovals": ["permission_check_failed"]
+      }
+    }
+  ],
+  "TOOL_FAILURE": [
+    {
+      "name": "Tool failure on mutation -> verify before retry",
+      "input": {
+        "agent": "billing",
+        "action": "refund",
+        "evidence": ["tool_failure_on_refund_attempt", "retry_requested"],
+        "policyReferences": ["refund_policy", "mutation_verification_policy"],
+        "permission": "customer_owns_account",
+        "risk": "high"
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "High risk action requires human approval",
+        "requiredApprovals": ["human_approval"]
+      }
+    },
+    {
+      "name": "Unknown mutation outcome -> verify before retry",
+      "input": {
+        "agent": "subscription",
+        "action": "upgrade",
+        "evidence": ["api_timeout_on_upgrade", "state_unknown"],
+        "policyReferences": ["subscription_policy", "mutation_verification_policy"],
+        "permission": "active_subscription",
+        "risk": "high"
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "High risk action requires human approval",
+        "requiredApprovals": ["human_approval"]
+      }
+    }
+  ],
+  "SUBSCRIPTION": [
+    {
+      "name": "Subscription downgrade/cancel -> requiresApproval",
+      "input": {
+        "agent": "subscription",
+        "action": "downgrade",
+        "evidence": ["customer_request_downgrade", "current_plan_enterprise"],
+        "policyReferences": ["downgrade_policy_enterprise"],
+        "permission": "active_subscription",
+        "risk": "high"
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "High risk action requires human approval",
+        "requiredApprovals": ["human_approval"]
+      }
+    },
+    {
+      "name": "Subscription cancel -> requiresApproval",
+      "input": {
+        "agent": "subscription",
+        "action": "cancel",
+        "evidence": ["customer_request_cancel", "no_outstanding_balance"],
+        "policyReferences": ["cancellation_policy"],
+        "permission": "active_subscription",
+        "risk": "high"
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "High risk action requires human approval",
+        "requiredApprovals": ["human_approval"]
+      }
+    }
+  ]
+}

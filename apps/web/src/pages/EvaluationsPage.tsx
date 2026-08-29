@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchJson, ApiError } from '@/lib/api';
 
 interface EvalSuite {
   id: string;
@@ -11,70 +13,73 @@ interface EvalSuite {
   status: 'PASSED' | 'WARNING' | 'RUNNING';
 }
 
-const EVAL_SUITES: EvalSuite[] = [
-  {
-    id: 'SUITE-101',
-    name: 'POL-PAY-204 Duplicate Charge Resolution',
-    category: 'Billing & Payments',
-    totalCases: 50,
-    passedCases: 50,
-    passRate: 100,
-    lastRun: '2 hours ago',
-    status: 'PASSED',
-  },
-  {
-    id: 'SUITE-102',
-    name: 'POL-AUTH-102 Customer Identity & Card Matching',
-    category: 'Authentication',
-    totalCases: 30,
-    passedCases: 29,
-    passRate: 96.6,
-    lastRun: '5 hours ago',
-    status: 'WARNING',
-  },
-  {
-    id: 'SUITE-103',
-    name: 'POL-SEC-109 Enterprise Tier Elevation Safety',
-    category: 'Security & Access',
-    totalCases: 25,
-    passedCases: 25,
-    passRate: 100,
-    lastRun: '1 day ago',
-    status: 'PASSED',
-  },
-  {
-    id: 'SUITE-104',
-    name: 'POL-SUB-301 Seat License Upgrade Quota',
-    category: 'Subscription',
-    totalCases: 40,
-    passedCases: 39,
-    passRate: 97.5,
-    lastRun: '2 days ago',
-    status: 'PASSED',
-  },
-];
+interface EvaluationRun {
+  id: string;
+  suiteId: string;
+  status: 'running' | 'completed' | 'failed';
+  startedAt: string;
+  completedAt?: string;
+  results: EvalSuite;
+}
+
+async function fetchEvaluations(): Promise<EvalSuite[]> {
+  return fetchJson<EvalSuite[]>('/api/evaluations');
+}
+
+async function runEvaluation(suiteId: string): Promise<EvaluationRun> {
+  return fetchJson<EvaluationRun>(`/api/evaluations/${suiteId}/run`, {
+    method: 'POST',
+  });
+}
 
 export function EvaluationsPage() {
+  const queryClient = useQueryClient();
   const [isRunning, setIsRunning] = useState(false);
   const [lastEvalTime, setLastEvalTime] = useState('2 hours ago');
-  const [evalSuites, setEvalSuites] = useState(EVAL_SUITES);
 
-  const handleRunEvaluation = () => {
-    setIsRunning(true);
-    setTimeout(() => {
+  const { data: evalSuites, isLoading, error } = useQuery({
+    queryKey: ['evaluations'],
+    queryFn: fetchEvaluations,
+  });
+
+  const runMutation = useMutation({
+    mutationFn: runEvaluation,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['evaluations'] });
       setIsRunning(false);
       setLastEvalTime('Just now');
-      setEvalSuites((prev) =>
-        prev.map((s) => ({
-          ...s,
-          lastRun: 'Just now',
-          status: 'PASSED',
-          passedCases: s.totalCases,
-          passRate: 100,
-        }))
-      );
-    }, 2000);
+    },
+    onError: () => {
+      setIsRunning(false);
+    },
+  });
+
+  const handleRunEvaluation = async () => {
+    setIsRunning(true);
+    if (evalSuites?.[0]?.id) {
+      await runMutation.mutateAsync(evalSuites[0].id);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="p-4 md:p-6 bg-background flex flex-col gap-6 max-w-7xl mx-auto w-full">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 md:p-6 bg-background flex flex-col gap-6 max-w-7xl mx-auto w-full">
+        <div className="text-center py-12 text-rose-600">
+          Failed to load evaluations: {(error as ApiError).message}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6 bg-background flex flex-col gap-6 max-w-7xl mx-auto w-full">
@@ -91,13 +96,13 @@ export function EvaluationsPage() {
 
         <button
           onClick={handleRunEvaluation}
-          disabled={isRunning}
+          disabled={isRunning || runMutation.isPending}
           className="px-4 py-2 bg-primary-container text-on-primary-container font-bold rounded-lg text-xs hover:opacity-90 transition-opacity flex items-center gap-2 shadow-xs disabled:opacity-60"
         >
-          <span className={`material-symbols-outlined text-[18px] ${isRunning ? 'animate-spin' : ''}`}>
-            {isRunning ? 'sync' : 'play_arrow'}
+          <span className={`material-symbols-outlined text-[18px] ${(isRunning || runMutation.isPending) ? 'animate-spin' : ''}`}>
+            {(isRunning || runMutation.isPending) ? 'sync' : 'play_arrow'}
           </span>
-          <span>{isRunning ? 'Running Eval Benchmark...' : 'Run New Evaluation'}</span>
+          <span>{(isRunning || runMutation.isPending) ? 'Running Eval Benchmark...' : 'Run New Evaluation'}</span>
         </button>
       </div>
 
@@ -181,7 +186,7 @@ export function EvaluationsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/30">
-              {evalSuites.map((suite) => (
+              {evalSuites?.map((suite) => (
                 <tr key={suite.id} className="hover:bg-surface-container-low/40 transition-colors">
                   <td className="py-3 px-4 font-mono font-bold text-primary">{suite.id}</td>
                   <td className="py-3 px-4 font-bold text-on-surface">{suite.name}</td>

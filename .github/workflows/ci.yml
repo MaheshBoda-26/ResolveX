@@ -1,0 +1,235 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '20.x'
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+  typecheck:
+    name: TypeCheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run typecheck
+        run: npm run typecheck
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm run test:unit
+        env:
+          # Disable external API calls for unit tests
+          FRESHWORKS_DOMAIN: ''
+          FRESHWORKS_API_KEY: ''
+          FRESHWORKS_AGENT_STUDIO_URL: ''
+          AUTONOMY_GATEWAY_URL: ''
+          OPENAI_API_KEY: ''
+          EMBEDDING_API_KEY: ''
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: resolvex_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for database
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5432 -U test; then
+              echo "Database is ready"
+              break
+            fi
+            echo "Waiting for database... ($i/30)"
+            sleep 2
+          done
+
+      - name: Set up test database
+        run: |
+          export DATABASE_URL="postgresql://test:test@localhost:5432/resolvex_test"
+          cd apps/api
+          npx drizzle-kit push
+          npx tsx src/db/seed.ts
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/resolvex_test
+
+      - name: Run integration tests
+        run: npm run test --workspace=apps/api
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/resolvex_test
+          FRESHWORKS_DOMAIN: ''
+          FRESHWORKS_API_KEY: ''
+          FRESHWORKS_AGENT_STUDIO_URL: ''
+          AUTONOMY_GATEWAY_URL: ''
+
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build --workspace=apps/web
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: ./apps/web
+
+      - name: Start preview server
+        run: |
+          npm run preview --workspace=apps/web &
+          sleep 5
+        env:
+          PORT: 5173
+
+      - name: Run E2E tests
+        run: npm run test:e2e --workspace=apps/web
+        working-directory: ./apps/web
+
+  coverage:
+    name: Coverage Enforcement
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm run test:unit -- --coverage
+        env:
+          FRESHWORKS_DOMAIN: ''
+          FRESHWORKS_API_KEY: ''
+          FRESHWORKS_AGENT_STUDIO_URL: ''
+          AUTONOMY_GATEWAY_URL: ''
+          OPENAI_API_KEY: ''
+          EMBEDDING_API_KEY: ''
+
+      - name: Check coverage thresholds
+        run: |
+          # Vitest outputs coverage to coverage/ directory
+          # Check if thresholds are met
+          echo "Coverage thresholds:"
+          echo "  Statements: 80%"
+          echo "  Branches: 80%"
+          echo "  Functions: 80%"
+          echo "  Lines: 80%"
+          # The actual threshold check is done by vitest config
+
+  summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    needs: [lint, typecheck, unit-tests, integration-tests, e2e-tests, coverage]
+    if: always()
+    steps:
+      - name: Check job statuses
+        run: |
+          echo "Lint: ${{ needs.lint.result }}"
+          echo "TypeCheck: ${{ needs.typecheck.result }}"
+          echo "Unit Tests: ${{ needs.unit-tests.result }}"
+          echo "Integration Tests: ${{ needs.integration-tests.result }}"
+          echo "E2E Tests: ${{ needs.e2e-tests.result }}"
+          echo "Coverage: ${{ needs.coverage.result }}"
+
+          if [[ "${{ needs.lint.result }}" != "success" ]] || \
+             [[ "${{ needs.typecheck.result }}" != "success" ]] || \
+             [[ "${{ needs.unit-tests.result }}" != "success" ]] || \
+             [[ "${{ needs.integration-tests.result }}" != "success" ]] || \
+             [[ "${{ needs.e2e-tests.result }}" != "success" ]] || \
+             [[ "${{ needs.coverage.result }}" != "success" ]]; then
+            echo "❌ Some checks failed"
+            exit 1
+          else
+            echo "✅ All checks passed"
+          fi

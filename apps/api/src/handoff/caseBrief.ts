@@ -1,6 +1,6 @@
 import { db } from '../db/client';
-import { handoffs, conversations, agentRuns, toolCalls, verifications } from '../db/schema';
-import { eq, and } from 'drizzle-orm';
+import { handoffs, conversations, agentRuns, toolCalls, verifications, customers } from '../db/schema';
+import { eq, and, inArray } from 'drizzle-orm';
 import type { TriageResult, BillingDecision, SubscriptionDecision, Verification } from '@resolvex/shared';
 import { HandoffReason, HANDOFF_REASONS } from '@resolvex/shared';
 
@@ -83,18 +83,18 @@ async function getCustomerFromConversation(conversationId: string): Promise<{
 
   const customer = await db
     .select()
-    .from(conversations)
-    .where(eq(conversations.customerId, conversation[0].customerId as any))
+    .from(customers)
+    .where(eq(customers.id, conversation[0].customerId as any))
     .limit(1);
 
   if (!customer[0]) return null;
 
   return {
-    id: conversation[0].customerId,
-    name: 'Customer',
-    email: 'unknown@example.com',
-    planId: 'unknown',
-    status: 'active',
+    id: customer[0].id,
+    name: customer[0].name,
+    email: customer[0].email,
+    planId: customer[0].planId,
+    status: customer[0].status,
   };
 }
 
@@ -130,7 +130,7 @@ async function getToolCallsForConversation(conversationId: string): Promise<Arra
   const calls = await db
     .select()
     .from(toolCalls)
-    .where(and(eq(toolCalls.agentRunId, runIds[0] as any)));
+    .where(inArray(toolCalls.agentRunId, runIds as any));
 
   return calls.map(c => ({
     toolName: c.toolName,

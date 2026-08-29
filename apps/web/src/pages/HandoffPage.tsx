@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ResolutionTimeline } from '@/components/ResolutionTimeline';
+import { useHandoffs, useHandoff, useAcceptHandoff, useCompleteHandoff, Handoff } from '@/lib/api';
 
 interface HandoffItem {
   id: string;
@@ -18,53 +19,47 @@ interface HandoffItem {
   status: 'Pending Review' | 'In Progress' | 'Resolved';
 }
 
-const HANDOFF_ITEMS: HandoffItem[] = [
-  {
-    id: 'RX-10482',
-    customerName: 'Sarah Jenkins',
-    customerTier: 'Gold Tier',
-    issue: 'Duplicate Charge $120.00 on Order #84920',
-    category: 'Billing & Refunds',
-    confidence: 64,
-    priority: 'High',
-    reason: 'Low AI Confidence Threshold (64% < 75%) & Policy POL-PAY-204 manual override threshold.',
-    policy: 'POL-PAY-204 (Auto Refund Limit $250.00)',
-    recommendedAction: 'Approve full refund of $120.00 to Visa ending in #4092.',
-    amount: '$120.00',
-    time: '5m ago',
-    status: 'Pending Review',
-  },
-  {
-    id: 'RX-10478',
-    customerName: 'Marcus Vance',
-    customerTier: 'Enterprise Admin',
-    issue: 'API Rate Limit Limit Expansion - Tier 3 Request',
-    category: 'API & Infrastructure',
-    confidence: 58,
-    priority: 'Urgent',
-    reason: 'Enterprise SLA requirement & Security permission validation failure.',
-    policy: 'POL-SEC-109 (Tier 3 Elevation Required)',
-    recommendedAction: 'Verify enterprise contract quota and grant temporary 5,000 req/min quota.',
-    amount: 'N/A',
-    time: '18m ago',
-    status: 'Pending Review',
-  },
-  {
-    id: 'RX-10472',
-    customerName: 'Elena Rostova',
-    issue: 'Account Lockout & Organization Transfer',
-    category: 'Account Security',
-    confidence: 45,
-    customerTier: 'Standard',
-    priority: 'Medium',
-    reason: 'Identity verification discrepancy between 2 organization domains.',
-    policy: 'POL-AUTH-501 (Domain Ownership Check)',
-    recommendedAction: 'Request additional DNS verification proof from customer before transfer.',
-    amount: 'N/A',
-    time: '42m ago',
-    status: 'In Progress',
-  },
-];
+function mapHandoffToItem(handoff: Handoff): HandoffItem {
+  const statusMap: Record<Handoff['status'], HandoffItem['status']> = {
+    pending: 'Pending Review',
+    accepted: 'In Progress',
+    completed: 'Resolved',
+  };
+
+  const priorityMap: Record<Handoff['priority'], HandoffItem['priority']> = {
+    critical: 'Urgent',
+    high: 'High',
+    medium: 'Medium',
+    low: 'Medium',
+  };
+
+  const confidence = Math.min(100, Math.max(0, Math.round(
+    handoff.evidence.filter(e => e.verified).length / Math.max(1, handoff.evidence.length) * 100
+  )));
+
+  const timeAgo = new Date(handoff.createdAt);
+  const now = new Date();
+  const diffMs = now.getTime() - timeAgo.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const time = diffMins < 60 ? `${diffMins}m ago` : `${diffHours}h ago`;
+
+  return {
+    id: handoff.id,
+    customerName: handoff.customer.name,
+    customerTier: handoff.customer.plan,
+    issue: handoff.issueSummary,
+    category: handoff.policyExcerpts[0]?.policyId || 'General',
+    confidence,
+    priority: priorityMap[handoff.priority],
+    reason: handoff.escalationReason,
+    policy: handoff.policyExcerpts.map(p => p.policyId).join(', ') || 'N/A',
+    recommendedAction: handoff.recommendedNextAction,
+    amount: handoff.evidence.find(e => e.type === 'transaction')?.data?.amount as string || 'N/A',
+    time,
+    status: statusMap[handoff.status],
+  };
+}
 
 export function HandoffPage() {
   const { id: paramId } = useParams();
@@ -72,15 +67,55 @@ export function HandoffPage() {
   const [takeoverActive, setTakeoverActive] = useState(false);
   const [actionDone, setActionDone] = useState<string | null>(null);
 
-  const selectedItem = HANDOFF_ITEMS.find((item) => item.id === selectedId) || HANDOFF_ITEMS[0]!;
+  const { data: handoffs } = useHandoffs();
+  const { data: selectedHandoff, isLoading } = useHandoff(selectedId);
+  const acceptHandoff = useAcceptHandoff();
+  const completeHandoff = useCompleteHandoff();
 
-  const handleApproveAction = () => {
-    setActionDone('AI Recommendation Approved: $120.00 Refund Triggered successfully.');
+  const handoffItems = handoffs?.map(mapHandoffToItem) || [];
+  const selectedItem = selectedHandoff ? mapHandoffToItem(selectedHandoff) : handoffItems.find(item => item.id === selectedId) ?? handoffItems[0];
+
+  // Handle case when no handoffs exist
+  if (!selectedItem) {
+    return (
+      <div className="flex-1 flex items-center justify-center h-[calc(100vh-48px)] bg-background">
+        <div className="text-center text-on-surface-variant">
+          <h2 className="text-lg font-semibold mb-2">No handoff cases available</h2>
+          <p className="text-sm">All cases have been resolved or no data available.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleApproveAction = async () => {
+    try {
+      await acceptHandoff.mutateAsync(selectedId);
+      setActionDone('AI Recommendation Approved: Handoff accepted successfully.');
+    } catch (error) {
+      setActionDone('Failed to approve action. Please try again.');
+    }
+  };
+
+  const handleCompleteHandoff = async () => {
+    try {
+      await completeHandoff.mutateAsync(selectedId);
+      setActionDone('Handoff marked as complete successfully.');
+    } catch (error) {
+      setActionDone('Failed to complete handoff. Please try again.');
+    }
   };
 
   const handleTakeover = () => {
     setTakeoverActive(!takeoverActive);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center h-[calc(100vh-48px)]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col h-[calc(100vh-48px)] overflow-hidden bg-background">
@@ -89,7 +124,7 @@ export function HandoffPage() {
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-[18px]">front_hand</span>
           <span className="font-bold">Human-in-the-Loop Supervision Queue:</span>
-          <span>{HANDOFF_ITEMS.length} cases require human authorization or intervention.</span>
+          <span>{handoffItems.length} cases require human authorization or intervention.</span>
         </div>
         <span className="font-mono text-[11px] bg-amber-200 dark:bg-amber-900/60 px-2 py-0.5 rounded font-semibold">
           Policy Safety Guard Active
@@ -102,13 +137,13 @@ export function HandoffPage() {
           <div className="p-3 border-b border-outline-variant/40 flex items-center justify-between bg-surface-container-lowest">
             <h3 className="font-bold text-xs text-on-surface flex items-center gap-1.5">
               <span className="material-symbols-outlined text-primary text-[18px]">rule</span>
-              Pending Handoffs ({HANDOFF_ITEMS.length})
+              Pending Handoffs ({handoffItems.length})
             </h3>
             <span className="text-[11px] text-on-surface-variant font-mono">Sorted by Priority</span>
           </div>
 
           <div className="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-thin">
-            {HANDOFF_ITEMS.map((item) => {
+            {handoffItems.map((item) => {
               const active = item.id === selectedId;
               return (
                 <div
@@ -197,10 +232,20 @@ export function HandoffPage() {
 
               <button
                 onClick={handleApproveAction}
-                className="px-4 py-2 text-xs font-bold rounded-lg bg-primary-container text-on-primary-container hover:opacity-90 transition-opacity flex items-center gap-1.5 shadow-xs"
+                disabled={acceptHandoff.isPending}
+                className="px-4 py-2 text-xs font-bold rounded-lg bg-primary-container text-on-primary-container hover:opacity-90 transition-opacity flex items-center gap-1.5 shadow-xs disabled:opacity-50"
               >
                 <span className="material-symbols-outlined text-[18px]">verified</span>
-                Approve AI Action
+                {acceptHandoff.isPending ? 'Accepting...' : 'Approve AI Action'}
+              </button>
+
+              <button
+                onClick={handleCompleteHandoff}
+                disabled={completeHandoff.isPending}
+                className="px-4 py-2 text-xs font-bold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center gap-1.5 shadow-xs disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                {completeHandoff.isPending ? 'Completing...' : 'Mark Complete'}
               </button>
 
               <Link
@@ -260,12 +305,17 @@ export function HandoffPage() {
             <div className="mt-3 flex items-center gap-3">
               <button
                 onClick={handleApproveAction}
-                className="px-3.5 py-1.5 text-xs font-bold rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                disabled={acceptHandoff.isPending}
+                className="px-3.5 py-1.5 text-xs font-bold rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-colors disabled:opacity-50"
               >
-                Execute Refund {selectedItem.amount}
+                {acceptHandoff.isPending ? 'Accepting...' : `Execute Refund ${selectedItem.amount}`}
               </button>
-              <button className="px-3.5 py-1.5 text-xs font-semibold rounded-md border border-outline-variant text-on-surface hover:bg-surface-container-low">
-                Request Additional Documentation
+              <button
+                onClick={handleCompleteHandoff}
+                disabled={completeHandoff.isPending}
+                className="px-3.5 py-1.5 text-xs font-semibold rounded-md border border-outline-variant text-on-surface hover:bg-surface-container-low disabled:opacity-50"
+              >
+                {completeHandoff.isPending ? 'Completing...' : 'Request Additional Documentation'}
               </button>
             </div>
           </div>

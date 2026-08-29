@@ -1,0 +1,222 @@
+{
+  "area": "testing",
+  "findings": [
+    {
+      "severity": "critical",
+      "category": "coverage",
+      "file": "apps/api/src/agents/triage.ts",
+      "line": 47,
+      "title": "No unit tests for triage agent logic",
+      "description": "The triage agent contains critical business logic (fallbackTriage, callFreshworksTriage, triageMessage) with zero unit tests. Tests only cover the /api/triage HTTP endpoint via integration tests.",
+      "recommendation": "Add unit tests for fallbackTriage, callFreshworksTriage error paths, and triageMessage in tests/integration/ or tests/unit/ with mocked Freshworks API."
+    },
+    {
+      "severity": "critical",
+      "category": "coverage",
+      "file": "apps/api/src/agents/billing.ts",
+      "line": 178,
+      "title": "No unit tests for billing agent decision logic",
+      "description": "processBillingTask contains complex duplicate charge detection, policy checking, and autonomy gate integration with no unit tests. Only integration tests exercise this via HTTP.",
+      "recommendation": "Add unit tests for detectDuplicateCharges, checkPolicy, processBillingTask with mocked Freshworks API and autonomy gateway."
+    },
+    {
+      "severity": "critical",
+      "category": "coverage",
+      "file": "apps/api/src/agents/subscription.ts",
+      "line": 137,
+      "title": "No unit tests for subscription agent decision logic",
+      "description": "processSubscriptionTask contains plan tier logic, eligibility checks, and autonomy gate integration with no unit tests.",
+      "recommendation": "Add unit tests for getPlanTier, checkPlanExists, processSubscriptionTask with mocked dependencies."
+    },
+    {
+      "severity": "critical",
+      "category": "coverage",
+      "file": "apps/api/src/verification/autonomyGate.ts",
+      "line": 4,
+      "title": "No direct unit tests for autonomyGate module",
+      "description": "autonomyGate.ts is only tested indirectly via evaluation tests. No isolated unit tests exist for checkAutonomyGate and determineRiskLevel functions.",
+      "recommendation": "Add dedicated unit tests for checkAutonomyGate and determineRiskLevel in tests/unit/verification/autonomyGate.test.ts"
+    },
+    {
+      "severity": "high",
+      "category": "coverage",
+      "file": "apps/api/src/verification/verify.ts",
+      "line": 1,
+      "title": "Zero tests for verification module",
+      "description": "The verification module (verify.ts) has no tests at all. This is a critical path for mutation verification.",
+      "recommendation": "Add unit tests for verification logic with mocked database and external APIs."
+    },
+    {
+      "severity": "high",
+      "category": "coverage",
+      "file": "apps/api/src/verification/failure-handling.ts",
+      "line": 1,
+      "title": "Zero tests for failure handling module",
+      "description": "failure-handling.ts has no tests. This handles retry logic and error recovery which are critical for reliability.",
+      "recommendation": "Add unit tests for failure handling scenarios including retries, circuit breakers, and escalation paths."
+    },
+    {
+      "severity": "high",
+      "category": "coverage",
+      "file": "apps/api/src/knowledge/search.ts",
+      "line": 1,
+      "title": "Zero tests for knowledge search module",
+      "description": "Knowledge search (RAG) module has no tests. This affects triage accuracy and agent knowledge retrieval.",
+      "recommendation": "Add unit tests for search, embedding, and chunking logic with mocked vector database."
+    },
+    {
+      "severity": "high",
+      "category": "coverage",
+      "file": "apps/api/src/handoff/escalation.ts",
+      "line": 1,
+      "title": "Zero tests for escalation/handoff logic",
+      "description": "Escalation and case brief creation logic has no tests. This is the human-in-the-loop fallback path.",
+      "recommendation": "Add unit tests for escalation triggers, case brief generation, and handoff persistence."
+    },
+    {
+      "severity": "high",
+      "category": "coverage",
+      "file": "apps/api/src/routes/billing.ts",
+      "line": 1,
+      "title": "No API route tests for billing endpoints",
+      "description": "Billing routes (/api/billing) have no dedicated tests. Only triage integration tests exist.",
+      "recommendation": "Add integration tests for billing routes with various task types and error scenarios."
+    },
+    {
+      "severity": "high",
+      "category": "coverage",
+      "file": "apps/api/src/routes/subscription.ts",
+      "line": 1,
+      "title": "No API route tests for subscription endpoints",
+      "description": "Subscription routes have no dedicated tests.",
+      "recommendation": "Add integration tests for subscription routes covering upgrade, downgrade, cancel flows."
+    },
+    {
+      "severity": "medium",
+      "category": "quality",
+      "file": "tests/integration/triage.test.ts",
+      "line": 77,
+      "title": "Tests skip silently when database unavailable",
+      "description": "Tests use itDb = dbAvailable ? it : it.skip pattern which silently skips tests when DB is down, masking CI failures. No clear failure signal.",
+      "recommendation": "Fail fast in CI when database is unavailable. Use beforeAll to throw if DB connection fails in test environment."
+    },
+    {
+      "severity": "medium",
+      "category": "quality",
+      "file": "tests/integration/full-workflow.test.ts",
+      "line": 172,
+      "title": "Tool failure test doesn't actually test failure",
+      "description": "The 'Freshworks API Down' test only verifies triage still works with fallback - it doesn't test actual error handling, retry logic, or escalation paths.",
+      "recommendation": "Add proper mocking to simulate Freshworks API failures and test retry/escalation behavior."
+    },
+    {
+      "severity": "medium",
+      "category": "quality",
+      "file": "tests/integration/triage.test.ts",
+      "line": 50,
+      "title": "No transaction rollback - manual cleanup is brittle",
+      "description": "Tests manually DELETE records in afterAll. If a test fails mid-way, cleanup doesn't run, polluting database for subsequent runs.",
+      "recommendation": "Use database transactions with rollback in beforeEach/afterEach for true test isolation."
+    },
+    {
+      "severity": "medium",
+      "category": "quality",
+      "file": "tests/evaluation/autonomy-gate.test.ts",
+      "line": 375,
+      "title": "Evaluation test uses custom test runner instead of Vitest",
+      "description": "The evaluation runner implements custom pass/fail tracking and console output instead of using Vitest's native assertions and reporters.",
+      "recommendation": "Refactor to use standard Vitest it() blocks with expect() assertions. Keep the summary as a Vitest test reporter or custom hook."
+    },
+    {
+      "severity": "medium",
+      "category": "quality",
+      "file": "tests/evaluation/runner.test.ts",
+      "line": 452,
+      "title": "Duplicate test cases between runner.test.ts and autonomy-gate.test.ts",
+      "description": "Both files test the same autonomy gate scenarios. runner.test.ts adds summary reporting but duplicates all test cases from autonomy-gate.test.ts.",
+      "recommendation": "Consolidate into single test file. Use Vitest's describe.each or test.each for parameterized tests. Move summary to a test reporter."
+    },
+    {
+      "severity": "medium",
+      "category": "quality",
+      "file": "apps/web/tests/app.test.tsx",
+      "line": 1,
+      "title": "Frontend tests are shallow smoke tests only",
+      "description": "Component tests only verify rendering of text content. No interaction tests, no state change tests, no error boundary tests.",
+      "recommendation": "Add interaction tests (click, form submission), state tests (loading, error, empty), and accessibility tests."
+    },
+    {
+      "severity": "high",
+      "category": "coverage",
+      "file": "apps/web/tests-e2e/e2e.test.ts",
+      "line": 148,
+      "title": "E2E tests only test happy path",
+      "description": "Playwright tests only cover happy path scenarios. No tests for: network errors, API failures, empty states, auth errors, or edge cases.",
+      "recommendation": "Add E2E tests for: API error handling, empty conversation state, auth failures, voice connection failures, mobile edge cases."
+    },
+    {
+      "severity": "medium",
+      "category": "infrastructure",
+      "file": "vitest.config.ts",
+      "line": 1,
+      "title": "Root vitest.config.ts has wrong include pattern",
+      "description": "Root config includes '../../tests/**/*.test.ts' but tests are in 'tests/' not '../../tests/'. This config is likely unused.",
+      "recommendation": "Remove root vitest.config.ts or fix the include path. Use apps/web/vitest.config.ts and apps/api/vitest.config.ts as primary configs."
+    },
+    {
+      "severity": "medium",
+      "category": "infrastructure",
+      "file": "apps/api/vitest.config.ts",
+      "line": 10,
+      "title": "API vitest config includes tests from root tests/ directory",
+      "description": "API config includes '../../tests/**/*.test.ts' but root is './apps/api'. This works due to path resolution but is confusing.",
+      "recommendation": "Clarify test organization. Either move integration tests to apps/api/tests/ or use a shared test config at root level."
+    },
+    {
+      "severity": "medium",
+      "category": "infrastructure",
+      "file": "package.json",
+      "line": 22,
+      "title": "No CI configuration for test execution",
+      "description": "No .github/workflows directory exists. No automated test runs on PR/push. No coverage thresholds enforced.",
+      "recommendation": "Add GitHub Actions workflow for: lint, typecheck, unit tests, integration tests (with test DB), E2E tests. Enforce coverage thresholds."
+    },
+    {
+      "severity": "medium",
+      "category": "infrastructure",
+      "file": "apps/web/playwright.config.ts",
+      "line": 37,
+      "title": "Playwright depends on npm run dev which may be flaky",
+      "description": "webServer command uses 'npm run dev' which starts Vite dev server. In CI this can be slow and flaky. Should build and serve static files instead.",
+      "recommendation": "In CI, use 'npm run build && npm run preview' for stable, fast test execution. Keep dev server only for local development."
+    },
+    {
+      "severity": "low",
+      "category": "architecture",
+      "file": "tests/integration/triage.test.ts",
+      "line": 1,
+      "title": "Test data setup duplicated across integration test files",
+      "description": "Both triage.test.ts and full-workflow.test.ts have identical beforeAll/afterAll/beforeEach setup code for database fixtures.",
+      "recommendation": "Extract shared test fixtures/setup into tests/integration/test-utils.ts or tests/integration/fixtures.ts"
+    },
+    {
+      "severity": "low",
+      "category": "architecture",
+      "file": "apps/api/src/db/client.ts",
+      "line": 23,
+      "title": "No test database setup utility",
+      "description": "testConnection() only checks connectivity. No utilities for: test database creation, migrations, seeding, or transaction rollback helpers.",
+      "recommendation": "Add test utilities: createTestDb(), runMigrations(), seedTestData(), withTransaction() for rollback pattern."
+    },
+    {
+      "severity": "low",
+      "category": "architecture",
+      "file": "tests/evaluation/autonomy-gate.test.ts",
+      "line": 1,
+      "title": "Evaluation test cases hardcoded in test file",
+      "description": "Test cases are hardcoded TypeScript objects. Cannot easily add new cases from external sources or separate test data from test logic.",
+      "recommendation": "Move evaluation cases to JSON/YAML files in tests/evaluation/fixtures/ for data-driven testing and easier maintenance."
+    }
+  ],
+  "summary": "Overall testing health: POOR. Critical gaps in unit test coverage for core business logic (agents, verification, knowledge, handoff). Integration tests exist but have quality issues (silent skips, no transaction rollback, duplicated setup). Frontend tests are shallow smoke tests only. E2E tests lack error scenario coverage. No CI pipeline exists to run tests automatically. Infrastructure has config issues and missing test utilities. Priority: 1) Add unit tests for all agent/verification modules, 2) Fix integration test reliability with transaction rollback, 3) Add CI pipeline, 4) Expand E2E/error scenario coverage."
+}

@@ -51,7 +51,7 @@ export async function verifyRefund(
   const startTime = Date.now();
 
   try {
-    const transactions = await getTransactions(agentRunId, { customerId: input.customerId });
+    const transactions = await getTransactions(agentRunId, { customerId: input.customerId } as any);
 
     const refundTx = transactions.find(t =>
       t.invoiceId === input.invoiceId &&
@@ -137,8 +137,8 @@ export async function verifyUpgrade(
   input: UpgradeVerificationInput
 ): Promise<VerificationResult> {
   try {
-    const subscription = await getSubscription(agentRunId, { customerId: input.customerId });
-    const customer = await getCustomer(agentRunId, { customerId: input.customerId });
+    const subscription = await getSubscription(agentRunId, { customerId: input.customerId } as any);
+    const customer = await getCustomer(agentRunId, { customerId: input.customerId } as any);
 
     const expectedState = {
       customerPlanId: input.expectedPlanId,

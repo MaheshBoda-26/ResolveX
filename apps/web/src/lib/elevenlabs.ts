@@ -2,7 +2,7 @@ import { VOICE_DEFAULTS } from '@resolvex/shared';
 
 export interface ElevenLabsConfig {
   agentId: string;
-  apiKey: string;
+  apiKey?: string; // Optional - not sent to frontend; obtained from backend proxy
   model?: string;
   voiceId?: string;
 }
@@ -25,6 +25,11 @@ export interface VoiceCallbacks {
   onAudioLevel?: (level: number) => void;
 }
 
+interface EphemeralTokenResponse {
+  token: string;
+  expiresIn: number;
+}
+
 class ElevenLabsClient {
   private ws: WebSocket | null = null;
   private audioContext: AudioContext | null = null;
@@ -44,6 +49,26 @@ class ElevenLabsClient {
   private setState(state: VoiceState) {
     this.state = state;
     this.callbacks.onStateChange?.(state);
+  }
+
+  /**
+   * Get ephemeral token from backend proxy
+   * Backend should call ElevenLabs API to generate signed token
+   */
+  private async getEphemeralToken(agentId: string): Promise<string> {
+    const response = await fetch('/api/voice/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agentId }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Failed to get voice token: ${error}`);
+    }
+
+    const data: EphemeralTokenResponse = await response.json();
+    return data.token;
   }
 
   async connect(config: ElevenLabsConfig): Promise<void> {
@@ -93,7 +118,9 @@ class ElevenLabsClient {
       this.source.connect(this.processor);
       this.processor.connect(this.audioContext.destination);
 
-      const wsUrl = `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${config.agentId}`;
+      // Get ephemeral token from backend (never expose API key on frontend)
+      const token = await this.getEphemeralToken(config.agentId);
+      const wsUrl = `wss://api.elevenlabs.io/v1/convai/conversation?token=${encodeURIComponent(token)}`;
       this.ws = new WebSocket(wsUrl);
 
       this.ws.binaryType = 'arraybuffer';
@@ -210,10 +237,9 @@ class ElevenLabsClient {
 
 export const elevenLabsClient = new ElevenLabsClient();
 
-export function createElevenLabsConfig(agentId: string, apiKey: string): ElevenLabsConfig {
+export function createElevenLabsConfig(agentId: string, _apiKey?: string): ElevenLabsConfig {
   return {
     agentId,
-    apiKey,
     model: VOICE_DEFAULTS.MODEL,
     voiceId: VOICE_DEFAULTS.VOICE_ID,
   };

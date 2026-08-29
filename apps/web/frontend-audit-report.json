@@ -1,0 +1,294 @@
+{
+  "area": "frontend",
+  "findings": [
+    {
+      "severity": "critical",
+      "category": "correctness",
+      "file": "src/lib/api.ts",
+      "line": 114,
+      "title": "fetchJson does not handle 401/403 auth errors with token refresh",
+      "description": "The fetchJson function throws ApiError for all non-ok responses but doesn't handle authentication failures (401/403) with token refresh logic. This will cause hard failures when JWT tokens expire.",
+      "recommendation": "Add token refresh logic in fetchJson for 401 responses, with a retry mechanism and proper logout redirect on 403 or failed refresh."
+    },
+    {
+      "severity": "critical",
+      "category": "security",
+      "file": "src/lib/elevenlabs.ts",
+      "line": 96,
+      "title": "API key exposed in WebSocket URL",
+      "description": "The ElevenLabs agentId is passed in the WebSocket URL query parameter which may be logged in server access logs, browser history, and network inspection tools.",
+      "recommendation": "Use token-based authentication with short-lived tokens from a backend proxy instead of exposing agentId in URL. Implement a backend endpoint that generates ephemeral tokens."
+    },
+    {
+      "severity": "critical",
+      "category": "correctness",
+      "file": "src/pages/ChatPage.tsx",
+      "line": 89,
+      "title": "ResolutionTimeline caseId hardcoded instead of dynamic",
+      "description": "The ResolutionTimeline component on the ChatPage receives a hardcoded caseId='RX-10482' instead of deriving it from the selected conversation or route params.",
+      "recommendation": "Pass dynamic caseId based on the active conversation or extract from URL params. The caseId should come from the conversation data or be passed as a prop from the parent."
+    },
+    {
+      "severity": "high",
+      "category": "correctness",
+      "file": "src/lib/api.ts",
+      "line": 159,
+      "title": "useTrace refetchInterval creates infinite polling when data is empty",
+      "description": "The refetchInterval callback returns 1000ms when data is empty (no trace data yet), causing constant polling even before a runId is active. This wastes resources and can hit rate limits.",
+      "recommendation": "Only enable refetchInterval when runId is valid and data exists. Return false when no data is available to prevent polling on empty state."
+    },
+    {
+      "severity": "high",
+      "category": "performance",
+      "file": "src/components/VoiceInput.tsx",
+      "line": 46,
+      "title": "Canvas visualizer runs continuous animation even when not needed",
+      "description": "The animateVisualizer function uses requestAnimationFrame in a continuous loop whenever state is not 'idle', creating unnecessary CPU/GPU usage. The audio level history is updated every frame.",
+      "recommendation": "Throttle the visualizer to 30fps max using setTimeout or use a more efficient visualization approach. Consider using CSS animations for simple visualizers."
+    },
+    {
+      "severity": "high",
+      "category": "performance",
+      "file": "src/components/HandoffList.tsx",
+      "line": 112,
+      "title": "Client-side filtering duplicates server-side filtering",
+      "description": "The component fetches filtered handoffs from the server via useHandoffs(filters, sort) but then applies additional client-side search filtering, causing redundant computation and potential inconsistencies.",
+      "recommendation": "Move search filtering to the server by adding search param to useHandoffs query, or remove client-side filtering if server already handles it. Currently both run, doubling the work."
+    },
+    {
+      "severity": "high",
+      "category": "architecture",
+      "file": "src/components/TraceTimeline.tsx",
+      "line": 267,
+      "title": "Duplicate trace components: Trace.tsx and TraceTimeline.tsx",
+      "description": "Two nearly identical trace components exist (Trace.tsx and TraceTimeline.tsx) with overlapping functionality. TraceTimeline is more feature-rich but Trace is still used in TracePage as fallback.",
+      "recommendation": "Consolidate into a single Trace component. Use TraceTimeline as the primary implementation and remove the simpler Trace component, or make Trace a lightweight wrapper."
+    },
+    {
+      "severity": "high",
+      "category": "correctness",
+      "file": "src/pages/OperationsDashboardPage.tsx",
+      "line": 15,
+      "title": "Hardcoded mock data instead of API integration",
+      "description": "The OperationsDashboardPage uses hardcoded CASES_DATA array instead of fetching real data from the API. This makes the dashboard non-functional in production.",
+      "recommendation": "Replace hardcoded data with useHandoffs or a new dashboard-specific API hook. The data should come from real backend endpoints."
+    },
+    {
+      "severity": "high",
+      "category": "correctness",
+      "file": "src/pages/HandoffPage.tsx",
+      "line": 5,
+      "title": "Hardcoded mock handoff data instead of API integration",
+      "description": "HandoffPage uses hardcoded HANDOFF_ITEMS array instead of fetching real handoff data. The page also has hardcoded approve/takeover logic that doesn't call real APIs.",
+      "recommendation": "Replace with useHandoffs and useHandoff hooks. Wire up handleApproveAction and handleTakeover to useAcceptHandoff and useCompleteHandoff mutations from api.ts."
+    },
+    {
+      "severity": "high",
+      "category": "correctness",
+      "file": "src/pages/CaseDetailPage.tsx",
+      "line": 5,
+      "title": "Hardcoded case data instead of API integration",
+      "description": "CaseDetailPage has all case details, notes, actions, policies, and customer profile hardcoded. No API calls are made to fetch real case data.",
+      "recommendation": "Create useCaseDetail hook in api.ts that fetches case data by ID. Replace all hardcoded data with real API responses."
+    },
+    {
+      "severity": "high",
+      "category": "correctness",
+      "file": "src/pages/TracePage.tsx",
+      "line": 5,
+      "title": "Hardcoded trace data instead of API integration",
+      "description": "TracePage uses SAMPLE_TRACE_STEPS hardcoded array instead of fetching real trace data from the API. The Trace component at the bottom is hidden and never used.",
+      "recommendation": "Use useTrace or useAgentRunTrace hooks to fetch real trace data. Remove hardcoded sample data and show the real Trace component."
+    },
+    {
+      "severity": "high",
+      "category": "correctness",
+      "file": "src/pages/EvaluationsPage.tsx",
+      "line": 3,
+      "title": "Hardcoded evaluation data with mock run logic",
+      "description": "EvaluationsPage uses hardcoded EVAL_SUITES array and a mock setTimeout for 'running' evaluations. No real API integration for evaluation runs.",
+      "recommendation": "Create evaluation API hooks (useEvaluations, useRunEvaluation) and replace mock data with real API calls."
+    },
+    {
+      "severity": "medium",
+      "category": "accessibility",
+      "file": "src/components/Chat.tsx",
+      "line": 146,
+      "title": "Missing ARIA labels for chat message containers",
+      "description": "Chat message bubbles lack proper ARIA roles (role='log' or role='status') and aria-live regions for screen reader announcements of new messages.",
+      "recommendation": "Add role='log' aria-live='polite' to the message container. Each message should have appropriate ARIA attributes for screen readers."
+    },
+    {
+      "severity": "medium",
+      "category": "accessibility",
+      "file": "src/components/VoiceInput.tsx",
+      "line": 127,
+      "title": "Voice button lacks proper accessible name when state changes",
+      "description": "The voice button uses aria-label that changes with state but doesn't announce state changes to screen readers. Users won't know when listening starts/stops.",
+      "recommendation": "Add aria-live='polite' region that announces state changes, or use a separate visually-hidden status element with aria-live."
+    },
+    {
+      "severity": "medium",
+      "category": "accessibility",
+      "file": "src/components/layout/Sidebar.tsx",
+      "line": 97,
+      "title": "Sidebar navigation links lack active state announcement",
+      "description": "Active navigation items use visual styling (border-left, background) but no ARIA current='page' attribute to indicate current page to screen readers.",
+      "recommendation": "Add aria-current='page' to the active Link component for screen reader users."
+    },
+    {
+      "severity": "medium",
+      "category": "accessibility",
+      "file": "src/components/ui/input.tsx",
+      "line": 34,
+      "title": "Input error message not properly associated via aria-describedby",
+      "description": "The error message has an id but the input's aria-describedby references it correctly. However, the error element lacks role='alert' for immediate screen reader announcement.",
+      "recommendation": "Add role='alert' to the error paragraph for immediate announcement when error appears."
+    },
+    {
+      "severity": "medium",
+      "category": "performance",
+      "file": "src/components/CaseBrief.tsx",
+      "line": 19,
+      "title": "CollapsibleSection re-renders all children on every toggle",
+      "description": "The CollapsibleSection component doesn't memoize its children, causing all nested components (EvidenceCard, PolicyExcerptCard, CompletedActionCard) to re-render on every expand/collapse.",
+      "recommendation": "Wrap CollapsibleSection children in React.memo or use the Radix Collapsible's built-in optimization. Consider extracting child components with memo."
+    },
+    {
+      "severity": "medium",
+      "category": "performance",
+      "file": "src/lib/api.ts",
+      "line": 183,
+      "title": "useHandoffs queryKey includes filter/sort objects causing cache misses",
+      "description": "The queryKey for useHandoffs includes the entire filters and sort objects. Since new objects are created on each render, this causes unnecessary cache misses and refetches.",
+      "recommendation": "Serialize filters/sort to a stable string or use a custom queryKey factory that creates stable keys. Use JSON.stringify or a hash function."
+    },
+    {
+      "severity": "medium",
+      "category": "architecture",
+      "file": "src/lib/api.ts",
+      "line": 106,
+      "title": "ApiError class not exported for use in error boundaries",
+      "description": "ApiError is defined but only exported at the bottom. Error boundaries and components can't easily catch and type-check API errors without importing the class.",
+      "recommendation": "Export ApiError as a named export at the top of the file. Consider adding error codes and more structured error info for better handling."
+    },
+    {
+      "severity": "medium",
+      "category": "security",
+      "file": "src/components/Chat.tsx",
+      "line": 118,
+      "title": "Potential XSS via message content rendering",
+      "description": "Message content is rendered directly via {msg.content} in a <p> tag with whitespace-pre-wrap. If content contains HTML/script tags from untrusted sources, it could execute.",
+      "recommendation": "Sanitize message content before rendering. Use a library like DOMPurify or ensure backend sanitizes all message content. At minimum, render as textContent not innerHTML."
+    },
+    {
+      "severity": "medium",
+      "category": "security",
+      "file": "src/components/CaseBrief.tsx",
+      "line": 86,
+      "title": "JSON.stringify of evidence data could expose sensitive info",
+      "description": "EvidenceCard uses JSON.stringify on evidence.data which may contain PII, tokens, or sensitive information that shouldn't be displayed in the UI.",
+      "recommendation": "Filter sensitive fields before displaying evidence data. Create a sanitize function that removes known sensitive keys (passwords, tokens, PII)."
+    },
+    {
+      "severity": "medium",
+      "category": "correctness",
+      "file": "src/lib/elevenlabs.ts",
+      "line": 68,
+      "title": "Audio processor uses deprecated ScriptProcessorNode",
+      "description": "The ElevenLabs client uses createScriptProcessor which is deprecated in favor of AudioWorklet. This may cause issues in future browser versions.",
+      "recommendation": "Migrate to AudioWorklet for audio processing. This provides better performance and is the modern standard."
+    },
+    {
+      "severity": "medium",
+      "category": "correctness",
+      "file": "src/lib/elevenlabs.ts",
+      "line": 120,
+      "title": "WebSocket reconnection logic doesn't reset state properly",
+      "description": "On reconnection attempts, the client doesn't clean up the previous WebSocket properly and may leave dangling connections. The reconnect logic uses setTimeout without clearing on unmount.",
+      "recommendation": "Add proper cleanup in a useEffect return or disconnect method. Track reconnection timeout IDs and clear them on component unmount or explicit disconnect."
+    },
+    {
+      "severity": "low",
+      "category": "architecture",
+      "file": "src/components/ui/collapsible.tsx",
+      "line": 5,
+      "title": "Collapsible component is just a re-export without customization",
+      "description": "The collapsible.tsx simply re-exports Radix primitives without any project-specific styling, behavior, or TypeScript enhancements. Adds indirection without value.",
+      "recommendation": "Either remove the wrapper and import Radix directly, or add project-specific defaults (className, animations, etc.) to justify the abstraction."
+    },
+    {
+      "severity": "low",
+      "category": "architecture",
+      "file": "src/components/ui/tooltip.tsx",
+      "line": 5,
+      "title": "Tooltip component is just a re-export without customization",
+      "description": "Same as Collapsible - tooltip.tsx re-exports Radix Tooltip without any customization. Adds unnecessary abstraction layer.",
+      "recommendation": "Remove wrapper or add project-specific styling/behavior defaults."
+    },
+    {
+      "severity": "low",
+      "category": "performance",
+      "file": "src/components/TraceTimeline.tsx",
+      "line": 80,
+      "title": "formatJson called on every render for CopyButton",
+      "description": "The formatJson function is called during render for each trace event's CopyButton, causing JSON serialization on every render even when not copying.",
+      "recommendation": "Memoize the formatted JSON with useMemo or compute it only when the copy button is clicked (lazy evaluation)."
+    },
+    {
+      "severity": "low",
+      "category": "missing",
+      "file": "src/pages/ChatPage.tsx",
+      "line": 1,
+      "title": "Missing error boundary around Chat component",
+      "description": "The Chat component is rendered without a dedicated error boundary. If Chat crashes, the entire page crashes instead of showing a graceful fallback.",
+      "recommendation": "Wrap Chat component in an ErrorBoundary with a chat-specific fallback (e.g., 'Failed to load chat, retry')."
+    },
+    {
+      "severity": "low",
+      "category": "missing",
+      "file": "src/lib/api.ts",
+      "line": 1,
+      "title": "No request/response interceptors for logging or auth",
+      "description": "The fetchJson function has no interceptors for request/response logging, auth header injection, or global error handling. Each mutation/query handles errors individually.",
+      "recommendation": "Create a centralized API client with interceptors for auth tokens, logging, and global error handling. Use a library like ky or create a wrapper."
+    },
+    {
+      "severity": "low",
+      "category": "missing",
+      "file": "src/hooks/useVoice.ts",
+      "line": 1,
+      "title": "No TypeScript types for ElevenLabs message events",
+      "description": "The handleMessage function uses 'unknown' type and casts to a loose object structure. No proper TypeScript interfaces for ElevenLabs WebSocket message types.",
+      "recommendation": "Define proper TypeScript interfaces for all ElevenLabs message types (user_transcript, agent_response, agent_response_end, error) for type safety."
+    },
+    {
+      "severity": "low",
+      "category": "accessibility",
+      "file": "src/components/ResolutionTimeline.tsx",
+      "line": 141,
+      "title": "Timeline steps lack keyboard navigation",
+      "description": "Timeline step nodes are clickable divs with onClick handlers but aren't focusable or keyboard accessible (no tabIndex, no onKeyDown for Enter/Space).",
+      "recommendation": "Add tabIndex={0}, role='button', and onKeyDown handlers for Enter/Space to make timeline steps keyboard navigable."
+    },
+    {
+      "severity": "low",
+      "category": "correctness",
+      "file": "src/lib/theme.tsx",
+      "line": 18,
+      "title": "Theme initialization race condition with SSR",
+      "description": "The theme uses useEffect to read localStorage and set initial theme, causing a flash of wrong theme on hydration. No SSR-compatible theme detection.",
+      "recommendation": "Use a script in index.html to set theme before React hydrates, or use next-themes pattern with suppressHydrationWarning and client-side only rendering."
+    },
+    {
+      "severity": "low",
+      "category": "architecture",
+      "file": "src/components/layout/Header.tsx",
+      "line": 75,
+      "title": "Search input state not connected to any search functionality",
+      "description": "The header search input has local state (searchQuery) but no onSearch callback or connection to any search API. It's a non-functional UI element.",
+      "recommendation": "Either implement global search functionality with a search API hook, or remove the search input if not needed."
+    }
+  ],
+  "summary": "The ResolveX frontend has a well-structured codebase with modern React patterns (React Query, Radix UI, Tailwind v4, TypeScript strict mode). However, critical issues exist: most pages use hardcoded mock data instead of real API integration, making them non-functional in production. Security concerns include exposed API keys in WebSocket URLs and potential XSS via unsanitized message rendering. Performance issues include unnecessary re-renders, continuous canvas animations, and inefficient query keys. Accessibility gaps exist in keyboard navigation, ARIA attributes, and screen reader announcements. Architecture has duplicate components (Trace/TraceTimeline) and over-abstracted UI wrappers. Priority: 1) Replace all hardcoded data with real API hooks, 2) Fix auth token handling and WebSocket security, 3) Address XSS and sensitive data exposure, 4) Consolidate duplicate components, 5) Improve accessibility."
+}

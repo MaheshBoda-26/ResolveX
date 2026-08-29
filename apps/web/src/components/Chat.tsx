@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { useSendMessage, Message } from '@/lib/api';
+import DOMPurify from 'dompurify';
 
 interface ChatProps {
   conversationId: string | undefined;
@@ -34,6 +35,13 @@ export function Chat({ conversationId, onConversationCreated }: ChatProps) {
       scrollArea.scrollTop = scrollArea.scrollHeight;
     }
   }, [messages]);
+
+  const sanitizeContent = (content: string): string => {
+    return DOMPurify.sanitize(content, {
+      ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'code', 'pre', 'br', 'p', 'ul', 'ol', 'li'],
+      ALLOWED_ATTR: ['href', 'target', 'rel'],
+    });
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -88,7 +96,7 @@ export function Chat({ conversationId, onConversationCreated }: ChatProps) {
 
   return (
     <div className="flex flex-col h-full bg-background-default dark:bg-background-dark">
-      <ScrollArea ref={scrollAreaRef} className="flex-1 p-6 space-y-4">
+      <ScrollArea ref={scrollAreaRef} className="flex-1 p-6 space-y-4" role="log" aria-live="polite" aria-label="Chat messages">
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -104,6 +112,7 @@ export function Chat({ conversationId, onConversationCreated }: ChatProps) {
                   ? 'bg-brand-primary text-white'
                   : 'bg-secondary-soft text-text-secondary dark:bg-secondary-default'
               )}
+              aria-hidden="true"
             >
               {msg.role === 'user' ? 'U' : 'A'}
             </div>
@@ -115,7 +124,7 @@ export function Chat({ conversationId, onConversationCreated }: ChatProps) {
                   : 'bg-surface-default dark:bg-surface-dark border border-border-default dark:border-border-dark rounded-bl-none'
               )}
             >
-              <p className="text-body whitespace-pre-wrap">{msg.content}</p>
+              <p className="text-body whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: sanitizeContent(msg.content) }} />
               <p className={cn('mt-1 text-caption', msg.role === 'user' ? 'text-brand-primary-soft' : 'text-text-muted')}>
                 {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
@@ -123,15 +132,15 @@ export function Chat({ conversationId, onConversationCreated }: ChatProps) {
           </div>
         ))}
         {sendMutation.isPending && (
-          <div className="flex gap-3 max-w-[800px] mx-auto w-full">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-caption font-medium bg-secondary-soft text-text-secondary dark:bg-secondary-default">
+          <div className="flex gap-3 max-w-[800px] mx-auto w-full" aria-live="polite">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-caption font-medium bg-secondary-soft text-text-secondary dark:bg-secondary-default" aria-hidden="true">
               A
             </div>
             <div className="max-w-[calc(100%-40px)] rounded-card bg-surface-default dark:bg-surface-dark border border-border-default dark:border-border-dark rounded-bl-none px-4 py-3">
-              <div className="flex gap-1 items-center">
-                <span className="w-2 h-2 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-2 h-2 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-2 h-2 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              <div className="flex gap-1 items-center" role="status" aria-label="AI is typing">
+                <span className="w-2 h-2 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} aria-hidden="true" />
+                <span className="w-2 h-2 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: '150ms' }} aria-hidden="true" />
+                <span className="w-2 h-2 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: '300ms' }} aria-hidden="true" />
               </div>
             </div>
           </div>
@@ -162,7 +171,7 @@ export function Chat({ conversationId, onConversationCreated }: ChatProps) {
           >
             {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
           </Button>
-          <Button type="submit" disabled={!message.trim() || sendMutation.isPending} className="h-control">
+          <Button type="submit" disabled={!message.trim() || sendMutation.isPending} className="h-control" aria-label="Send message">
             <Send className="h-5 w-5" />
           </Button>
         </div>

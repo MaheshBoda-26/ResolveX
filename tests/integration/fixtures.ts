@@ -1,61 +1,32 @@
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import * as schema from './schema';
+import * as schema from '../../apps/api/src/db/schema';
+import { randomUUID } from 'crypto';
 
-const globalForPool = globalThis as unknown as { pgPool: Pool | undefined };
-
-const databaseUrl = process.env['DATABASE_URL'];
-const nodeEnv = process.env['NODE_ENV'];
-
-export const pool = globalForPool.pgPool ?? new Pool({
-  connectionString: databaseUrl,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
-});
-
-if (nodeEnv !== 'production') {
-  globalForPool.pgPool = pool;
-}
-
-export const db = drizzle(pool, { schema });
-
-export async function testConnection(): Promise<boolean> {
-  try {
-    const client = await pool.connect();
-    await client.query('SELECT 1');
-    client.release();
-    return true;
-  } catch (error) {
-    console.error('Database connection failed:', error);
-    return false;
-  }
-}
-
-export async function closePool(): Promise<void> {
-  await pool.end();
-}
-
-export type DB = typeof db;
+let testPool: Pool | null = null;
+let testDb: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
 /**
- * Create a test database connection with a separate pool
- * Useful for integration tests that need isolated connections
+ * Initialize test database connection
  */
-export async function createTestDb(): Promise<{ pool: Pool; db: ReturnType<typeof drizzle<typeof schema>> }> {
-  const testDatabaseUrl = process.env['TEST_DATABASE_URL'] || databaseUrl;
-  if (!testDatabaseUrl) {
-    throw new Error('TEST_DATABASE_URL or DATABASE_URL must be set for test database');
+export async function initTestDb(): Promise<ReturnType<typeof drizzle<typeof schema>>> {
+  if (testPool && testDb) {
+    return testDb;
   }
 
-  const testPool = new Pool({
-    connectionString: testDatabaseUrl,
+  const databaseUrl = process.env['DATABASE_URL'];
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL environment variable not set. Cannot run integration tests without database.');
+  }
+
+  testPool = new Pool({
+    connectionString: databaseUrl,
     max: 5,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 5000,
   });
 
-  const testDb = drizzle(testPool, { schema });
+  testDb = drizzle(testPool, { schema });
 
   // Verify connection
   const client = await testPool.connect();
@@ -65,31 +36,84 @@ export async function createTestDb(): Promise<{ pool: Pool; db: ReturnType<typeo
     client.release();
   }
 
-  return { pool: testPool, db: testDb };
+  return testDb;
 }
 
 /**
- * Run a callback within a database transaction that gets rolled back
- * Provides true test isolation - no data persists after the callback
+ * Clean up test database connection
+ */
+export async function closeTestDb(): Promise<void> {
+  if (testPool) {
+    await testPool.end();
+    testPool = null;
+    testDb = null;
+  }
+}
+
+/**
+ * Get test database instance
+ */
+export function getTestDb(): ReturnType<typeof drizzle<typeof schema>> {
+  if (!testDb) {
+    throw new Error('Test database not initialized. Call initTestDb() first.');
+  }
+  return testDb;
+}
+
+/**
+ * Run a test within a transaction that gets rolled back
+ * Provides true test isolation
  */
 export async function withTransaction<T>(
-  callback: (tx: ReturnType<typeof drizzle<typeof schema>>) => Promise<T>
+  fn: (tx: ReturnType<typeof drizzle<typeof schema>>) => Promise<T>
 ): Promise<T> {
+  const db = getTestDb();
+  const pool = testPool!;
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Create a transaction-specific db instance
+    const txDb = drizzle(client, { schema });
+
+    // Savepoint for nested transactions
+    await client.query('SAVEPOINT test_savepoint');
+
+    try {
+      const result = await fn(txDb);
+      // Rollback to savepoint (not commit!)
+      await client.query('ROLLBACK TO SAVEPOINT test_savepoint');
+      return result;
+    } catch (error) {
+      await client.query('ROLLBACK TO SAVEPOINT test_savepoint');
+      throw error;
+    }
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Run a test with a fresh transaction that rolls back
+ * Convenience wrapper for test isolation
+ */
+export async function withTestTransaction<T>(
+  fn: (tx: ReturnType<typeof drizzle<typeof schema>>) => Promise<T>
+): Promise<T> {
+  const pool = testPool!;
+
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
     const txDb = drizzle(client, { schema });
 
-    const result = await callback(txDb);
+    const result = await fn(txDb);
 
-    // Always rollback for test isolation
+    // Always rollback - tests should not persist data
     await client.query('ROLLBACK');
-
     return result;
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
   } finally {
     client.release();
   }
@@ -161,7 +185,6 @@ export async function createTestCustomer(
   tx: ReturnType<typeof drizzle<typeof schema>>,
   overrides: Partial<{ name: string; email: string; planId: string; status: string }> = {}
 ) {
-  const { randomUUID } = await import('crypto');
   const [customer] = await tx.insert(schema.customers).values({
     name: overrides.name || 'Test Customer',
     email: overrides.email || `test-${randomUUID()}@example.com`,
@@ -227,4 +250,16 @@ export async function createTestConversation(
     status,
   }).returning();
   return conversation;
+}
+
+/**
+ * Assert database is available, throw if not (fail fast in CI)
+ */
+export function assertDbAvailable(): void {
+  if (!process.env['DATABASE_URL']) {
+    throw new Error(
+      'DATABASE_URL not set. Integration tests require a database connection. ' +
+      'Set DATABASE_URL environment variable or run with test database.'
+    );
+  }
 }

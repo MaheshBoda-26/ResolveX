@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, numeric, jsonb, vector } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, numeric, jsonb, vector, index } from 'drizzle-orm/pg-core';
 
 export const customers = pgTable('customers', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -19,7 +19,11 @@ export const transactions = pgTable('transactions', {
   status: text('status').notNull().default('completed'),
   chargedAt: timestamp('charged_at', { withTimezone: true }).notNull(),
   metadata: jsonb('metadata').default({}),
-});
+}, (table) => ({
+  transactions_customer_id_idx: index('transactions_customer_id_idx').on(table.customerId),
+  transactions_invoice_id_idx: index('transactions_invoice_id_idx').on(table.invoiceId),
+  transactions_customer_charged_idx: index('transactions_customer_charged_idx').on(table.customerId, table.chargedAt),
+}));
 
 export const subscriptions = pgTable('subscriptions', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -29,7 +33,10 @@ export const subscriptions = pgTable('subscriptions', {
   price: numeric('price', { precision: 10, scale: 2 }).notNull(),
   renewalAt: timestamp('renewal_at', { withTimezone: true }).notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => ({
+  subscriptions_customer_id_idx: index('subscriptions_customer_id_idx').on(table.customerId),
+  subscriptions_customer_status_idx: index('subscriptions_customer_status_idx').on(table.customerId, table.status),
+}));
 
 export const knowledgeDocuments = pgTable('knowledge_documents', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -48,7 +55,10 @@ export const conversations = pgTable('conversations', {
   status: text('status').notNull().default('open'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => ({
+  conversations_customer_id_idx: index('conversations_customer_id_idx').on(table.customerId),
+  conversations_status_idx: index('conversations_status_idx').on(table.status),
+}));
 
 export const agentRuns = pgTable('agent_runs', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -59,7 +69,10 @@ export const agentRuns = pgTable('agent_runs', {
   status: text('status').notNull().default('pending'),
   startedAt: timestamp('started_at', { withTimezone: true }).defaultNow().notNull(),
   completedAt: timestamp('completed_at', { withTimezone: true }),
-});
+}, (table) => ({
+  agent_runs_conversation_id_idx: index('agent_runs_conversation_id_idx').on(table.conversationId),
+  agent_runs_status_idx: index('agent_runs_status_idx').on(table.status),
+}));
 
 export const toolCalls = pgTable('tool_calls', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -70,7 +83,10 @@ export const toolCalls = pgTable('tool_calls', {
   status: text('status').notNull().default('pending'),
   latencyMs: numeric('latency_ms', { precision: 10, scale: 0 }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => ({
+  tool_calls_agent_run_id_idx: index('tool_calls_agent_run_id_idx').on(table.agentRunId),
+  tool_calls_tool_name_idx: index('tool_calls_tool_name_idx').on(table.toolName),
+}));
 
 export const verifications = pgTable('verifications', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -80,7 +96,10 @@ export const verifications = pgTable('verifications', {
   observedState: jsonb('observed_state'),
   status: text('status').notNull().default('pending'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => ({
+  verifications_conversation_id_idx: index('verifications_conversation_id_idx').on(table.conversationId),
+  verifications_action_type_idx: index('verifications_action_type_idx').on(table.actionType),
+}));
 
 export const handoffs = pgTable('handoffs', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -90,7 +109,10 @@ export const handoffs = pgTable('handoffs', {
   recommendedAction: text('recommended_action').notNull(),
   status: text('status').notNull().default('pending'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => ({
+  handoffs_conversation_id_idx: index('handoffs_conversation_id_idx').on(table.conversationId),
+  handoffs_status_idx: index('handoffs_status_idx').on(table.status),
+}));
 
 export const evaluations = pgTable('evaluations', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -100,4 +122,7 @@ export const evaluations = pgTable('evaluations', {
   actualOutcome: jsonb('actual_outcome'),
   status: text('status').notNull().default('pending'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => ({
+  evaluations_case_id_idx: index('evaluations_case_id_idx').on(table.caseId),
+  evaluations_status_idx: index('evaluations_status_idx').on(table.status),
+}));

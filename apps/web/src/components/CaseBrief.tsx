@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { ChevronDown, ChevronUp, AlertCircle, CheckCircle, XCircle, Clock, User, Mail, CreditCard, Shield, FileText, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +36,7 @@ function CollapsibleSection({ title, icon, children, defaultOpen = true }: Colla
   );
 }
 
-function InfoRow({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
+const InfoRow = memo(function InfoRow({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
   return (
     <div className="flex items-start gap-3 py-2">
       {icon && <span className="h-5 w-5 text-text-muted flex-shrink-0 mt-0.5">{icon}</span>}
@@ -46,9 +46,9 @@ function InfoRow({ label, value, icon }: { label: string; value: string; icon?: 
       </div>
     </div>
   );
-}
+});
 
-function EvidenceCard({ evidence }: { evidence: Evidence }) {
+const EvidenceCard = memo(function EvidenceCard({ evidence }: { evidence: Evidence }) {
   const typeIcons: Record<Evidence['type'], React.ReactNode> = {
     transaction: <CreditCard className="h-4 w-4" />,
     policy: <FileText className="h-4 w-4" />,
@@ -89,9 +89,9 @@ function EvidenceCard({ evidence }: { evidence: Evidence }) {
       </details>
     </div>
   );
-}
+});
 
-function PolicyExcerptCard({ excerpt }: { excerpt: Handoff['policyExcerpts'][0] }) {
+const PolicyExcerptCard = memo(function PolicyExcerptCard({ excerpt }: { excerpt: Handoff['policyExcerpts'][0] }) {
   return (
     <div className="p-3 bg-surface-default border border-border-default rounded-lg">
       <div className="flex items-start justify-between gap-2 mb-2">
@@ -104,9 +104,9 @@ function PolicyExcerptCard({ excerpt }: { excerpt: Handoff['policyExcerpts'][0] 
       <p className="text-body-medium text-text-secondary bg-background-default p-3 rounded border border-border-default">{excerpt.excerpt}</p>
     </div>
   );
-}
+});
 
-function CompletedActionCard({ action }: { action: Handoff['completedActions'][0] }) {
+const CompletedActionCard = memo(function CompletedActionCard({ action }: { action: Handoff['completedActions'][0] }) {
   const statusIcons = {
     verified: <CheckCircle className="h-4 w-4 text-success-default" />,
     pending: <Clock className="h-4 w-4 text-warning-default" />,
@@ -142,7 +142,7 @@ function CompletedActionCard({ action }: { action: Handoff['completedActions'][0
       </div>
     </div>
   );
-}
+});
 
 export function CaseBrief({
   handoff,

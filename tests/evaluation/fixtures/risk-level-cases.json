@@ -1,0 +1,101 @@
+{
+  "RISK_DETERMINATION": [
+    {
+      "name": "refund $25 -> low",
+      "agent": "billing",
+      "action": "refund",
+      "amount": 25,
+      "expected": "low"
+    },
+    {
+      "name": "refund $50 -> low",
+      "agent": "billing",
+      "action": "refund",
+      "amount": 50,
+      "expected": "low"
+    },
+    {
+      "name": "refund $51 -> medium",
+      "agent": "billing",
+      "action": "refund",
+      "amount": 51,
+      "expected": "medium"
+    },
+    {
+      "name": "refund $100 -> medium",
+      "agent": "billing",
+      "action": "refund",
+      "amount": 100,
+      "expected": "medium"
+    },
+    {
+      "name": "refund $500 -> medium",
+      "agent": "billing",
+      "action": "refund",
+      "amount": 500,
+      "expected": "medium"
+    },
+    {
+      "name": "refund $501 -> high",
+      "agent": "billing",
+      "action": "refund",
+      "amount": 501,
+      "expected": "high"
+    },
+    {
+      "name": "refund $1000 -> high",
+      "agent": "billing",
+      "action": "refund",
+      "amount": 1000,
+      "expected": "high"
+    },
+    {
+      "name": "refund (no amount) -> medium",
+      "agent": "billing",
+      "action": "refund",
+      "expected": "medium"
+    },
+    {
+      "name": "upgrade -> medium",
+      "agent": "subscription",
+      "action": "upgrade",
+      "expected": "medium"
+    },
+    {
+      "name": "downgrade -> medium",
+      "agent": "subscription",
+      "action": "downgrade",
+      "expected": "medium"
+    },
+    {
+      "name": "cancel -> high",
+      "agent": "subscription",
+      "action": "cancel",
+      "expected": "high"
+    },
+    {
+      "name": "investigate -> low",
+      "agent": "billing",
+      "action": "investigate",
+      "expected": "low"
+    },
+    {
+      "name": "verify -> low",
+      "agent": "billing",
+      "action": "verify",
+      "expected": "low"
+    },
+    {
+      "name": "triage -> low",
+      "agent": "triage",
+      "action": "classify",
+      "expected": "low"
+    },
+    {
+      "name": "unknown -> medium",
+      "agent": "billing",
+      "action": "unknown_action",
+      "expected": "medium"
+    }
+  ]
+}

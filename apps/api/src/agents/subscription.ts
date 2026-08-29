@@ -118,12 +118,12 @@ async function callAutonomyGate(input: AutonomyGateInput): Promise<AutonomyGateR
   }
 }
 
-function checkPlanExists(planId: string): boolean {
+export function checkPlanExists(planId: string): boolean {
   const validPlans = ['starter', 'professional', 'enterprise', 'pro', 'basic'];
   return validPlans.includes(planId.toLowerCase());
 }
 
-function getPlanTier(planId: string): number {
+export function getPlanTier(planId: string): number {
   const tiers: Record<string, number> = {
     basic: 1,
     starter: 1,
