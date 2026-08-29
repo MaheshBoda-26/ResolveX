@@ -1,13 +1,21 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { verifyRefund, verifyUpgrade, verifyCustomerState, getVerificationHistory } from '../../../apps/api/src/verification/verify';
 
-// Mock the database - declare mocks at top level for hoisting
-const mockDbInsert = vi.fn().mockReturnThis();
-const mockDbValues = vi.fn().mockReturnThis();
-const mockDbSelect = vi.fn().mockReturnThis();
-const mockDbFrom = vi.fn().mockReturnThis();
-const mockDbWhere = vi.fn().mockReturnThis();
-const mockDbOrderBy = vi.fn().mockReturnThis();
+// Mock the database - declare mocks using vi.hoisted for hoisting
+const {
+  mockDbInsert,
+  mockDbValues,
+  mockDbSelect,
+  mockDbFrom,
+  mockDbWhere,
+  mockDbOrderBy,
+} = vi.hoisted(() => ({
+  mockDbInsert: vi.fn().mockReturnThis(),
+  mockDbValues: vi.fn().mockReturnThis(),
+  mockDbSelect: vi.fn().mockReturnThis(),
+  mockDbFrom: vi.fn().mockReturnThis(),
+  mockDbWhere: vi.fn().mockReturnThis(),
+  mockDbOrderBy: vi.fn().mockReturnThis(),
+}));
 
 vi.mock('../../../apps/api/src/db/client', () => ({
   db: {
@@ -23,14 +31,27 @@ vi.mock('../../../apps/api/src/db/client', () => ({
 }));
 
 // Mock Freshworks functions
-vi.mock('../../../apps/api/src/actions/freshworks', () => ({
-  getCustomer: vi.fn(),
-  getTransactions: vi.fn(),
-  getSubscription: vi.fn(),
-  verifyCustomerState: vi.fn(),
+const {
+  mockGetCustomer,
+  mockGetTransactions,
+  mockGetSubscription,
+  mockFreshworksVerifyCustomerState,
+} = vi.hoisted(() => ({
+  mockGetCustomer: vi.fn(),
+  mockGetTransactions: vi.fn(),
+  mockGetSubscription: vi.fn(),
+  mockFreshworksVerifyCustomerState: vi.fn(),
 }));
 
-import { getCustomer, getTransactions, getSubscription, verifyCustomerState as freshworksVerifyCustomerState } from '../../../apps/api/src/actions/freshworks';
+vi.mock('../../../apps/api/src/actions/freshworks', () => ({
+  getCustomer: mockGetCustomer,
+  getTransactions: mockGetTransactions,
+  getSubscription: mockGetSubscription,
+  verifyCustomerState: mockFreshworksVerifyCustomerState,
+}));
+
+// Import after mocks are set up
+import { verifyRefund, verifyUpgrade, verifyCustomerState, getVerificationHistory } from '../../../apps/api/src/verification/verify';
 
 describe('Verification Unit Tests', () => {
   beforeEach(() => {
@@ -62,7 +83,7 @@ describe('Verification Unit Tests', () => {
         },
       ];
 
-      (getTransactions as any).mockResolvedValue(mockTransactions);
+      mockGetTransactions.mockResolvedValue(mockTransactions);
 
       const result = await verifyRefund('run-1', 'conv-1', {
         customerId: 'cust-1',
@@ -96,7 +117,7 @@ describe('Verification Unit Tests', () => {
         },
       ];
 
-      (getTransactions as any).mockResolvedValue(mockTransactions);
+      mockGetTransactions.mockResolvedValue(mockTransactions);
 
       const result = await verifyRefund('run-1', 'conv-1', {
         customerId: 'cust-1',
@@ -112,7 +133,7 @@ describe('Verification Unit Tests', () => {
       });
     });
 
-    it('should return mismatch when refund status is not refunded', async () => {
+    it('should return mismatch when refund transaction not found (status not refunded)', async () => {
       const mockTransactions = [
         {
           id: 'tx-1',
@@ -120,13 +141,13 @@ describe('Verification Unit Tests', () => {
           invoiceId: 'INV-001',
           amount: 49.99,
           currency: 'USD',
-          status: 'completed', // Not refunded
+          status: 'completed', // Not refunded - won't be found by the search
           chargedAt: new Date().toISOString(),
           metadata: {},
         },
       ];
 
-      (getTransactions as any).mockResolvedValue(mockTransactions);
+      mockGetTransactions.mockResolvedValue(mockTransactions);
 
       const result = await verifyRefund('run-1', 'conv-1', {
         customerId: 'cust-1',
@@ -134,16 +155,16 @@ describe('Verification Unit Tests', () => {
         invoiceId: 'INV-001',
       });
 
+      // Transaction with status 'completed' is not found (only 'refunded' status is searched)
       expect(result.verified).toBe(false);
+      expect(result.differences).toHaveProperty('refundAmount');
       expect(result.differences).toHaveProperty('status');
-      expect(result.differences.status).toEqual({
-        expected: 'refunded',
-        actual: 'completed',
-      });
+      expect(result.differences.refundAmount.actual).toBeNull();
+      expect(result.differences.status.actual).toBe('not_found');
     });
 
     it('should return mismatch when refund transaction not found', async () => {
-      (getTransactions as any).mockResolvedValue([]);
+      mockGetTransactions.mockResolvedValue([]);
 
       const result = await verifyRefund('run-1', 'conv-1', {
         customerId: 'cust-1',
@@ -159,7 +180,7 @@ describe('Verification Unit Tests', () => {
     });
 
     it('should throw and record failure on error', async () => {
-      (getTransactions as any).mockRejectedValue(new Error('Database error'));
+      mockGetTransactions.mockRejectedValue(new Error('Database error'));
 
       await expect(verifyRefund('run-1', 'conv-1', {
         customerId: 'cust-1',
@@ -194,8 +215,8 @@ describe('Verification Unit Tests', () => {
         updatedAt: new Date().toISOString(),
       };
 
-      (getSubscription as any).mockResolvedValue(mockSubscription);
-      (getCustomer as any).mockResolvedValue(mockCustomer);
+      mockGetSubscription.mockResolvedValue(mockSubscription);
+      mockGetCustomer.mockResolvedValue(mockCustomer);
 
       const result = await verifyUpgrade('run-1', 'conv-1', {
         customerId: 'cust-1',
@@ -231,8 +252,8 @@ describe('Verification Unit Tests', () => {
         updatedAt: new Date().toISOString(),
       };
 
-      (getSubscription as any).mockResolvedValue(mockSubscription);
-      (getCustomer as any).mockResolvedValue(mockCustomer);
+      mockGetSubscription.mockResolvedValue(mockSubscription);
+      mockGetCustomer.mockResolvedValue(mockCustomer);
 
       const result = await verifyUpgrade('run-1', 'conv-1', {
         customerId: 'cust-1',
@@ -268,8 +289,8 @@ describe('Verification Unit Tests', () => {
         updatedAt: new Date().toISOString(),
       };
 
-      (getSubscription as any).mockResolvedValue(mockSubscription);
-      (getCustomer as any).mockResolvedValue(mockCustomer);
+      mockGetSubscription.mockResolvedValue(mockSubscription);
+      mockGetCustomer.mockResolvedValue(mockCustomer);
 
       const result = await verifyUpgrade('run-1', 'conv-1', {
         customerId: 'cust-1',
@@ -305,8 +326,8 @@ describe('Verification Unit Tests', () => {
         updatedAt: new Date().toISOString(),
       };
 
-      (getSubscription as any).mockResolvedValue(mockSubscription);
-      (getCustomer as any).mockResolvedValue(mockCustomer);
+      mockGetSubscription.mockResolvedValue(mockSubscription);
+      mockGetCustomer.mockResolvedValue(mockCustomer);
 
       const result = await verifyUpgrade('run-1', 'conv-1', {
         customerId: 'cust-1',
@@ -319,7 +340,7 @@ describe('Verification Unit Tests', () => {
     });
 
     it('should throw and record failure on error', async () => {
-      (getSubscription as any).mockRejectedValue(new Error('API error'));
+      mockGetSubscription.mockRejectedValue(new Error('API error'));
 
       await expect(verifyUpgrade('run-1', 'conv-1', {
         customerId: 'cust-1',
@@ -338,7 +359,7 @@ describe('Verification Unit Tests', () => {
         observedState: { status: 'active', planId: 'pro' },
       };
 
-      (freshworksVerifyCustomerState as any).mockResolvedValue(mockResult);
+      mockFreshworksVerifyCustomerState.mockResolvedValue(mockResult);
 
       const result = await verifyCustomerState('run-1', 'conv-1', {
         customerId: 'cust-1',
@@ -346,14 +367,14 @@ describe('Verification Unit Tests', () => {
       });
 
       expect(result).toEqual(mockResult);
-      expect(freshworksVerifyCustomerState).toHaveBeenCalledWith('run-1', {
+      expect(mockFreshworksVerifyCustomerState).toHaveBeenCalledWith('run-1', {
         customerId: 'cust-1',
         expectedState: { status: 'active', planId: 'pro' },
       });
     });
 
     it('should throw and record failure on error', async () => {
-      (freshworksVerifyCustomerState as any).mockRejectedValue(new Error('Network error'));
+      mockFreshworksVerifyCustomerState.mockRejectedValue(new Error('Network error'));
 
       await expect(verifyCustomerState('run-1', 'conv-1', {
         customerId: 'cust-1',

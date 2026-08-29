@@ -14,17 +14,7 @@ export default defineConfig({
           root: './apps/api',
         },
       },
-      {
-        test: {
-          name: 'web',
-          environment: 'jsdom',
-          include: ['../../apps/web/tests/**/*.test.{ts,tsx}'],
-          exclude: ['**/*.spec.ts', '**/tests-e2e/**'],
-          globals: true,
-          setupFiles: ['../../apps/web/tests/setup.ts'],
-          root: './apps/api',
-        },
-      },
+      './apps/web/vitest.config.ts',
     ],
   },
   resolve: {
