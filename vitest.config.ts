@@ -9,6 +9,7 @@ export default defineConfig({
           name: 'api',
           environment: 'node',
           include: ['../../tests/unit/**/*.test.ts', '../../tests/integration/**/*.test.ts'],
+          exclude: ['**/web/**', '**/node_modules/**'],
           testTimeout: 30000,
           hookTimeout: 30000,
           root: './apps/api',
