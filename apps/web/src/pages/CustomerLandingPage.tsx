@@ -49,13 +49,14 @@ export function CustomerLandingPage() {
           />
 
           <div className="flex justify-between items-center px-4 py-3 border-t border-outline-variant/40 bg-surface-bright">
-            <label className="flex items-center gap-1.5 text-on-surface-variant hover:text-primary cursor-pointer transition-colors text-xs font-medium">
+            <label htmlFor="file-upload" className="flex items-center gap-1.5 text-on-surface-variant hover:text-primary cursor-pointer transition-colors text-xs font-medium">
               <span className="material-symbols-outlined text-[18px]">attachment</span>
               <span>{attachedFiles.length > 0 ? `${attachedFiles.length} attached` : 'Attach files'}</span>
               <input
                 type="file"
                 multiple
                 className="hidden"
+                id="file-upload"
                 onChange={(e) => {
                   if (e.target.files) {
                     setAttachedFiles(Array.from(e.target.files).map((f) => f.name));
@@ -68,6 +69,7 @@ export function CustomerLandingPage() {
               onClick={() => handleStartResolution()}
               disabled={!issueText.trim()}
               className="bg-primary-container text-on-primary-container font-semibold rounded-lg px-5 py-2 text-xs hover:opacity-90 transition-opacity flex items-center gap-1.5 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+              type="button"
             >
               Start Resolution
               <span className="material-symbols-outlined text-[16px]">arrow_forward</span>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, FormEvent } from 'react';
-import { Send, Mic, MicOff } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -9,6 +9,8 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { useSendMessage, Message } from '@/lib/api';
 import DOMPurify from 'dompurify';
+import { VoiceInput } from '@/components/VoiceInput';
+import { createElevenLabsConfig } from '@/lib/elevenlabs';
 
 interface ChatProps {
   conversationId: string | undefined;
@@ -18,7 +20,6 @@ interface ChatProps {
 
 export function Chat({ conversationId, onConversationCreated }: ChatProps) {
   const [message, setMessage] = useState('');
-  const [isListening, setIsListening] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -82,15 +83,6 @@ export function Chat({ conversationId, onConversationCreated }: ChatProps) {
         createdAt: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMessage]);
-    }
-  };
-
-  const handleVoiceInput = () => {
-    setIsListening(!isListening);
-    if (isListening) {
-      // Stop listening
-    } else {
-      // Start listening - would integrate with ElevenLabs
     }
   };
 
@@ -160,17 +152,15 @@ export function Chat({ conversationId, onConversationCreated }: ChatProps) {
             className="flex-1"
             aria-label="Message input"
           />
-          <Button
-            type="button"
-            variant="secondary"
-            size="md"
-            onClick={handleVoiceInput}
-            className={cn('h-control', isListening && 'bg-brand-primary-soft text-brand-primary')}
-            aria-label={isListening ? 'Stop voice input' : 'Start voice input'}
-            aria-pressed={isListening}
-          >
-            {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-          </Button>
+          <VoiceInput
+            config={createElevenLabsConfig('agent_01')}
+            onTranscript={(text, isFinal) => {
+              if (isFinal && text.trim()) {
+                setMessage(text);
+              }
+            }}
+            className="h-control"
+          />
           <Button type="submit" disabled={!message.trim() || sendMutation.isPending} className="h-control" aria-label="Send message">
             <Send className="h-5 w-5" />
           </Button>

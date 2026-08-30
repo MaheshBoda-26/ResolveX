@@ -157,7 +157,7 @@ export function useSendMessage() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (req: ChatRequest) =>
-      fetchJson<ChatResponse>('/api/chat', {
+      fetchJson<ChatResponse>('/api/agent/process', {
         method: 'POST',
         body: JSON.stringify(req),
       }),

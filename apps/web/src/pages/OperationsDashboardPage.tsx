@@ -87,7 +87,29 @@ export function OperationsDashboardPage() {
             <option>Last 30 Days</option>
           </select>
 
-          <button className="flex items-center gap-1 px-3 py-1.5 border border-outline-variant/60 rounded-lg bg-surface text-on-surface hover:bg-surface-container-low text-xs font-medium transition-colors">
+          <button
+            onClick={() => {
+              const csv = [
+                ['Case ID', 'Customer', 'Issue', 'Status', 'Confidence', 'Priority', 'Time'].join(','),
+                ...filteredCases.map(c => [
+                  c.id,
+                  c.customer,
+                  `"${c.issue.replace(/"/g, '""')}"`,
+                  c.status,
+                  `${c.confidence}%`,
+                  c.priority,
+                  c.time
+                ].join(','))
+              ].join('\n');
+              const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+              const link = document.createElement('a');
+              link.href = URL.createObjectURL(blob);
+              link.download = `operations-cases-${new Date().toISOString().split('T')[0]}.csv`;
+              link.click();
+              URL.revokeObjectURL(link.href);
+            }}
+            className="flex items-center gap-1 px-3 py-1.5 border border-outline-variant/60 rounded-lg bg-surface text-on-surface hover:bg-surface-container-low text-xs font-medium transition-colors"
+          >
             <span className="material-symbols-outlined text-[18px]">download</span>
             Export
           </button>

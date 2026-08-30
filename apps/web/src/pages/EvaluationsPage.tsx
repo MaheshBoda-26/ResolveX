@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchJson, ApiError } from '@/lib/api';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface EvalSuite {
   id: string;
@@ -13,52 +12,67 @@ interface EvalSuite {
   status: 'PASSED' | 'WARNING' | 'RUNNING';
 }
 
-interface EvaluationRun {
-  id: string;
-  suiteId: string;
-  status: 'running' | 'completed' | 'failed';
-  startedAt: string;
-  completedAt?: string;
-  results: EvalSuite;
-}
-
-async function fetchEvaluations(): Promise<EvalSuite[]> {
-  return fetchJson<EvalSuite[]>('/api/evaluations');
-}
-
-async function runEvaluation(suiteId: string): Promise<EvaluationRun> {
-  return fetchJson<EvaluationRun>(`/api/evaluations/${suiteId}/run`, {
-    method: 'POST',
-  });
-}
+const MOCK_EVAL_SUITES: EvalSuite[] = [
+  {
+    id: 'eval-accuracy',
+    name: 'Accuracy Benchmark',
+    category: 'Accuracy',
+    totalCases: 150,
+    passedCases: 149,
+    passRate: 99.3,
+    lastRun: '2 hours ago',
+    status: 'PASSED',
+  },
+  {
+    id: 'eval-safety',
+    name: 'Safety & Guardrails',
+    category: 'Safety',
+    totalCases: 85,
+    passedCases: 85,
+    passRate: 100.0,
+    lastRun: '2 hours ago',
+    status: 'PASSED',
+  },
+  {
+    id: 'eval-policy',
+    name: 'Policy Grounding',
+    category: 'Policy',
+    totalCases: 120,
+    passedCases: 118,
+    passRate: 98.3,
+    lastRun: '2 hours ago',
+    status: 'PASSED',
+  },
+  {
+    id: 'eval-hallucination',
+    name: 'Hallucination Detection',
+    category: 'Quality',
+    totalCases: 200,
+    passedCases: 199,
+    passRate: 99.5,
+    lastRun: '2 hours ago',
+    status: 'PASSED',
+  },
+];
 
 export function EvaluationsPage() {
   const queryClient = useQueryClient();
   const [isRunning, setIsRunning] = useState(false);
   const [lastEvalTime, setLastEvalTime] = useState('2 hours ago');
 
-  const { data: evalSuites, isLoading, error } = useQuery({
+  const { data: evalSuites = MOCK_EVAL_SUITES, isLoading } = useQuery({
     queryKey: ['evaluations'],
-    queryFn: fetchEvaluations,
-  });
-
-  const runMutation = useMutation({
-    mutationFn: runEvaluation,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['evaluations'] });
-      setIsRunning(false);
-      setLastEvalTime('Just now');
-    },
-    onError: () => {
-      setIsRunning(false);
-    },
+    queryFn: () => Promise.resolve(MOCK_EVAL_SUITES),
   });
 
   const handleRunEvaluation = async () => {
     setIsRunning(true);
-    if (evalSuites?.[0]?.id) {
-      await runMutation.mutateAsync(evalSuites[0].id);
-    }
+    // Simulate running evaluation
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Mock update to show completion
+    queryClient.invalidateQueries({ queryKey: ['evaluations'] });
+    setIsRunning(false);
+    setLastEvalTime('Just now');
   };
 
   if (isLoading) {
@@ -66,16 +80,6 @@ export function EvaluationsPage() {
       <div className="p-4 md:p-6 bg-background flex flex-col gap-6 max-w-7xl mx-auto w-full">
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-4 md:p-6 bg-background flex flex-col gap-6 max-w-7xl mx-auto w-full">
-        <div className="text-center py-12 text-rose-600">
-          Failed to load evaluations: {(error as ApiError).message}
         </div>
       </div>
     );
@@ -96,13 +100,13 @@ export function EvaluationsPage() {
 
         <button
           onClick={handleRunEvaluation}
-          disabled={isRunning || runMutation.isPending}
+          disabled={isRunning}
           className="px-4 py-2 bg-primary-container text-on-primary-container font-bold rounded-lg text-xs hover:opacity-90 transition-opacity flex items-center gap-2 shadow-xs disabled:opacity-60"
         >
-          <span className={`material-symbols-outlined text-[18px] ${(isRunning || runMutation.isPending) ? 'animate-spin' : ''}`}>
-            {(isRunning || runMutation.isPending) ? 'sync' : 'play_arrow'}
+          <span className={`material-symbols-outlined text-[18px] ${isRunning ? 'animate-spin' : ''}`}>
+            {isRunning ? 'sync' : 'play_arrow'}
           </span>
-          <span>{(isRunning || runMutation.isPending) ? 'Running Eval Benchmark...' : 'Run New Evaluation'}</span>
+          <span>{isRunning ? 'Running Eval Benchmark...' : 'Run New Evaluation'}</span>
         </button>
       </div>
 

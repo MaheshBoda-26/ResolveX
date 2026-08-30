@@ -50,7 +50,46 @@ export function CaseDetailPage() {
             View Technical Trace
           </Link>
 
-          <button className="px-4 py-2 text-xs font-bold rounded-lg bg-primary-container text-on-primary-container hover:opacity-90 transition-opacity flex items-center gap-1.5 shadow-xs">
+          <button
+            onClick={() => {
+              const caseData = {
+                caseId: id,
+                title: 'Duplicate Charge $120.00 on Order #84920',
+                status: 'Resolved',
+                category: 'Billing & Payments',
+                engine: 'Autonomous Billing Agent v2',
+                createdAt: 'Aug 26, 2026 10:42 AM',
+                timeline: [
+                  { step: 'Understand', title: 'Customer Intent Extracted', description: 'Identified duplicate charge issue for Order #84920 ($120.00).', timestamp: '10:42:01 AM' },
+                  { step: 'Investigate', title: 'Payment Gateway Audited', description: 'Stripe API confirms 2 authorization holds within 45 seconds.', timestamp: '10:42:05 AM' },
+                  { step: 'Policy', title: 'Policy Compliance Check', description: 'POL-PAY-204 passed: Automatic refund eligible for <$250 duplicate.', timestamp: '10:42:09 AM' },
+                  { step: 'Decide', title: 'Resolution Decision Formulated', description: 'Initiate immediate $120.00 refund to original payment method.', timestamp: '10:42:12 AM' },
+                  { step: 'Act', title: 'Executing Refund API Call', description: 'Triggering Stripe Refund Endpoint (tx_ref_99401)...', timestamp: '10:42:15 AM' },
+                  { step: 'Verify', title: 'Post-Action Ledger Audit', description: 'Verify refund status & update customer ledger.', timestamp: 'Completed' },
+                  { step: 'Resolve', title: 'Case Resolution Complete', description: 'Send confirmation summary to customer & close case.', timestamp: 'Completed' },
+                ],
+                actions: [
+                  { method: 'POST', endpoint: '/v1/refunds', description: 'Stripe Refund Endpoint • Charge #ch_3N8xY291 ($120.00)', status: '200 OK' },
+                  { method: 'POST', endpoint: '/v2/notifications/email', description: 'Send refund confirmation receipt to s.jenkins@example.com', status: '200 OK' },
+                ],
+                policies: [
+                  { policy: 'POL-PAY-204: Duplicate Charge Eligibility', description: 'Duplicate charges under $250 qualify for automated refund execution.', status: 'PASSED' },
+                  { policy: 'POL-AUTH-102: Identity & Card Matching', description: 'Verified payment method owner matches customer profile Sarah Jenkins.', status: 'PASSED' },
+                ],
+                notes: [
+                  { author: 'AI Agent (Billing Engine)', text: 'Detected duplicate charge pattern on Stripe transaction ch_3N8xY291.', time: '10:42:05 AM' },
+                  { author: 'Human Supervisor (Alex M.)', text: 'Verified customer Gold Tier standing. Approved refund exception.', time: '10:44:12 AM' },
+                ],
+              };
+              const blob = new Blob([JSON.stringify(caseData, null, 2)], { type: 'application/json' });
+              const link = document.createElement('a');
+              link.href = URL.createObjectURL(blob);
+              link.download = `audit-report-${id}.json`;
+              link.click();
+              URL.revokeObjectURL(link.href);
+            }}
+            className="px-4 py-2 text-xs font-bold rounded-lg bg-primary-container text-on-primary-container hover:opacity-90 transition-opacity flex items-center gap-1.5 shadow-xs"
+          >
             <span className="material-symbols-outlined text-[18px]">download</span>
             Export Audit Report
           </button>
