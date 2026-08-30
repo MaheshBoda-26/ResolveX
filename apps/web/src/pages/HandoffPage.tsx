@@ -324,18 +324,18 @@ export function HandoffPage() {
             </div>
             <div className="mt-3 flex items-center gap-3">
               <button
-                onClick={handleApproveAction}
-                disabled={acceptHandoff.isPending}
+                onClick={handleExecuteRefund}
+                disabled={executeRefund.isPending}
                 className="px-3.5 py-1.5 text-xs font-bold rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-colors disabled:opacity-50"
               >
-                {acceptHandoff.isPending ? 'Accepting...' : `Execute Refund ${selectedItem.amount}`}
+                {executeRefund.isPending ? 'Executing Refund...' : `Execute Refund ${selectedItem.amount}`}
               </button>
               <button
-                onClick={handleCompleteHandoff}
-                disabled={completeHandoff.isPending}
+                onClick={handleRequestDocumentation}
+                disabled={requestDocumentation.isPending}
                 className="px-3.5 py-1.5 text-xs font-semibold rounded-md border border-outline-variant text-on-surface hover:bg-surface-container-low disabled:opacity-50"
               >
-                {completeHandoff.isPending ? 'Completing...' : 'Request Additional Documentation'}
+                {requestDocumentation.isPending ? 'Requesting...' : 'Request Additional Documentation'}
               </button>
             </div>
           </div>
