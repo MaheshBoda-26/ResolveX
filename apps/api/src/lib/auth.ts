@@ -54,7 +54,10 @@ export function registerAuthMiddleware(server: FastifyInstance): void {
     const publicPaths = ['/health'];
     const isPublic = publicPaths.some(path => request.url.startsWith(path));
 
-    if (!isPublic) {
+    // Allow demo mode to bypass auth for local development
+    const isDemoMode = process.env['DEMO_MODE'] === 'true' || process.env['NODE_ENV'] === 'development';
+
+    if (!isPublic && !isDemoMode) {
       await authMiddleware(request, reply);
     }
   });

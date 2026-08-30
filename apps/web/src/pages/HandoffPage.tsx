@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ResolutionTimeline } from '@/components/ResolutionTimeline';
-import { useHandoffs, useHandoff, useAcceptHandoff, useCompleteHandoff, Handoff } from '@/lib/api';
+import { useHandoffs, useHandoff, useAcceptHandoff, useCompleteHandoff, useExecuteRefund, useRequestDocumentation, Handoff } from '@/lib/api';
 
 interface HandoffItem {
   id: string;
@@ -71,6 +71,8 @@ export function HandoffPage() {
   const { data: selectedHandoff, isLoading } = useHandoff(selectedId);
   const acceptHandoff = useAcceptHandoff();
   const completeHandoff = useCompleteHandoff();
+  const executeRefund = useExecuteRefund();
+  const requestDocumentation = useRequestDocumentation();
 
   const handoffItems = handoffs?.map(mapHandoffToItem) || [];
   const selectedItem = selectedHandoff ? mapHandoffToItem(selectedHandoff) : handoffItems.find(item => item.id === selectedId) ?? handoffItems[0];
@@ -102,6 +104,24 @@ export function HandoffPage() {
       setActionDone('Handoff marked as complete successfully.');
     } catch (error) {
       setActionDone('Failed to complete handoff. Please try again.');
+    }
+  };
+
+  const handleExecuteRefund = async () => {
+    try {
+      await executeRefund.mutateAsync({ handoffId: selectedId, amount: selectedItem.amount });
+      setActionDone('Refund executed successfully.');
+    } catch (error) {
+      setActionDone('Failed to execute refund. Please try again.');
+    }
+  };
+
+  const handleRequestDocumentation = async () => {
+    try {
+      await requestDocumentation.mutateAsync(selectedId);
+      setActionDone('Documentation requested from customer.');
+    } catch (error) {
+      setActionDone('Failed to request documentation. Please try again.');
     }
   };
 

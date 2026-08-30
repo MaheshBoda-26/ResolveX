@@ -250,3 +250,32 @@ export function useCompleteHandoff() {
     },
   });
 }
+
+export function useExecuteRefund() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ handoffId, amount }: { handoffId: string; amount: string }) =>
+      fetchJson<Handoff>(`/api/handoffs/${handoffId}/execute-refund`, {
+        method: 'POST',
+        body: JSON.stringify({ amount }),
+      }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['handoffs'] });
+      queryClient.invalidateQueries({ queryKey: ['handoff', data.id] });
+    },
+  });
+}
+
+export function useRequestDocumentation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (handoffId: string) =>
+      fetchJson<Handoff>(`/api/handoffs/${handoffId}/request-docs`, {
+        method: 'POST',
+      }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['handoffs'] });
+      queryClient.invalidateQueries({ queryKey: ['handoff', data.id] });
+    },
+  });
+}
