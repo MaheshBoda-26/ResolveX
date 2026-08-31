@@ -13,7 +13,7 @@ export const env = createEnv({
     PORT: z.coerce.number().default(4000),
     CORS_ORIGIN: z.string().url().default('http://localhost:5173'),
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
-    DEMO_MODE: z.string().transform(v => v === 'true').default('true'),
+    DEMO_MODE: z.preprocess((v) => v === 'true', z.boolean()).default(true),
     AUTONOMY_GATEWAY_URL: z.string().url().default('http://localhost:4000'),
     JWKS_URL: z.string().url().default('https://your-auth-provider.com/.well-known/jwks.json'),
     JWT_ISSUER: z.string().optional(),

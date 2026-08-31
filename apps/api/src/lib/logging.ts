@@ -1,11 +1,11 @@
-import pino, { Logger } from 'pino';
+import pino, { Logger as PinoLogger, LogLevel as PinoLogLevel } from 'pino';
 import { getCurrentSpan } from './telemetry';
 
 type LogLevel = 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace' | 'silent';
-const logLevel = (process.env['LOG_LEVEL'] as LogLevel) || 'info';
+const logLevel: PinoLogLevel = (process.env['LOG_LEVEL'] as LogLevel) || 'info';
 const isDevelopment = process.env['NODE_ENV'] === 'development';
 
-const baseLogger: Logger = pino({
+const baseLogger: PinoLogger = pino({
   level: logLevel,
   transport: isDevelopment ? {
     target: 'pino-pretty',

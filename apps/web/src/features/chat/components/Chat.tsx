@@ -6,7 +6,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import { Separator } from '@/shared/components/ui/separator';
-import { cn } from '@/shared/utils';
+import { cn } from '@/shared/utils/utils';
 import { useSendMessage, Message } from '@/shared/lib/api';
 import DOMPurify from 'dompurify';
 import { VoiceInput } from '@/features/chat/components/VoiceInput';

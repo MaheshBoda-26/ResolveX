@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useTheme } from '@/lib/theme';
+import { useTheme } from '@/shared/lib/theme';
 import { useState } from 'react';
 
 interface HeaderProps {

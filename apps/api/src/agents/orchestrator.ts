@@ -62,11 +62,11 @@ async function routeToBillingAgent(context: AgentContext, task: Task): Promise<B
     };
 
     try {
-      const response = await messageBus.request<'billing', BillingDecision>(
+      const response = await messageBus.request(
         'orchestrator' as const,
         'billing' as const,
         billingTask
-      );
+      ) as { payload: BillingDecision };
       addSpanEvent('billing_agent_response_received');
       logAgentOperation(logger, 'routeToBillingAgent', 'completed', { action: response.payload.action });
       return response.payload;
@@ -115,11 +115,11 @@ async function routeToSubscriptionAgent(context: AgentContext, task: Task): Prom
     };
 
     try {
-      const response = await messageBus.request<'subscription', SubscriptionDecision>(
+      const response = await messageBus.request(
         'orchestrator' as const,
         'subscription' as const,
         subscriptionTask
-      );
+      ) as { payload: SubscriptionDecision };
       addSpanEvent('subscription_agent_response_received');
       logAgentOperation(logger, 'routeToSubscriptionAgent', 'completed', { action: response.payload.action });
       return response.payload;

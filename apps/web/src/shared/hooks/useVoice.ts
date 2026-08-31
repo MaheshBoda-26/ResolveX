@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { elevenLabsClient, VoiceState, VoiceCallbacks, ElevenLabsConfig } from '@/lib/elevenlabs';
+import { elevenLabsClient, VoiceState, VoiceCallbacks, ElevenLabsConfig } from '@/shared/lib/elevenlabs';
 
 // ElevenLabs WebSocket message types
 export interface ElevenLabsUserTranscriptMessage {

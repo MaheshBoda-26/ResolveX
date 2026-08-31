@@ -2,13 +2,13 @@
 
 import { useState, useMemo } from 'react';
 import { Search, Filter, ChevronUp, ChevronDown, ArrowUpDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge, BadgeProps } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
-import { useHandoffs, Handoff, HandoffFilters, HandoffSort, HandoffStatus } from '@/lib/api';
+import { Button } from '@/shared/components/ui/button';
+import { Badge, BadgeProps } from '@/shared/components/ui/badge';
+import { Card, CardContent } from '@/shared/components/ui/card';
+import { Input } from '@/shared/components/ui/input';
+import { Separator } from '@/shared/components/ui/separator';
+import { cn } from '@/shared/utils/utils';
+import { useHandoffs, Handoff, HandoffFilters, HandoffSort, HandoffStatus } from '@/shared/lib/api';
 
 const STATUS_COLORS: Record<HandoffStatus, 'warning' | 'info' | 'success'> = {
   pending: 'warning',

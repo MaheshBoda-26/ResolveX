@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ResolutionTimeline } from '@/components/ResolutionTimeline';
+import { ResolutionTimeline } from '@/features/trace/components/ResolutionTimeline';
 
 export function CaseDetailPage() {
   const { id = 'RX-10482' } = useParams();

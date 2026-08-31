@@ -2,12 +2,12 @@
 
 import { useState, memo } from 'react';
 import { ChevronDown, ChevronUp, AlertCircle, CheckCircle, XCircle, Clock, User, Mail, CreditCard, Shield, FileText, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
-import { Handoff, HandoffStatus, Evidence } from '@/lib/api';
+import { Button } from '@/shared/components/ui/button';
+import { Badge } from '@/shared/components/ui/badge';
+import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui/card';
+import { Separator } from '@/shared/components/ui/separator';
+import { cn } from '@/shared/utils/utils';
+import { Handoff, HandoffStatus, Evidence } from '@/shared/lib/api';
 
 interface CollapsibleSectionProps {
   title: string;

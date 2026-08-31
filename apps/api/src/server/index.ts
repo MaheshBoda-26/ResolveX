@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import Fastify, { FastifyInstance, FastifyRequest, FastifyReply, FastifyBaseLogger } from 'fastify';
+import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { fastifyCors } from '@fastify/cors';
 import { conversationsRoutes } from '../routes/conversations.js';
 import { triageRoutes } from '../routes/triage.js';
@@ -12,9 +12,8 @@ import { adminRoutes } from '../routes/admin.js';
 import { db, pool } from '../db/index.js';
 import { registerAuthMiddleware } from '../lib/auth.js';
 import { env } from '../lib/env.js';
-import { initTelemetry, shutdownTelemetry, getCorrelationId, withTracing } from '../lib/telemetry.js';
+import { initTelemetry, shutdownTelemetry, getCorrelationId } from '../lib/telemetry.js';
 import { createRequestLogger, logRequest, logError, logger } from '../lib/logging.js';
-import type { Logger as PinoLogger } from 'pino';
 
 const port = env.PORT;
 const corsOrigin = env.CORS_ORIGIN;
@@ -23,7 +22,7 @@ initTelemetry();
 
 export async function buildServer(): Promise<FastifyInstance> {
   const server = Fastify({
-    logger: logger as FastifyBaseLogger,
+    logger,
   });
 
   await server.register(fastifyCors, {

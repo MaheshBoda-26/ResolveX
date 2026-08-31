@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ResolutionTimeline } from '@/components/ResolutionTimeline';
-import { useHandoffs, useHandoff, useAcceptHandoff, useCompleteHandoff, useExecuteRefund, useRequestDocumentation, Handoff } from '@/lib/api';
+import { ResolutionTimeline } from '@/features/trace/components/ResolutionTimeline';
+import { useHandoffs, useHandoff, useAcceptHandoff, useCompleteHandoff, useExecuteRefund, useRequestDocumentation, Handoff } from '@/shared/lib/api';
 
 interface HandoffItem {
   id: string;

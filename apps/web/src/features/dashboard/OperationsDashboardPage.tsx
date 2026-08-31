@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useHandoffs, Handoff, HandoffStatus } from '@/lib/api';
+import { useHandoffs, Handoff, HandoffStatus } from '@/shared/lib/api';
 
 interface CaseItem {
   id: string;

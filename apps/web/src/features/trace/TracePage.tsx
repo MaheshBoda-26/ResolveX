@@ -1,5 +1,5 @@
 import { useSearchParams, Link } from 'react-router-dom';
-import { TraceTimeline } from '@/components/TraceTimeline';
+import { TraceTimeline } from '@/features/trace/components/TraceTimeline';
 
 export function TracePage() {
   const [searchParams] = useSearchParams();

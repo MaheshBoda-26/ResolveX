@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { AgentTrace } from '@/lib/api';
+import { AgentTrace } from '@/shared/lib/api';
+import { env } from '@/lib/env';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+const API_URL = env.VITE_API_URL ?? 'http://localhost:3000';
 
 async function fetchJson<T>(path: string): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
