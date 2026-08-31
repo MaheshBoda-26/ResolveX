@@ -6,30 +6,9 @@ import {
   AutonomyGateInput,
   AutonomyGateResult,
 } from '@resolvex/shared';
-
-const FRESHWORKS_DOMAIN = process.env['FRESHWORKS_DOMAIN'];
-const FRESHWORKS_API_KEY = process.env['FRESHWORKS_API_KEY'];
-const FRESHWORKS_BASE_URL = process.env['FRESHWORKS_BASE_URL'] || `https://${FRESHWORKS_DOMAIN}.freshworks.com/crm/sales/api`;
-
-interface FreshworksCustomer {
-  id: string;
-  name: string;
-  email: string;
-  plan_id: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface FreshworksSubscription {
-  id: string;
-  customer_id: string;
-  plan_id: string;
-  status: string;
-  price: number;
-  renewal_at: string;
-  updated_at: string;
-}
+import { db } from '../db/client';
+import { customers, subscriptions } from '../db/schema';
+import { eq } from 'drizzle-orm';
 
 interface SubscriptionTask {
   type: 'upgrade' | 'downgrade' | 'cancel';
@@ -40,83 +19,22 @@ interface SubscriptionTask {
   };
 }
 
-async function freshworksGet<T>(endpoint: string): Promise<T | null> {
-  if (!FRESHWORKS_DOMAIN || !FRESHWORKS_API_KEY) {
-    console.warn('Freshworks credentials not configured');
-    return null;
-  }
-
-  try {
-    const response = await fetch(`${FRESHWORKS_BASE_URL}${endpoint}`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${FRESHWORKS_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      signal: AbortSignal.timeout(10000),
-    });
-
-    if (!response.ok) {
-      console.error(`Freshworks API error: ${response.status} ${response.statusText}`);
-      return null;
-    }
-
-    return (await response.json()) as T;
-  } catch (error) {
-    console.error('Freshworks API call failed:', error);
-    return null;
-  }
-}
-
 export async function getCustomer(customerId: string): Promise<Customer | null> {
-  const data = await freshworksGet<FreshworksCustomer>(`/customers/${customerId}`);
+  const [data] = await db.select().from(customers).where(eq(customers.id, customerId)).limit(1);
   if (!data) return null;
 
   return {
     id: data.id,
     name: data.name,
     email: data.email,
-    planId: data.plan_id,
+    planId: data.planId,
     status: data.status as Customer['status'],
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
+    createdAt: data.createdAt.toISOString(),
+    updatedAt: data.updatedAt.toISOString(),
   };
 }
 
-export async function getSubscription(customerId: string): Promise<Subscription | null> {
-  const data = await freshworksGet<FreshworksSubscription>(`/subscriptions?customer_id=${customerId}`);
-  if (!data) return null;
-
-  return {
-    id: data.id,
-    customerId: data.customer_id,
-    planId: data.plan_id,
-    status: data.status as Subscription['status'],
-    price: data.price,
-    renewalAt: data.renewal_at,
-    updatedAt: data.updated_at,
-  };
-}
-
-async function callAutonomyGate(input: AutonomyGateInput): Promise<AutonomyGateResult> {
-  const gatewayUrl = process.env['AUTONOMY_GATEWAY_URL'] || 'http://localhost:3002';
-  try {
-    const response = await fetch(`${gatewayUrl}/api/autonomy/gate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(input),
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!response.ok) {
-      console.error(`Autonomy gate error: ${response.status}`);
-      return { allowed: false, reason: 'Autonomy gate unavailable', requiredApprovals: [] };
-    }
-    return (await response.json()) as AutonomyGateResult;
-  } catch (error) {
-    console.error('Autonomy gate call failed:', error);
-    return { allowed: false, reason: 'Autonomy gate call failed', requiredApprovals: [] };
-  }
-}
+import { checkAutonomyGate } from '../verification/autonomyGate';
 
 export function checkPlanExists(planId: string): boolean {
   const validPlans = ['starter', 'professional', 'enterprise', 'pro', 'basic'];
@@ -134,6 +52,21 @@ export function getPlanTier(planId: string): number {
   return tiers[planId.toLowerCase()] || 0;
 }
 
+export async function getSubscription(customerId: string): Promise<Subscription | null> {
+  const [data] = await db.select().from(subscriptions).where(eq(subscriptions.customerId, customerId)).limit(1);
+  if (!data) return null;
+
+  return {
+    id: data.id,
+    customerId: data.customerId,
+    planId: data.planId,
+    status: data.status as Subscription['status'],
+    price: Number(data.price),
+    renewalAt: data.renewalAt.toISOString(),
+    updatedAt: data.updatedAt.toISOString(),
+  };
+}
+
 export async function processSubscriptionTask(task: SubscriptionTask): Promise<SubscriptionDecision> {
   const { customerId, targetPlanId } = task.payload;
   const evidence: string[] = [];
@@ -144,7 +77,7 @@ export async function processSubscriptionTask(task: SubscriptionTask): Promise<S
     return SubscriptionDecisionSchema.parse({
       action: 'investigate',
       eligibility: 'ineligible',
-      evidence: ['Customer not found in Freshworks'],
+      evidence: ['Customer not found'],
       policyReferences: ['POL-CUST-001'],
       requiresApproval: false,
     });
@@ -189,7 +122,10 @@ export async function processSubscriptionTask(task: SubscriptionTask): Promise<S
   let eligibility: SubscriptionDecision['eligibility'] = 'eligible';
   let requiresApproval = false;
 
-  switch (task.type) {
+  // Handle change_plan as upgrade
+  const effectiveType = task.type === 'change_plan' ? 'upgrade' : task.type;
+
+  switch (effectiveType) {
     case 'upgrade': {
       if (!targetPlanId) {
         action = 'investigate';
@@ -262,13 +198,13 @@ export async function processSubscriptionTask(task: SubscriptionTask): Promise<S
   if (action === 'upgrade' || action === 'downgrade') {
     const gateInput: AutonomyGateInput = {
       agent: 'subscription',
-      action: task.type,
+      action,
       evidence,
       policyReferences,
-      permission: `subscription.${task.type}`,
+      permission: `subscription.${action}`,
       risk: action === 'downgrade' ? 'medium' : 'low',
     };
-    const gateResult = await callAutonomyGate(gateInput);
+    const gateResult = checkAutonomyGate(gateInput);
     if (!gateResult.allowed) {
       return SubscriptionDecisionSchema.parse({
         action: 'escalate',

@@ -2,6 +2,7 @@ import { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { ChatRequestSchema, ConversationSchema } from '@resolvex/shared';
 import { toFastifySchema } from '../lib/fastify-schema';
+import { createConversation, getConversation } from '../db/conversations';
 
 export const conversationsRoutes: FastifyPluginAsync = async (app) => {
   app.post('/', {
@@ -14,16 +15,16 @@ export const conversationsRoutes: FastifyPluginAsync = async (app) => {
     async handler(request, reply) {
       const body = request.body as z.infer<typeof ChatRequestSchema>;
 
-      const conversation = {
-        id: crypto.randomUUID(),
-        customerId: body.customerId ?? null,
-        channel: body.channel,
-        status: 'open' as const,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+      const conversation = await createConversation(body.customerId ?? null, body.channel);
 
-      return reply.status(201).send(conversation);
+      return reply.status(201).send({
+        id: conversation.id,
+        customerId: conversation.customerId ?? null,
+        channel: conversation.channel,
+        status: conversation.status,
+        createdAt: conversation.createdAt.toISOString(),
+        updatedAt: conversation.updatedAt.toISOString(),
+      });
     },
   });
 
@@ -38,17 +39,19 @@ export const conversationsRoutes: FastifyPluginAsync = async (app) => {
     async handler(request, reply) {
       const { id } = request.params as { id: string };
 
-      // Placeholder: In real implementation, fetch from database
-      const conversation = {
-        id,
-        customerId: null,
-        channel: 'chat' as const,
-        status: 'open' as const,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+      const conversation = await getConversation(id);
+      if (!conversation) {
+        return reply.status(404).send({ error: 'Conversation not found', statusCode: 404 });
+      }
 
-      return reply.send(conversation);
+      return reply.send({
+        id: conversation.id,
+        customerId: conversation.customerId ?? null,
+        channel: conversation.channel,
+        status: conversation.status,
+        createdAt: conversation.createdAt.toISOString(),
+        updatedAt: conversation.updatedAt.toISOString(),
+      });
     },
   });
 

@@ -135,7 +135,7 @@ export function determineRiskLevel(agent: string, action: string, amount?: numbe
     return RISK_LEVELS.HIGH;
   }
 
-  if (lowerAction === 'investigate' || lowerAction === 'verify') {
+  if (lowerAction.startsWith('investigate') || lowerAction.startsWith('verify')) {
     return RISK_LEVELS.LOW;
   }
 

@@ -1,10 +1,11 @@
 import { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
-import { ChatRequestSchema, ChatResponseSchema, TriageResultSchema } from '@resolvex/shared';
+import { ChatRequestSchema, ChatResponseSchema, TriageResultSchema, HandoffReason, HANDOFF_REASONS } from '@resolvex/shared';
 import { triageMessage } from '../agents/triage';
 import { orchestrateWorkflow, createAgentContext } from '../agents/orchestrator';
 import { createConversation, createAgentRun, createTriageAgentRun } from '../db/conversations';
-import { createAgentRun as createTraceRun } from '../traces/repository';
+import { createAgentRun as createTraceRun, updateAgentRunStatus } from '../traces/repository';
+import { generateCaseBrief } from '../handoff/caseBrief';
 import { toFastifySchema } from '../lib/fastify-schema';
 
 export const agentRoutes: FastifyPluginAsync = async (app) => {
@@ -26,7 +27,7 @@ export const agentRoutes: FastifyPluginAsync = async (app) => {
         conversationId = conversation.id;
       }
 
-      await createTraceRun({
+      const traceRun = await createTraceRun({
         conversationId,
         agentName: 'triage',
         input: body as Record<string, unknown>,
@@ -47,11 +48,49 @@ export const agentRoutes: FastifyPluginAsync = async (app) => {
       const finalStatus = orchestratorResult.status === 'completed' ? 'completed' :
                           orchestratorResult.status === 'escalated' ? 'escalated' : 'error';
 
+      // If escalated, create a handoff
+      if (orchestratorResult.status === 'escalated') {
+        const billingDecisions = orchestratorResult.decisions
+          .filter(d => d.agent === 'billing')
+          .map(d => d.decision);
+        const subscriptionDecisions = orchestratorResult.decisions
+          .filter(d => d.agent === 'subscription')
+          .map(d => d.decision);
+
+        const hasHighValueRefund = billingDecisions.some(d =>
+          d.action === 'refund' && (d.amount ?? 0) > 500
+        );
+
+        const hasPolicyException = billingDecisions.some(d => d.action === 'escalate') ||
+                                   subscriptionDecisions.some(d => d.action === 'escalate');
+
+        let escalationReason: HandoffReason = HANDOFF_REASONS.POLICY_EXCEPTION;
+        if (hasHighValueRefund) {
+          escalationReason = HANDOFF_REASONS.HIGH_VALUE_REFUND;
+        } else if (hasPolicyException) {
+          escalationReason = HANDOFF_REASONS.POLICY_EXCEPTION;
+        }
+
+        await generateCaseBrief({
+          conversationId,
+          triageResult,
+          specialistDecisions: {
+            billing: billingDecisions,
+            subscription: subscriptionDecisions,
+          },
+          verificationResults: [],
+          escalationReason,
+        });
+      }
+
       await createAgentRun(conversationId, 'triage', { ...body, traceId }, {
         triageResult,
         decisions: orchestratorResult.decisions,
         status: finalStatus,
       }, finalStatus === 'completed' ? 'completed' : 'failed');
+
+      // Update the trace run with final status
+      await updateAgentRunStatus(traceRun.id, finalStatus === 'completed' ? 'completed' : 'failed', new Date());
 
       return reply.send({
         conversationId,

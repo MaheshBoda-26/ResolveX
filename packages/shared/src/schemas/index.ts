@@ -163,10 +163,12 @@ export const AutonomyGateResultSchema = z.object({
 });
 
 // API schemas
+// Use permissive UUID pattern for customerId since DB has version-0 UUIDs
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const ChatRequestSchema = z.object({
   message: z.string().min(1).max(4000),
   conversationId: z.uuid().optional(),
-  customerId: z.uuid().optional(),
+  customerId: z.string().regex(uuidPattern).optional(),
   channel: z.enum(['chat', 'voice']),
 });
 

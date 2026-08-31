@@ -73,6 +73,23 @@ export async function callFreshworksTriage(message: string): Promise<FreshworksT
   }
 }
 
+function extractTargetPlan(message: string): string | undefined {
+  const lower = message.toLowerCase();
+  const plans = ['enterprise', 'pro', 'professional', 'basic', 'starter'];
+  for (const plan of plans) {
+    if (lower.includes(plan)) {
+      // Check if it's a target plan (e.g., "upgrade to enterprise" or "plan to pro")
+      const upgradePattern = new RegExp(`(?:upgrade|change|switch|move).*\\b${plan}\\b`, 'i');
+      const planPattern = new RegExp(`\\bplan\\s+is\\s+${plan}\\b`, 'i');
+      const toPattern = new RegExp(`\\bto\\s+${plan}\\b`, 'i');
+      if (upgradePattern.test(lower) || planPattern.test(lower) || toPattern.test(lower)) {
+        return plan;
+      }
+    }
+  }
+  return undefined;
+}
+
 export function fallbackTriage(message: string): TriageResult {
   const lower = message.toLowerCase();
   const intents: Intent[] = [];
@@ -91,11 +108,12 @@ export function fallbackTriage(message: string): TriageResult {
 
   if (lower.includes('subscript') || lower.includes('plan') || lower.includes('upgrade') || lower.includes('downgrade') || lower.includes('cancel')) {
     intents.push({ type: 'subscription', confidence: 0.7, entities: {} });
+    const targetPlanId = extractTargetPlan(message);
     tasks.push({
       id: crypto.randomUUID(),
       agent: 'subscription',
-      type: 'investigate_subscription_issue',
-      payload: { message },
+      type: targetPlanId ? 'change_plan' : 'investigate_subscription_issue',
+      payload: { message, targetPlanId },
       priority: 'normal',
     });
   }

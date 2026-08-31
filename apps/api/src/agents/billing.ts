@@ -6,31 +6,10 @@ import {
   AutonomyGateInput,
   AutonomyGateResult,
 } from '@resolvex/shared';
-
-const FRESHWORKS_DOMAIN = process.env['FRESHWORKS_DOMAIN'];
-const FRESHWORKS_API_KEY = process.env['FRESHWORKS_API_KEY'];
-const FRESHWORKS_BASE_URL = process.env['FRESHWORKS_BASE_URL'] || `https://${FRESHWORKS_DOMAIN}.freshworks.com/crm/sales/api`;
-
-interface FreshworksCustomer {
-  id: string;
-  name: string;
-  email: string;
-  plan_id: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface FreshworksTransaction {
-  id: string;
-  customer_id: string;
-  invoice_id: string;
-  amount: number;
-  currency: string;
-  status: string;
-  charged_at: string;
-  metadata: Record<string, unknown>;
-}
+import { db } from '../db/client';
+import { customers, transactions } from '../db/schema';
+import { eq, and } from 'drizzle-orm';
+import { checkAutonomyGate } from '../verification/autonomyGate';
 
 interface BillingTask {
   type: 'duplicate_charge' | 'refund_inquiry';
@@ -42,61 +21,32 @@ interface BillingTask {
   };
 }
 
-async function freshworksGet<T>(endpoint: string): Promise<T | null> {
-  if (!FRESHWORKS_DOMAIN || !FRESHWORKS_API_KEY) {
-    console.warn('Freshworks credentials not configured');
-    return null;
-  }
-
-  try {
-    const response = await fetch(`${FRESHWORKS_BASE_URL}${endpoint}`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${FRESHWORKS_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      signal: AbortSignal.timeout(10000),
-    });
-
-    if (!response.ok) {
-      console.error(`Freshworks API error: ${response.status} ${response.statusText}`);
-      return null;
-    }
-
-    return (await response.json()) as T;
-  } catch (error) {
-    console.error('Freshworks API call failed:', error);
-    return null;
-  }
-}
-
 export async function getCustomer(customerId: string): Promise<Customer | null> {
-  const data = await freshworksGet<FreshworksCustomer>(`/customers/${customerId}`);
+  const [data] = await db.select().from(customers).where(eq(customers.id, customerId)).limit(1);
   if (!data) return null;
 
   return {
     id: data.id,
     name: data.name,
     email: data.email,
-    planId: data.plan_id,
+    planId: data.planId,
     status: data.status as Customer['status'],
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
+    createdAt: data.createdAt.toISOString(),
+    updatedAt: data.updatedAt.toISOString(),
   };
 }
 
 export async function getTransactions(customerId: string): Promise<Transaction[]> {
-  const data = await freshworksGet<FreshworksTransaction[]>(`/transactions?customer_id=${customerId}`);
-  if (!data) return [];
+  const data = await db.select().from(transactions).where(eq(transactions.customerId, customerId));
 
   return data.map(t => ({
     id: t.id,
-    customerId: t.customer_id,
-    invoiceId: t.invoice_id,
-    amount: t.amount,
+    customerId: t.customerId,
+    invoiceId: t.invoiceId,
+    amount: Number(t.amount),
     currency: t.currency,
     status: t.status as Transaction['status'],
-    chargedAt: t.charged_at,
+    chargedAt: t.chargedAt.toISOString(),
     metadata: t.metadata,
   }));
 }
@@ -248,7 +198,7 @@ export async function processBillingTask(task: BillingTask): Promise<BillingDeci
       permission: 'billing.refund',
       risk,
     };
-    const gateResult = await callAutonomyGate(gateInput);
+    const gateResult = checkAutonomyGate(gateInput);
     if (!gateResult.allowed) {
       return BillingDecisionSchema.parse({
         action: 'escalate',

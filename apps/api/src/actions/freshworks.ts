@@ -30,16 +30,19 @@ const freshworksPool = new Pool(FRESHWORKS_BASE_URL, {
 
 setGlobalDispatcher(freshworksPool);
 
+// Use permissive UUID pattern for customerId since DB has version-0 UUIDs
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const GetCustomerInputSchema = z.object({
-  customerId: z.uuid(),
+  customerId: z.string().regex(uuidPattern),
 });
 
 const GetTransactionsInputSchema = z.object({
-  customerId: z.uuid(),
+  customerId: z.string().regex(uuidPattern),
 });
 
 const GetSubscriptionInputSchema = z.object({
-  customerId: z.uuid(),
+  customerId: z.string().regex(uuidPattern),
 });
 
 const CheckPolicyInputSchema = z.object({
@@ -47,19 +50,19 @@ const CheckPolicyInputSchema = z.object({
 });
 
 const IssueRefundInputSchema = z.object({
-  customerId: z.uuid(),
+  customerId: z.string().regex(uuidPattern),
   amount: z.number().positive(),
   invoiceId: z.string().min(1).max(100),
   reason: z.string().min(1).max(500),
 });
 
 const UpgradeSubscriptionInputSchema = z.object({
-  customerId: z.uuid(),
+  customerId: z.string().regex(uuidPattern),
   targetPlanId: z.string().min(1).max(100),
 });
 
 const VerifyCustomerStateInputSchema = z.object({
-  customerId: z.uuid(),
+  customerId: z.string().regex(uuidPattern),
   expectedState: z.record(z.string(), z.unknown()),
 });
 
