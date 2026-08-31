@@ -47,7 +47,7 @@ export async function getTransactions(customerId: string): Promise<Transaction[]
     currency: t.currency,
     status: t.status as Transaction['status'],
     chargedAt: t.chargedAt.toISOString(),
-    metadata: t.metadata,
+    metadata: (t.metadata as Record<string, unknown>) ?? {},
   }));
 }
 

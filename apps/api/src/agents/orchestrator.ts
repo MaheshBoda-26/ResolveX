@@ -37,12 +37,12 @@ async function routeToBillingAgent(context: AgentContext, task: Task): Promise<B
 
   // Convert task to billing task format
   const billingTask = {
-    type: task.type === 'investigate_billing_issue' ? 'duplicate_charge' : task.type,
+    type: task.type === 'investigate_billing_issue' ? 'duplicate_charge' as const : 'refund_inquiry' as const,
     payload: {
       customerId: context.customerId,
-      amount: task.payload?.amount as number | undefined,
-      invoiceId: task.payload?.invoiceId as string | undefined,
-      message: task.payload?.message as string | undefined,
+      amount: task.payload?.['amount'] as number | undefined,
+      invoiceId: task.payload?.['invoiceId'] as string | undefined,
+      message: task.payload?.['message'] as string | undefined,
     },
   };
 
@@ -66,8 +66,8 @@ async function routeToSubscriptionAgent(context: AgentContext, task: Task): Prom
     type: (task.type === 'investigate_subscription_issue' ? 'change_plan' : task.type) as 'upgrade' | 'downgrade' | 'cancel',
     payload: {
       customerId: context.customerId,
-      targetPlanId: task.payload?.targetPlanId as string | undefined,
-      message: task.payload?.message as string | undefined,
+      targetPlanId: task.payload?.['targetPlanId'] as string | undefined,
+      message: task.payload?.['message'] as string | undefined,
     },
   };
 

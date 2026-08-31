@@ -11,7 +11,7 @@ import { customers, subscriptions } from '../db/schema';
 import { eq } from 'drizzle-orm';
 
 interface SubscriptionTask {
-  type: 'upgrade' | 'downgrade' | 'cancel';
+  type: 'upgrade' | 'downgrade' | 'cancel' | 'change_plan';
   payload: {
     customerId: string;
     targetPlanId?: string;
@@ -122,8 +122,8 @@ export async function processSubscriptionTask(task: SubscriptionTask): Promise<S
   let eligibility: SubscriptionDecision['eligibility'] = 'eligible';
   let requiresApproval = false;
 
-  // Handle change_plan as upgrade
-  const effectiveType = task.type === 'change_plan' ? 'upgrade' : task.type;
+  // Handle change_plan as upgrade (from orchestrator)
+  const effectiveType = (task.type === 'change_plan' ? 'upgrade' : task.type) as SubscriptionDecision['action'];
 
   switch (effectiveType) {
     case 'upgrade': {

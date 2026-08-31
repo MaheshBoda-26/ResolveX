@@ -1,8 +1,9 @@
 import { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { ChatRequestSchema, ChatResponseSchema, TriageResultSchema, HandoffReason, HANDOFF_REASONS } from '@resolvex/shared';
+import type { BillingDecision, SubscriptionDecision } from '@resolvex/shared';
 import { triageMessage } from '../agents/triage';
-import { orchestrateWorkflow, createAgentContext } from '../agents/orchestrator';
+import { orchestrateWorkflow, createAgentContext, type SpecialistDecision } from '../agents/orchestrator';
 import { createConversation, createAgentRun, createTriageAgentRun } from '../db/conversations';
 import { createAgentRun as createTraceRun, updateAgentRunStatus } from '../traces/repository';
 import { generateCaseBrief } from '../handoff/caseBrief';
@@ -51,10 +52,10 @@ export const agentRoutes: FastifyPluginAsync = async (app) => {
       // If escalated, create a handoff
       if (orchestratorResult.status === 'escalated') {
         const billingDecisions = orchestratorResult.decisions
-          .filter(d => d.agent === 'billing')
+          .filter((d): d is SpecialistDecision & { decision: BillingDecision } => d.agent === 'billing')
           .map(d => d.decision);
         const subscriptionDecisions = orchestratorResult.decisions
-          .filter(d => d.agent === 'subscription')
+          .filter((d): d is SpecialistDecision & { decision: SubscriptionDecision } => d.agent === 'subscription')
           .map(d => d.decision);
 
         const hasHighValueRefund = billingDecisions.some(d =>
