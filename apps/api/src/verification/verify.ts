@@ -1,6 +1,12 @@
 import { db } from '../db/client';
-import { verifications, toolCalls, customers, subscriptions as subscriptionsTable, transactions as transactionsTable } from '../db/schema';
-import { eq, and } from 'drizzle-orm';
+import { verifications, toolCalls } from '../db/schema';
+import { eq } from 'drizzle-orm';
+import {
+  getCustomer,
+  getTransactions,
+  getSubscription,
+  verifyCustomerState as freshworksVerifyCustomerState,
+} from '../actions/freshworks';
 import type { Customer, Transaction, Subscription } from '@resolvex/shared';
 
 export interface RefundVerificationInput {
@@ -50,7 +56,7 @@ export async function verifyRefund(
   const startTime = Date.now();
 
   try {
-    const transactions = await db.select().from(transactionsTable).where(eq(transactionsTable.customerId, input.customerId));
+    const transactions = await getTransactions(agentRunId, { customerId: input.customerId });
 
     const refundTx = transactions.find(t =>
       t.invoiceId === input.invoiceId &&
@@ -136,8 +142,8 @@ export async function verifyUpgrade(
   input: UpgradeVerificationInput
 ): Promise<VerificationResult> {
   try {
-    const [customer] = await db.select().from(customers).where(eq(customers.id, input.customerId)).limit(1);
-    const [subscription] = await db.select().from(subscriptionsTable).where(eq(subscriptionsTable.customerId, input.customerId)).limit(1);
+    const customer = await getCustomer(agentRunId, { customerId: input.customerId });
+    const subscription = await getSubscription(agentRunId, { customerId: input.customerId });
 
     const expectedState = {
       customerPlanId: input.expectedPlanId,
@@ -199,52 +205,27 @@ export async function verifyCustomerState(
   input: CustomerStateVerificationInput
 ): Promise<VerificationResult> {
   try {
-    const [customer] = await db.select().from(customers).where(eq(customers.id, input.customerId)).limit(1);
-    const [subscription] = await db.select().from(subscriptionsTable).where(eq(subscriptionsTable.customerId, input.customerId)).limit(1);
+    // Delegate to Freshworks verifyCustomerState which already does the comparison
+    const result = await freshworksVerifyCustomerState(agentRunId, {
+      customerId: input.customerId,
+      expectedState: input.expectedState,
+    });
 
-    const observedState: Record<string, unknown> = {
-      customer: customer ? {
-        id: customer.id,
-        name: customer.name,
-        email: customer.email,
-        planId: customer.planId,
-        status: customer.status,
-        updatedAt: customer.updatedAt.toISOString(),
-      } : null,
-      subscription: subscription ? {
-        id: subscription.id,
-        planId: subscription.planId,
-        status: subscription.status,
-        price: Number(subscription.price),
-        renewalAt: subscription.renewalAt.toISOString(),
-      } : null,
-    };
-
-    const differences: Record<string, { expected: unknown; actual: unknown }> = {};
-
-    for (const [key, expectedValue] of Object.entries(input.expectedState)) {
-      const actualValue = observedState[key];
-      if (JSON.stringify(expectedValue) !== JSON.stringify(actualValue)) {
-        differences[key] = { expected: expectedValue, actual: actualValue };
-      }
-    }
-
-    const verified = Object.keys(differences).length === 0;
-    const status = verified ? 'verified' : 'mismatch';
+    const status = result.verified ? 'verified' : 'mismatch';
 
     await createVerificationRecord(
       agentRunId,
       conversationId,
       'customer_state',
       input.expectedState,
-      observedState,
+      result.observedState,
       status
     );
 
     return {
-      verified,
-      differences,
-      observedState,
+      verified: result.verified,
+      differences: result.differences,
+      observedState: result.observedState,
     };
   } catch (error) {
     await createVerificationRecord(
