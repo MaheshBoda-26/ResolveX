@@ -1,9 +1,18 @@
 import 'dotenv/config';
 import { db, pool } from './index';
 import { customers, transactions, subscriptions, knowledgeDocuments } from './schema';
+import { getSeedVersion, setSeedVersion } from './seed-version';
 
-export async function seed() {
-  console.log('Seeding database...');
+export const SEED_VERSION = '1.0.0';
+
+export async function seedIfNeeded(): Promise<boolean> {
+  const currentVersion = await getSeedVersion();
+  if (currentVersion === SEED_VERSION) {
+    console.log(`Seed version ${SEED_VERSION} already applied, skipping`);
+    return false;
+  }
+
+  console.log(`Seeding database (version: ${SEED_VERSION})...`);
 
   // Use valid version-4 UUIDs (version digit = 4 in the 13th position)
   const johnDoeId = '11111111-1111-4111-8111-111111111111';
@@ -126,15 +135,22 @@ export async function seed() {
     .onConflictDoNothing();
 
   console.log('Knowledge documents seeded');
+
+  await setSeedVersion(SEED_VERSION);
   console.log('Seeding complete!');
   console.log(`Jane Smith ID: ${janeSmithId}`);
+  return true;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  seed().catch((err) => {
+  seedIfNeeded().catch((err) => {
     console.error('Seeding failed:', err);
     process.exit(1);
   }).finally(async () => {
     await pool.end();
   });
+}
+
+export async function seed(): Promise<void> {
+  await seedIfNeeded();
 }

@@ -15,6 +15,17 @@ export default defineConfig({
           root: './apps/api',
         },
       },
+      {
+        test: {
+          name: 'evaluation',
+          environment: 'node',
+          include: ['../../tests/evaluation/**/*.test.ts'],
+          exclude: ['**/web/**', '**/node_modules/**'],
+          testTimeout: 60000,
+          hookTimeout: 30000,
+          root: './apps/api',
+        },
+      },
       './apps/web/vitest.config.ts',
     ],
   },

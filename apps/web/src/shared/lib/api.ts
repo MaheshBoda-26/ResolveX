@@ -161,9 +161,34 @@ export function useSendMessage() {
         method: 'POST',
         body: JSON.stringify(req),
       }),
+    onMutate: async (req) => {
+      await queryClient.cancelQueries({ queryKey: ['conversation', req.conversationId] });
+      const previousConversation = queryClient.getQueryData<Conversation>(['conversation', req.conversationId]);
+
+      if (previousConversation) {
+        const optimisticMessage: Message = {
+          id: `temp-${Date.now()}`,
+          role: 'user',
+          content: req.message,
+          createdAt: new Date().toISOString(),
+        };
+        queryClient.setQueryData(['conversation', req.conversationId], {
+          ...previousConversation,
+          messages: [...previousConversation.messages, optimisticMessage],
+        });
+      }
+
+      return { previousConversation, conversationId: req.conversationId };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousConversation) {
+        queryClient.setQueryData(['conversation', context.conversationId], context.previousConversation);
+      }
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['conversation', data.conversationId] });
       queryClient.invalidateQueries({ queryKey: ['trace', data.runId] });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
     },
   });
 }
@@ -186,6 +211,38 @@ export function useConversations() {
   return useQuery({
     queryKey: ['conversations'],
     queryFn: () => fetchJson<Conversation[]>('/api/conversations'),
+  });
+}
+
+export function useCreateConversation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => fetchJson<Conversation>('/api/conversations', { method: 'POST' }),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['conversations'] });
+      const previousConversations = queryClient.getQueryData<Conversation[]>(['conversations']);
+
+      const optimisticConversation: Conversation = {
+        id: `temp-${Date.now()}`,
+        messages: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      if (previousConversations) {
+        queryClient.setQueryData(['conversations'], [optimisticConversation, ...previousConversations]);
+      }
+
+      return { previousConversations };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousConversations) {
+        queryClient.setQueryData(['conversations'], context.previousConversations);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    },
   });
 }
 

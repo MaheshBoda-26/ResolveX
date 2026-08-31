@@ -1,20 +1,18 @@
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from './schema';
+import { env } from '../lib/env.js';
 
 const globalForPool = globalThis as unknown as { pgPool: Pool | undefined };
 
-const databaseUrl = process.env['DATABASE_URL'];
-const nodeEnv = process.env['NODE_ENV'];
-
 export const pool = globalForPool.pgPool ?? new Pool({
-  connectionString: databaseUrl,
+  connectionString: env.DATABASE_URL,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
 });
 
-if (nodeEnv !== 'production') {
+if (env.NODE_ENV !== 'production') {
   globalForPool.pgPool = pool;
 }
 
@@ -43,7 +41,7 @@ export type DB = typeof db;
  * Useful for integration tests that need isolated connections
  */
 export async function createTestDb(): Promise<{ pool: Pool; db: ReturnType<typeof drizzle<typeof schema>> }> {
-  const testDatabaseUrl = process.env['TEST_DATABASE_URL'] || databaseUrl;
+  const testDatabaseUrl = env.TEST_DATABASE_URL || env.DATABASE_URL;
   if (!testDatabaseUrl) {
     throw new Error('TEST_DATABASE_URL or DATABASE_URL must be set for test database');
   }

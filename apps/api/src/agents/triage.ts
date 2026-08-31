@@ -1,4 +1,6 @@
 import { TriageResult, Intent, Task, ChatRequest } from '@resolvex/shared';
+import { withTracing, addSpanEvent } from '../lib/telemetry.js';
+import { createAgentLogger, logAgentOperation } from '../lib/logging.js';
 
 const FRESHWORKS_DOMAIN = process.env['FRESHWORKS_DOMAIN'];
 const FRESHWORKS_API_KEY = process.env['FRESHWORKS_API_KEY'];
@@ -44,33 +46,41 @@ function mapPriority(priority: string): Task['priority'] {
   return 'normal';
 }
 
-export async function callFreshworksTriage(message: string): Promise<FreshworksTriageResponse | null> {
-  if (!FRESHWORKS_DOMAIN || !FRESHWORKS_API_KEY || !FRESHWORKS_AGENT_STUDIO_URL) {
-    console.warn('Freshworks credentials not configured, skipping intent detection');
-    return null;
-  }
+async function callFreshworksTriage(message: string): Promise<FreshworksTriageResponse | null> {
+  return withTracing('callFreshworksTriage', async (span) => {
+    span.setAttribute('message.length', message.length);
 
-  try {
-    const response = await fetch(`${FRESHWORKS_AGENT_STUDIO_URL}/api/triage`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${FRESHWORKS_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ message }),
-      signal: AbortSignal.timeout(10000),
-    });
-
-    if (!response.ok) {
-      console.error(`Freshworks API error: ${response.status} ${response.statusText}`);
+    if (!FRESHWORKS_DOMAIN || !FRESHWORKS_API_KEY || !FRESHWORKS_AGENT_STUDIO_URL) {
+      addSpanEvent('credentials_not_configured');
+      console.warn('Freshworks credentials not configured, skipping intent detection');
       return null;
     }
 
-    return await response.json() as FreshworksTriageResponse;
-  } catch (error) {
-    console.error('Freshworks triage call failed:', error);
-    return null;
-  }
+    try {
+      const response = await fetch(`${FRESHWORKS_AGENT_STUDIO_URL}/api/triage`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${FRESHWORKS_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+        signal: AbortSignal.timeout(10000),
+      });
+
+      if (!response.ok) {
+        addSpanEvent('api_error', { status: response.status, statusText: response.statusText });
+        console.error(`Freshworks API error: ${response.status} ${response.statusText}`);
+        return null;
+      }
+
+      addSpanEvent('api_response_received');
+      return await response.json() as FreshworksTriageResponse;
+    } catch (error) {
+      addSpanEvent('fetch_error', { error: error instanceof Error ? error.message : 'Unknown' });
+      console.error('Freshworks triage call failed:', error);
+      return null;
+    }
+  });
 }
 
 function extractTargetPlan(message: string): string | undefined {
@@ -90,7 +100,7 @@ function extractTargetPlan(message: string): string | undefined {
   return undefined;
 }
 
-export function fallbackTriage(message: string): TriageResult {
+function fallbackTriage(message: string): TriageResult {
   const lower = message.toLowerCase();
   const intents: Intent[] = [];
   const tasks: Task[] = [];
@@ -130,25 +140,48 @@ export function fallbackTriage(message: string): TriageResult {
 }
 
 export async function triageMessage(request: ChatRequest): Promise<TriageResult> {
-  const freshworksResult = await callFreshworksTriage(request.message);
+  return withTracing('triageMessage', async (span) => {
+    span.setAttribute('message.length', request.message.length);
+    span.setAttribute('customerId', request.customerId ?? 'unknown');
+    span.setAttribute('channel', request.channel);
 
-  if (freshworksResult) {
-    return {
-      intents: freshworksResult.intents.map(i => ({
-        type: mapIntentType(i.name),
-        confidence: i.confidence,
-        entities: i.entities,
-      })),
-      tasks: freshworksResult.tasks.map(t => ({
-        id: crypto.randomUUID(),
-        agent: mapAgentType(t.agent),
-        type: t.type,
-        payload: t.payload,
-        priority: mapPriority(t.priority),
-      })),
-      summary: freshworksResult.summary,
-    };
-  }
+    const logger = createAgentLogger('triage', crypto.randomUUID());
+    logAgentOperation(logger, 'triageMessage', 'started', { messageLength: request.message.length });
 
-  return fallbackTriage(request.message);
+    const freshworksResult = await callFreshworksTriage(request.message);
+
+    if (freshworksResult) {
+      addSpanEvent('freshworks_result_received', { intentCount: freshworksResult.intents.length, taskCount: freshworksResult.tasks.length });
+      const result = {
+        intents: freshworksResult.intents.map(i => ({
+          type: mapIntentType(i.name),
+          confidence: i.confidence,
+          entities: i.entities,
+        })),
+        tasks: freshworksResult.tasks.map(t => ({
+          id: crypto.randomUUID(),
+          agent: mapAgentType(t.agent),
+          type: t.type,
+          payload: t.payload,
+          priority: mapPriority(t.priority),
+        })),
+        summary: freshworksResult.summary,
+      };
+      logAgentOperation(logger, 'triageMessage', 'completed', {
+        intentCount: result.intents.length,
+        taskCount: result.tasks.length,
+        source: 'freshworks'
+      });
+      return result;
+    }
+
+    const result = fallbackTriage(request.message);
+    addSpanEvent('fallback_triage_used');
+    logAgentOperation(logger, 'triageMessage', 'completed', {
+      intentCount: result.intents.length,
+      taskCount: result.tasks.length,
+      source: 'fallback'
+    });
+    return result;
+  });
 }

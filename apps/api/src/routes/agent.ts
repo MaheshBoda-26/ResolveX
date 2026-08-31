@@ -8,6 +8,8 @@ import { createConversation, createAgentRun, createTriageAgentRun } from '../db/
 import { createAgentRun as createTraceRun, updateAgentRunStatus } from '../traces/repository';
 import { generateCaseBrief } from '../handoff/caseBrief';
 import { toFastifySchema } from '../lib/fastify-schema';
+import { withTracing, addSpanEvent } from '../lib/telemetry.js';
+import { createRequestLogger, logAgentOperation } from '../lib/logging.js';
 
 export const agentRoutes: FastifyPluginAsync = async (app) => {
   app.post('/agent/process', {
@@ -18,86 +20,110 @@ export const agentRoutes: FastifyPluginAsync = async (app) => {
       },
     },
     async handler(request, reply) {
-      const body = request.body as z.infer<typeof ChatRequestSchema>;
-      const traceId = crypto.randomUUID();
+      return withTracing('agent/process', async (span) => {
+        const body = request.body as z.infer<typeof ChatRequestSchema>;
+        const traceId = crypto.randomUUID();
 
-      let conversationId = body.conversationId;
+        span.setAttribute('traceId', traceId);
+        span.setAttribute('customerId', body.customerId ?? 'unknown');
+        span.setAttribute('channel', body.channel);
 
-      if (!conversationId) {
-        const conversation = await createConversation(body.customerId ?? null, body.channel);
-        conversationId = conversation.id;
-      }
+        const logger = createRequestLogger(traceId);
+        logAgentOperation(logger, 'agent/process', 'started');
 
-      const traceRun = await createTraceRun({
-        conversationId,
-        agentName: 'triage',
-        input: body as Record<string, unknown>,
-        decision: {},
-        status: 'running',
-        startedAt: new Date(),
-        completedAt: null,
-      });
+        let conversationId = body.conversationId;
 
-      const triageResult = await triageMessage(body);
-
-      await createTriageAgentRun(conversationId, body, triageResult);
-
-      const context = createAgentContext(body, conversationId, traceId);
-
-      const orchestratorResult = await orchestrateWorkflow(triageResult, body, context);
-
-      const finalStatus = orchestratorResult.status === 'completed' ? 'completed' :
-                          orchestratorResult.status === 'escalated' ? 'escalated' : 'error';
-
-      // If escalated, create a handoff
-      if (orchestratorResult.status === 'escalated') {
-        const billingDecisions = orchestratorResult.decisions
-          .filter((d): d is SpecialistDecision & { decision: BillingDecision } => d.agent === 'billing')
-          .map(d => d.decision);
-        const subscriptionDecisions = orchestratorResult.decisions
-          .filter((d): d is SpecialistDecision & { decision: SubscriptionDecision } => d.agent === 'subscription')
-          .map(d => d.decision);
-
-        const hasHighValueRefund = billingDecisions.some(d =>
-          d.action === 'refund' && (d.amount ?? 0) > 500
-        );
-
-        const hasPolicyException = billingDecisions.some(d => d.action === 'escalate') ||
-                                   subscriptionDecisions.some(d => d.action === 'escalate');
-
-        let escalationReason: HandoffReason = HANDOFF_REASONS.POLICY_EXCEPTION;
-        if (hasHighValueRefund) {
-          escalationReason = HANDOFF_REASONS.HIGH_VALUE_REFUND;
-        } else if (hasPolicyException) {
-          escalationReason = HANDOFF_REASONS.POLICY_EXCEPTION;
+        if (!conversationId) {
+          const conversation = await createConversation(body.customerId ?? null, body.channel);
+          conversationId = conversation.id;
+          addSpanEvent('conversation_created', { conversationId });
         }
 
-        await generateCaseBrief({
+        span.setAttribute('conversationId', conversationId);
+
+        const traceRun = await createTraceRun({
           conversationId,
-          triageResult,
-          specialistDecisions: {
-            billing: billingDecisions,
-            subscription: subscriptionDecisions,
-          },
-          verificationResults: [],
-          escalationReason,
+          agentName: 'triage',
+          input: body as Record<string, unknown>,
+          decision: {},
+          status: 'running',
+          startedAt: new Date(),
+          completedAt: null,
         });
-      }
 
-      await createAgentRun(conversationId, 'triage', { ...body, traceId }, {
-        triageResult,
-        decisions: orchestratorResult.decisions,
-        status: finalStatus,
-      }, finalStatus === 'completed' ? 'completed' : 'failed');
+        const triageResult = await triageMessage(body);
 
-      // Update the trace run with final status
-      await updateAgentRunStatus(traceRun.id, finalStatus === 'completed' ? 'completed' : 'failed', new Date());
+        await createTriageAgentRun(conversationId, body, triageResult);
 
-      return reply.send({
-        conversationId,
-        message: generateResponseMessage(triageResult, orchestratorResult),
-        status: finalStatus,
-        traceId,
+        const context = createAgentContext(body, conversationId, traceId);
+
+        const orchestratorResult = await orchestrateWorkflow(triageResult, body, context);
+
+        const finalStatus = orchestratorResult.status === 'completed' ? 'completed' :
+                            orchestratorResult.status === 'escalated' ? 'escalated' : 'error';
+
+        addSpanEvent('orchestration_completed', { finalStatus, decisionCount: orchestratorResult.decisions.length });
+
+        // If escalated, create a handoff
+        if (orchestratorResult.status === 'escalated') {
+          await withTracing('generateCaseBrief', async (handoffSpan) => {
+            handoffSpan.setAttribute('conversationId', conversationId);
+            handoffSpan.setAttribute('traceId', traceId);
+
+            const billingDecisions = orchestratorResult.decisions
+              .filter((d): d is SpecialistDecision & { decision: BillingDecision } => d.agent === 'billing')
+              .map(d => d.decision);
+            const subscriptionDecisions = orchestratorResult.decisions
+              .filter((d): d is SpecialistDecision & { decision: SubscriptionDecision } => d.agent === 'subscription')
+              .map(d => d.decision);
+
+            const hasHighValueRefund = billingDecisions.some(d =>
+              d.action === 'refund' && (d.amount ?? 0) > 500
+            );
+
+            const hasPolicyException = billingDecisions.some(d => d.action === 'escalate') ||
+                                       subscriptionDecisions.some(d => d.action === 'escalate');
+
+            let escalationReason: HandoffReason = HANDOFF_REASONS.POLICY_EXCEPTION;
+            if (hasHighValueRefund) {
+              escalationReason = HANDOFF_REASONS.HIGH_VALUE_REFUND;
+            } else if (hasPolicyException) {
+              escalationReason = HANDOFF_REASONS.POLICY_EXCEPTION;
+            }
+
+            handoffSpan.setAttribute('escalationReason', escalationReason);
+
+            await generateCaseBrief({
+              conversationId,
+              triageResult,
+              specialistDecisions: {
+                billing: billingDecisions,
+                subscription: subscriptionDecisions,
+              },
+              verificationResults: [],
+              escalationReason,
+            });
+          });
+        }
+
+        await createAgentRun(conversationId, 'triage', { ...body, traceId }, {
+          triageResult,
+          decisions: orchestratorResult.decisions,
+          status: finalStatus,
+        }, finalStatus === 'completed' ? 'completed' : 'failed');
+
+        // Update the trace run with final status
+        await updateAgentRunStatus(traceRun.id, finalStatus === 'completed' ? 'completed' : 'failed', new Date());
+
+        const response = {
+          conversationId,
+          message: generateResponseMessage(triageResult, orchestratorResult),
+          status: finalStatus,
+          traceId,
+        };
+
+        logAgentOperation(logger, 'agent/process', 'completed', { finalStatus, conversationId });
+        return reply.send(response);
       });
     },
   });

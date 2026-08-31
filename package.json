@@ -19,7 +19,8 @@
     "test:unit": "vitest run",
     "test:e2e": "npm run test:e2e --workspaces --if-present",
     "lint": "npm run lint --workspaces",
-    "eval:autonomy": "npx vitest run tests/evaluation/autonomy-gate.test.ts tests/evaluation/runner.test.ts"
+    "eval:autonomy": "npx vitest run tests/evaluation/autonomy-gate.test.ts tests/evaluation/runner.test.ts",
+    "eval:e2e": "npx vitest run tests/evaluation/e2e.test.ts"
   },
   "devDependencies": {
     "concurrently": "^9.0.0",

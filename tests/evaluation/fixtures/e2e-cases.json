@@ -1,0 +1,228 @@
+{
+  "BILLING_REFUND_AUTO": [
+    {
+      "id": "billing-refund-auto-1",
+      "category": "BILLING_REFUND_AUTO",
+      "input": {
+        "message": "I was charged twice for invoice INV-001, amount $25. Can you refund the duplicate?",
+        "customerId": "00000000-0000-0000-0000-000000000001",
+        "channel": "chat"
+      },
+      "expected": {
+        "intents": ["billing"],
+        "tasks": ["billing"],
+        "finalState": "completed"
+      }
+    },
+    {
+      "id": "billing-refund-auto-2",
+      "category": "BILLING_REFUND_AUTO",
+      "input": {
+        "message": "I see a duplicate charge of $49.99 on my account from yesterday. Please process a refund.",
+        "customerId": "00000000-0000-0000-0000-000000000002",
+        "channel": "chat"
+      },
+      "expected": {
+        "intents": ["billing"],
+        "tasks": ["billing"],
+        "finalState": "completed"
+      }
+    },
+    {
+      "id": "billing-refund-auto-voice",
+      "category": "BILLING_REFUND_AUTO",
+      "input": {
+        "message": "There's a duplicate charge of thirty dollars on my account from last week. I need a refund.",
+        "customerId": "00000000-0000-0000-0000-000000000003",
+        "channel": "voice"
+      },
+      "expected": {
+        "intents": ["billing"],
+        "tasks": ["billing"],
+        "finalState": "completed"
+      }
+    }
+  ],
+  "BILLING_REFUND_ESCALATED": [
+    {
+      "id": "billing-refund-escalated-1",
+      "category": "BILLING_REFUND_ESCALATED",
+      "input": {
+        "message": "I need a refund of $150 for invoice INV-002 due to service outage.",
+        "customerId": "00000000-0000-0000-0000-000000000004",
+        "channel": "chat"
+      },
+      "expected": {
+        "intents": ["billing"],
+        "tasks": ["billing"],
+        "finalState": "escalated"
+      }
+    },
+    {
+      "id": "billing-refund-escalated-2",
+      "category": "BILLING_REFUND_ESCALATED",
+      "input": {
+        "message": "Please refund $300 for the billing error on my account last month.",
+        "customerId": "00000000-0000-0000-0000-000000000005",
+        "channel": "chat"
+      },
+      "expected": {
+        "intents": ["billing"],
+        "tasks": ["billing"],
+        "finalState": "escalated"
+      }
+    },
+    {
+      "id": "billing-refund-high-1",
+      "category": "BILLING_REFUND_ESCALATED",
+      "input": {
+        "message": "I was charged $1000 incorrectly for invoice INV-003. I need a full refund immediately.",
+        "customerId": "00000000-0000-0000-0000-000000000006",
+        "channel": "chat"
+      },
+      "expected": {
+        "intents": ["billing"],
+        "tasks": ["billing"],
+        "finalState": "escalated"
+      }
+    }
+  ],
+  "SUBSCRIPTION_UPGRADE_AUTO": [
+    {
+      "id": "subscription-upgrade-auto-1",
+      "category": "SUBSCRIPTION_UPGRADE_AUTO",
+      "input": {
+        "message": "I want to upgrade my plan from basic to pro.",
+        "customerId": "00000000-0000-0000-0000-000000000007",
+        "channel": "chat"
+      },
+      "expected": {
+        "intents": ["subscription"],
+        "tasks": ["subscription"],
+        "finalState": "completed"
+      }
+    },
+    {
+      "id": "subscription-upgrade-auto-2",
+      "category": "SUBSCRIPTION_UPGRADE_AUTO",
+      "input": {
+        "message": "Please upgrade my subscription to professional tier.",
+        "customerId": "00000000-0000-0000-0000-000000000008",
+        "channel": "chat"
+      },
+      "expected": {
+        "intents": ["subscription"],
+        "tasks": ["subscription"],
+        "finalState": "completed"
+      }
+    }
+  ],
+  "SUBSCRIPTION_DOWNGRADE_ESCALATED": [
+    {
+      "id": "subscription-downgrade-1",
+      "category": "SUBSCRIPTION_DOWNGRADE_ESCALATED",
+      "input": {
+        "message": "I want to downgrade from enterprise to professional plan.",
+        "customerId": "00000000-0000-0000-0000-000000000009",
+        "channel": "chat"
+      },
+      "expected": {
+        "intents": ["subscription"],
+        "tasks": ["subscription"],
+        "finalState": "escalated"
+      }
+    },
+    {
+      "id": "subscription-cancel-1",
+      "category": "SUBSCRIPTION_DOWNGRADE_ESCALATED",
+      "input": {
+        "message": "I want to cancel my subscription entirely.",
+        "customerId": "00000000-0000-0000-0000-000000000010",
+        "channel": "chat"
+      },
+      "expected": {
+        "intents": ["subscription"],
+        "tasks": ["subscription"],
+        "finalState": "escalated"
+      }
+    }
+  ],
+  "COMBINED_BILLING_SUBSCRIPTION": [
+    {
+      "id": "combined-billing-sub-1",
+      "category": "COMBINED_BILLING_SUBSCRIPTION",
+      "input": {
+        "message": "I was charged twice for my subscription invoice and I also want to upgrade to enterprise.",
+        "customerId": "00000000-0000-0000-0000-000000000011",
+        "channel": "chat"
+      },
+      "expected": {
+        "intents": ["billing", "subscription"],
+        "tasks": ["billing", "subscription"],
+        "finalState": "escalated"
+      }
+    },
+    {
+      "id": "combined-billing-sub-2",
+      "category": "COMBINED_BILLING_SUBSCRIPTION",
+      "input": {
+        "message": "There's a duplicate charge on my account and I need to downgrade my plan.",
+        "customerId": "00000000-0000-0000-0000-000000000012",
+        "channel": "chat"
+      },
+      "expected": {
+        "intents": ["billing", "subscription"],
+        "tasks": ["billing", "subscription"],
+        "finalState": "escalated"
+      }
+    }
+  ],
+  "MISSING_CUSTOMER_ID": [
+    {
+      "id": "missing-customer-1",
+      "category": "MISSING_CUSTOMER_ID",
+      "input": {
+        "message": "I need a refund for a duplicate charge.",
+        "customerId": "",
+        "channel": "chat"
+      },
+      "expected": {
+        "intents": ["billing"],
+        "tasks": ["billing"],
+        "finalState": "escalated",
+        "handoffReason": "missing_customer_id"
+      }
+    },
+    {
+      "id": "missing-customer-2",
+      "category": "MISSING_CUSTOMER_ID",
+      "input": {
+        "message": "I want to upgrade my subscription plan.",
+        "customerId": "",
+        "channel": "voice"
+      },
+      "expected": {
+        "intents": ["subscription"],
+        "tasks": ["subscription"],
+        "finalState": "escalated",
+        "handoffReason": "missing_customer_id"
+      }
+    }
+  ],
+  "TOOL_FAILURE": [
+    {
+      "id": "tool-failure-1",
+      "category": "TOOL_FAILURE",
+      "input": {
+        "message": "I need a refund for $25 duplicate charge.",
+        "customerId": "00000000-0000-0000-0000-000000000013",
+        "channel": "chat"
+      },
+      "expected": {
+        "intents": ["billing"],
+        "tasks": ["billing"],
+        "finalState": "completed"
+      }
+    }
+  ]
+}

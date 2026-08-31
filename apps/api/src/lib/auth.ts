@@ -1,8 +1,8 @@
 import { FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
 import { createRemoteJWKSet, jwtVerify, JWTPayload } from 'jose';
+import { env } from './env.js';
 
-const JWKS_URL = process.env['JWKS_URL'] || 'https://your-auth-provider.com/.well-known/jwks.json';
-const JWKS = createRemoteJWKSet(new URL(JWKS_URL));
+const JWKS = createRemoteJWKSet(new URL(env.JWKS_URL));
 
 export interface AuthPayload extends JWTPayload {
   sub: string;
@@ -28,8 +28,8 @@ export async function authMiddleware(request: FastifyRequest, reply: FastifyRepl
 
   try {
     const { payload } = await jwtVerify(token, JWKS, {
-      issuer: process.env['JWT_ISSUER'],
-      audience: process.env['JWT_AUDIENCE'],
+      issuer: env.JWT_ISSUER,
+      audience: env.JWT_AUDIENCE,
     });
 
     request.user = payload as unknown as AuthPayload;
@@ -55,7 +55,7 @@ export function registerAuthMiddleware(server: FastifyInstance): void {
     const isPublic = publicPaths.some(path => request.url.startsWith(path));
 
     // Allow demo mode to bypass auth for local development
-    const isDemoMode = process.env['DEMO_MODE'] === 'true' || process.env['NODE_ENV'] === 'development';
+    const isDemoMode = env.DEMO_MODE || env.NODE_ENV === 'development';
 
     if (!isPublic && !isDemoMode) {
       await authMiddleware(request, reply);

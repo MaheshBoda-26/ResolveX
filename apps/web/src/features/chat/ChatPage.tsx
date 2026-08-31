@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
-import { Chat } from '@/components/Chat';
-import { ResolutionTimeline } from '@/components/ResolutionTimeline';
-import { useConversations, useConversation, Conversation } from '@/lib/api';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { Chat } from '@/features/chat/components/Chat';
+import { ResolutionTimeline } from '@/features/trace/components/ResolutionTimeline';
+import { useConversations, useConversation, Conversation } from '@/shared/lib/api';
+import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 
 export function ChatPage() {
   const [searchParams, setSearchParams] = useSearchParams();

@@ -2,15 +2,15 @@
 
 import { useState, useRef, useEffect, FormEvent } from 'react';
 import { Send } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
-import { useSendMessage, Message } from '@/lib/api';
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import { ScrollArea } from '@/shared/components/ui/scroll-area';
+import { Separator } from '@/shared/components/ui/separator';
+import { cn } from '@/shared/utils';
+import { useSendMessage, Message } from '@/shared/lib/api';
 import DOMPurify from 'dompurify';
-import { VoiceInput } from '@/components/VoiceInput';
-import { createElevenLabsConfig } from '@/lib/elevenlabs';
+import { VoiceInput } from '@/features/chat/components/VoiceInput';
+import { createElevenLabsConfig } from '@/shared/lib/elevenlabs';
 
 interface ChatProps {
   conversationId: string | undefined;

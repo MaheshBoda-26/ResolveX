@@ -1,3 +1,5 @@
+import { env } from '../lib/env.js';
+
 const EMBEDDING_DIMENSIONS = 1536;
 const EMBEDDING_CACHE_SIZE = 1000;
 
@@ -43,7 +45,7 @@ export async function generateEmbedding(text: string): Promise<EmbeddingResult> 
   const cached = getCachedEmbedding(text);
   if (cached) return cached;
 
-  const apiKey = process.env['OPENAI_API_KEY'] || process.env['EMBEDDING_API_KEY'];
+  const apiKey = env.OPENAI_API_KEY || env.EMBEDDING_API_KEY;
 
   let result: EmbeddingResult;
   if (apiKey) {

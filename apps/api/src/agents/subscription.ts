@@ -9,6 +9,8 @@ import {
 import { db } from '../db/client';
 import { customers, subscriptions } from '../db/schema';
 import { eq } from 'drizzle-orm';
+import { checkAutonomyGate } from '../verification/autonomyGate';
+import { messageBus, InMemoryMessageBus } from '@resolvex/shared/messaging';
 
 interface SubscriptionTask {
   type: 'upgrade' | 'downgrade' | 'cancel' | 'change_plan';
@@ -33,8 +35,6 @@ export async function getCustomer(customerId: string): Promise<Customer | null> 
     updatedAt: data.updatedAt.toISOString(),
   };
 }
-
-import { checkAutonomyGate } from '../verification/autonomyGate';
 
 export function checkPlanExists(planId: string): boolean {
   const validPlans = ['starter', 'professional', 'enterprise', 'pro', 'basic'];
@@ -122,7 +122,6 @@ export async function processSubscriptionTask(task: SubscriptionTask): Promise<S
   let eligibility: SubscriptionDecision['eligibility'] = 'eligible';
   let requiresApproval = false;
 
-  // Handle change_plan as upgrade (from orchestrator)
   const effectiveType = (task.type === 'change_plan' ? 'upgrade' : task.type) as SubscriptionDecision['action'];
 
   switch (effectiveType) {
@@ -227,3 +226,37 @@ export async function processSubscriptionTask(task: SubscriptionTask): Promise<S
     requiresApproval,
   });
 }
+
+messageBus.subscribe<SubscriptionTask>('subscription', async (request) => {
+  try {
+    const decision = await processSubscriptionTask(request.payload);
+    messageBus.handleResponse({
+      correlationId: request.correlationId,
+      from: 'subscription',
+      to: request.from,
+      type: 'response',
+      payload: decision,
+      timestamp: new Date().toISOString(),
+      success: true,
+      traceId: request.traceId,
+    });
+  } catch (error) {
+    messageBus.handleResponse({
+      correlationId: request.correlationId,
+      from: 'subscription',
+      to: request.from,
+      type: 'response',
+      payload: {
+        action: 'investigate',
+        eligibility: 'requires_review',
+        evidence: [`Handler error: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        policyReferences: ['POL-SUB-001'],
+        requiresApproval: false,
+      } as SubscriptionDecision,
+      timestamp: new Date().toISOString(),
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      traceId: request.traceId,
+    });
+  }
+});

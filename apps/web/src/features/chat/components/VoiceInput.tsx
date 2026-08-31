@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Volume2, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { useVoice, UseVoiceOptions } from '@/hooks/useVoice';
+import { Button } from '@/shared/components/ui/button';
+import { cn } from '@/shared/utils';
+import { useVoice, UseVoiceOptions } from '@/shared/hooks/useVoice';
 
 interface VoiceInputProps extends Omit<UseVoiceOptions, 'config'> {
   config: UseVoiceOptions['config'];

@@ -1,25 +1,16 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from '@/lib/theme';
-import { AppLayout } from '@/components/layout/AppLayout';
-import { OperationsDashboardPage } from '@/pages/OperationsDashboardPage';
-import { CustomerLandingPage } from '@/pages/CustomerLandingPage';
-import { ChatPage } from '@/pages/ChatPage';
-import { HandoffPage } from '@/pages/HandoffPage';
-import { CaseDetailPage } from '@/pages/CaseDetailPage';
-import { TracePage } from '@/pages/TracePage';
-import { EvaluationsPage } from '@/pages/EvaluationsPage';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 30_000,
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
+import { ThemeProvider } from '@/shared/lib/theme';
+import { AppLayout } from '@/shared/components/layout/AppLayout';
+import { OperationsDashboardPage } from '@/features/dashboard/OperationsDashboardPage';
+import { CustomerLandingPage } from '@/features/dashboard/CustomerLandingPage';
+import { ChatPage } from '@/features/chat/ChatPage';
+import { HandoffPage } from '@/features/handoff/HandoffPage';
+import { CaseDetailPage } from '@/features/handoff/CaseDetailPage';
+import { TracePage } from '@/features/trace/TracePage';
+import { EvaluationsPage } from '@/features/evaluations/EvaluationsPage';
+import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 
 function AppRoutes() {
   return (

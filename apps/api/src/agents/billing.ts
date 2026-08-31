@@ -10,6 +10,7 @@ import { db } from '../db/client';
 import { customers, transactions } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
 import { checkAutonomyGate } from '../verification/autonomyGate';
+import { messageBus, InMemoryMessageBus } from '@resolvex/shared/messaging';
 
 interface BillingTask {
   type: 'duplicate_charge' | 'refund_inquiry';
@@ -49,26 +50,6 @@ export async function getTransactions(customerId: string): Promise<Transaction[]
     chargedAt: t.chargedAt.toISOString(),
     metadata: (t.metadata as Record<string, unknown>) ?? {},
   }));
-}
-
-async function callAutonomyGate(input: AutonomyGateInput): Promise<AutonomyGateResult> {
-  const gatewayUrl = process.env['AUTONOMY_GATEWAY_URL'] || 'http://localhost:3002';
-  try {
-    const response = await fetch(`${gatewayUrl}/api/autonomy/gate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(input),
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!response.ok) {
-      console.error(`Autonomy gate error: ${response.status}`);
-      return { allowed: false, reason: 'Autonomy gate unavailable', requiredApprovals: [] };
-    }
-    return (await response.json()) as AutonomyGateResult;
-  } catch (error) {
-    console.error('Autonomy gate call failed:', error);
-    return { allowed: false, reason: 'Autonomy gate call failed', requiredApprovals: [] };
-  }
 }
 
 export function detectDuplicateCharges(transactions: Transaction[], targetAmount?: number, targetInvoiceId?: string): Transaction[] {
@@ -219,3 +200,36 @@ export async function processBillingTask(task: BillingTask): Promise<BillingDeci
     requiresApproval,
   });
 }
+
+messageBus.subscribe<BillingTask>('billing', async (request) => {
+  try {
+    const decision = await processBillingTask(request.payload);
+    messageBus.handleResponse({
+      correlationId: request.correlationId,
+      from: 'billing',
+      to: request.from,
+      type: 'response',
+      payload: decision,
+      timestamp: new Date().toISOString(),
+      success: true,
+      traceId: request.traceId,
+    });
+  } catch (error) {
+    messageBus.handleResponse({
+      correlationId: request.correlationId,
+      from: 'billing',
+      to: request.from,
+      type: 'response',
+      payload: {
+        action: 'investigate',
+        evidence: [`Handler error: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        policyReferences: ['POL-BILL-004'],
+        requiresApproval: false,
+      } as BillingDecision,
+      timestamp: new Date().toISOString(),
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      traceId: request.traceId,
+    });
+  }
+});
