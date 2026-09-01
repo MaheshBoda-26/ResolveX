@@ -3,12 +3,12 @@ import { z } from "zod";
 
 export const env = createEnv({
   server: {
-    DATABASE_URL: z.string().url(),
-    FRESHWORKS_DOMAIN: z.string().min(1),
-    FRESHWORKS_API_KEY: z.string().min(1),
-    FRESHWORKS_AGENT_STUDIO_URL: z.string().url(),
-    ELEVENLABS_API_KEY: z.string().min(1),
-    ELEVENLABS_AGENT_ID: z.string().min(1),
+    DATABASE_URL: z.string().url().default("postgresql://postgres:postgres@localhost:5432/resolvex"),
+    FRESHWORKS_DOMAIN: z.string().min(1).default("resolvex.freshworks.com"),
+    FRESHWORKS_API_KEY: z.string().min(1).default("demo-freshworks-api-key"),
+    FRESHWORKS_AGENT_STUDIO_URL: z.string().url().default("https://resolvex.freshworks.com/agent-studio"),
+    ELEVENLABS_API_KEY: z.string().min(1).default("demo-elevenlabs-key"),
+    ELEVENLABS_AGENT_ID: z.string().min(1).default("demo-elevenlabs-agent"),
     NODE_ENV: z
       .enum(["development", "production", "test"])
       .default("development"),

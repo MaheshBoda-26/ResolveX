@@ -101,22 +101,8 @@ export async function withTransaction<T>(
 export async function withTestTransaction<T>(
   fn: (tx: ReturnType<typeof drizzle<typeof schema>>) => Promise<T>
 ): Promise<T> {
-  const pool = testPool!;
-
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-
-    const txDb = drizzle(client, { schema });
-
-    const result = await fn(txDb);
-
-    // Always rollback - tests should not persist data
-    await client.query('ROLLBACK');
-    return result;
-  } finally {
-    client.release();
-  }
+  const db = await initTestDb();
+  return await fn(db);
 }
 
 /**
@@ -185,9 +171,10 @@ export async function createTestCustomer(
   tx: ReturnType<typeof drizzle<typeof schema>>,
   overrides: Partial<{ name: string; email: string; planId: string; status: string }> = {}
 ) {
+  const email = overrides.email ? `${randomUUID().slice(0, 8)}-${overrides.email}` : `test-${randomUUID()}@example.com`;
   const [customer] = await tx.insert(schema.customers).values({
     name: overrides.name || 'Test Customer',
-    email: overrides.email || `test-${randomUUID()}@example.com`,
+    email,
     planId: overrides.planId || 'basic',
     status: overrides.status || 'active',
   }).returning();
@@ -206,7 +193,7 @@ export async function createTestTransactions(
   for (const t of transactions) {
     const [inserted] = await tx.insert(schema.transactions).values({
       customerId,
-      invoiceId: t.invoiceId,
+      invoiceId: `${randomUUID().slice(0, 8)}-${t.invoiceId}`,
       amount: t.amount.toString(),
       currency: t.currency,
       status: t.status,

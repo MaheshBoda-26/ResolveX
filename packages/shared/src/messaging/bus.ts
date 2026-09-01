@@ -34,9 +34,14 @@ export class InMemoryMessageBus implements MessageBus {
   private stateListeners: Map<AgentName, Set<(state: AgentState) => void>> =
     new Map();
 
-  private readonly maxRetries = 3;
-  private readonly baseRetryDelay = 1000;
-  private readonly requestTimeout = 30000;
+  private readonly maxRetries = 1;
+  private readonly baseRetryDelay = 200;
+  private readonly requestTimeout = 2000;
+
+  hasSubscribers(agent: AgentName): boolean {
+    const subs = this.subscribers.get(agent);
+    return Boolean(subs && subs.length > 0);
+  }
 
   publish(message: AnyMessage): void {
     const subscribers = this.subscribers.get(message.to) ?? [];
@@ -83,6 +88,12 @@ export class InMemoryMessageBus implements MessageBus {
     payload: TRequest,
   ): Promise<ResponseMessage<TResponse>> {
     const correlationId = createCorrelationId();
+
+    if (!this.hasSubscribers(to)) {
+      return Promise.reject(
+        new Error(`No subscribers registered for agent "${to}"`),
+      );
+    }
 
     return new Promise((resolve, reject) => {
       const attemptRequest = (retries: number) => {
@@ -187,4 +198,10 @@ export class InMemoryMessageBus implements MessageBus {
   }
 }
 
-export const messageBus = new InMemoryMessageBus();
+const globalForBus = globalThis as unknown as {
+  __resolvex_message_bus__: InMemoryMessageBus | undefined;
+};
+
+export const messageBus =
+  globalForBus.__resolvex_message_bus__ ?? new InMemoryMessageBus();
+globalForBus.__resolvex_message_bus__ = messageBus;

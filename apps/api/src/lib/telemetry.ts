@@ -11,6 +11,9 @@ import {
 let sdk: NodeSDK | null = null;
 
 export function initTelemetry(): void {
+  if (process.env["NODE_ENV"] === "test" || process.env["OTEL_SDK_DISABLED"] === "true") {
+    return;
+  }
   const otlpEndpoint =
     process.env["OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"] ||
     "http://localhost:4318/v1/traces";

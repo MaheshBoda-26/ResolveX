@@ -135,42 +135,59 @@ function extractTargetPlan(message: string): string | undefined {
   return undefined;
 }
 
+function extractAmount(message: string): number | undefined {
+  const match = message.match(/\$(\d+(?:\.\d{2})?)/);
+  if (match && match[1]) {
+    return parseFloat(match[1]);
+  }
+  return undefined;
+}
+
 export function fallbackTriage(message: string): TriageResult {
   const lower = message.toLowerCase();
   const intents: Intent[] = [];
   const tasks: Task[] = [];
 
-  if (
+  const hasBilling =
     lower.includes("bill") ||
     lower.includes("payment") ||
     lower.includes("invoice") ||
     lower.includes("refund") ||
-    lower.includes("charge")
-  ) {
-    intents.push({ type: "billing", confidence: 0.7, entities: {} });
+    lower.includes("charge");
+
+  if (hasBilling) {
+    const amount = extractAmount(message);
+    intents.push({
+      type: "billing",
+      confidence: 0.7,
+      entities: amount !== undefined ? { amount } : {},
+    });
     tasks.push({
       id: crypto.randomUUID(),
       agent: "billing",
       type: "investigate_billing_issue",
-      payload: { message },
-      priority: "normal",
+      payload: { message, ...(amount !== undefined ? { amount } : {}) },
+      priority: (amount && amount > 100) || lower.includes("urgent") ? "high" : "normal",
     });
   }
 
-  if (
-    lower.includes("subscript") ||
-    lower.includes("plan") ||
+  const hasSubscriptionAction =
     lower.includes("upgrade") ||
     lower.includes("downgrade") ||
-    lower.includes("cancel")
-  ) {
+    lower.includes("cancel") ||
+    lower.includes("renew") ||
+    lower.includes("switch") ||
+    (lower.includes("plan") && !hasBilling) ||
+    (lower.includes("subscript") && !hasBilling);
+
+  if (hasSubscriptionAction) {
     intents.push({ type: "subscription", confidence: 0.7, entities: {} });
     const targetPlanId = extractTargetPlan(message);
     tasks.push({
       id: crypto.randomUUID(),
       agent: "subscription",
-      type: targetPlanId ? "change_plan" : "investigate_subscription_issue",
-      payload: { message, targetPlanId },
+      type: "investigate_subscription_issue",
+      payload: { message, ...(targetPlanId ? { targetPlanId } : {}) },
       priority: "normal",
     });
   }

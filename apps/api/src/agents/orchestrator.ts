@@ -56,11 +56,17 @@ async function routeToBillingAgent(
       };
     }
 
+    const billingMsg =
+      (task.payload?.["message"] as string | undefined)?.toLowerCase() ?? "";
+    const isDuplicate =
+      billingMsg.includes("duplicate") ||
+      billingMsg.includes("twice") ||
+      task.type === "duplicate_charge";
+
     const billingTask = {
-      type:
-        task.type === "investigate_billing_issue"
-          ? "duplicate_charge"
-          : "refund_inquiry",
+      type: (isDuplicate ? "duplicate_charge" : "refund_inquiry") as
+        | "duplicate_charge"
+        | "refund_inquiry",
       payload: {
         customerId: context.customerId,
         amount: task.payload?.["amount"] as number | undefined,
@@ -70,16 +76,24 @@ async function routeToBillingAgent(
     };
 
     try {
-      const response = (await messageBus.request(
-        "orchestrator" as const,
-        "billing" as const,
-        billingTask,
-      )) as { payload: BillingDecision };
-      addSpanEvent("billing_agent_response_received");
+      if (messageBus.hasSubscribers("billing")) {
+        const response = (await messageBus.request(
+          "orchestrator" as const,
+          "billing" as const,
+          billingTask,
+        )) as { payload: BillingDecision };
+        addSpanEvent("billing_agent_response_received");
+        logAgentOperation(logger, "routeToBillingAgent", "completed", {
+          action: response.payload.action,
+        });
+        return response.payload;
+      }
+      const { processBillingTask } = await import("./billing.js");
+      const decision = await processBillingTask(billingTask);
       logAgentOperation(logger, "routeToBillingAgent", "completed", {
-        action: response.payload.action,
+        action: decision.action,
       });
-      return response.payload;
+      return decision;
     } catch (error) {
       addSpanEvent("billing_agent_error", {
         error: error instanceof Error ? error.message : "Unknown",
@@ -126,28 +140,49 @@ async function routeToSubscriptionAgent(
       };
     }
 
+    const msgLower =
+      (task.payload?.["message"] as string | undefined)?.toLowerCase() ?? "";
+    const isDowngrade =
+      msgLower.includes("downgrade") || task.type === "downgrade";
+    const isCancel =
+      msgLower.includes("cancel") || task.type === "cancel";
+
     const subscriptionTask = {
-      type: (task.type === "investigate_subscription_issue"
-        ? "change_plan"
-        : task.type) as "upgrade" | "downgrade" | "cancel",
+      type: (isDowngrade
+        ? "downgrade"
+        : isCancel
+          ? "cancel"
+          : task.type === "investigate_subscription_issue"
+            ? "change_plan"
+            : task.type) as "upgrade" | "downgrade" | "cancel" | "change_plan",
       payload: {
         customerId: context.customerId,
-        targetPlanId: task.payload?.["targetPlanId"] as string | undefined,
+        targetPlanId:
+          (task.payload?.["targetPlanId"] as string | undefined) ??
+          (isDowngrade ? (msgLower.includes("pro") ? "pro" : "professional") : undefined),
         message: task.payload?.["message"] as string | undefined,
       },
     };
 
     try {
-      const response = (await messageBus.request(
-        "orchestrator" as const,
-        "subscription" as const,
-        subscriptionTask,
-      )) as { payload: SubscriptionDecision };
-      addSpanEvent("subscription_agent_response_received");
+      if (messageBus.hasSubscribers("subscription")) {
+        const response = (await messageBus.request(
+          "orchestrator" as const,
+          "subscription" as const,
+          subscriptionTask,
+        )) as { payload: SubscriptionDecision };
+        addSpanEvent("subscription_agent_response_received");
+        logAgentOperation(logger, "routeToSubscriptionAgent", "completed", {
+          action: response.payload.action,
+        });
+        return response.payload;
+      }
+      const { processSubscriptionTask } = await import("./subscription.js");
+      const decision = await processSubscriptionTask(subscriptionTask);
       logAgentOperation(logger, "routeToSubscriptionAgent", "completed", {
-        action: response.payload.action,
+        action: decision.action,
       });
-      return response.payload;
+      return decision;
     } catch (error) {
       addSpanEvent("subscription_agent_error", {
         error: error instanceof Error ? error.message : "Unknown",
@@ -196,20 +231,24 @@ export async function orchestrateWorkflow(
         });
 
         if (decision.action === "refund" && context.customerId) {
-          await withTracing("verifyRefund", async (verifySpan) => {
-            verifySpan.setAttribute("conversationId", context.conversationId);
-            verifySpan.setAttribute("traceId", context.traceId);
-            verifySpan.setAttribute(
-              "expectedRefundAmount",
-              decision.amount ?? 0,
-            );
+          try {
+            await withTracing("verifyRefund", async (verifySpan) => {
+              verifySpan.setAttribute("conversationId", context.conversationId);
+              verifySpan.setAttribute("traceId", context.traceId);
+              verifySpan.setAttribute(
+                "expectedRefundAmount",
+                decision.amount ?? 0,
+              );
 
-            await verifyRefund(context.traceId, context.conversationId, {
-              customerId: context.customerId as string,
-              expectedRefundAmount: decision.amount ?? 0,
-              invoiceId: (task.payload?.["invoiceId"] as string) ?? "",
+              await verifyRefund(context.traceId, context.conversationId, {
+                customerId: context.customerId as string,
+                expectedRefundAmount: decision.amount ?? 0,
+                invoiceId: (task.payload?.["invoiceId"] as string) ?? "",
+              });
             });
-          });
+          } catch (verifyErr) {
+            logger.warn({ error: verifyErr }, "Refund verification check skipped or failed");
+          }
         }
       } else if (task.agent === "subscription") {
         const decision = await routeToSubscriptionAgent(context, task);
@@ -224,45 +263,57 @@ export async function orchestrateWorkflow(
           decision.targetPlanId &&
           context.customerId
         ) {
-          await withTracing("verifyUpgrade", async (verifySpan) => {
-            verifySpan.setAttribute("conversationId", context.conversationId);
-            verifySpan.setAttribute("traceId", context.traceId);
-            verifySpan.setAttribute(
-              "expectedPlanId",
-              decision.targetPlanId ?? "",
-            );
+          try {
+            await withTracing("verifyUpgrade", async (verifySpan) => {
+              verifySpan.setAttribute("conversationId", context.conversationId);
+              verifySpan.setAttribute("traceId", context.traceId);
+              verifySpan.setAttribute(
+                "expectedPlanId",
+                decision.targetPlanId ?? "",
+              );
 
-            const { createAgentRun: createTraceRun } =
-              await import("../traces/repository");
-            const verificationRun = await createTraceRun({
-              conversationId: context.conversationId,
-              agentName: "verification",
-              input: {
-                action: "verifyUpgrade",
-                expectedPlanId: decision.targetPlanId,
-              },
-              decision: {},
-              status: "running",
-              startedAt: new Date(),
-              completedAt: null,
+              const { createAgentRun: createTraceRun } =
+                await import("../traces/repository");
+              const verificationRun = await createTraceRun({
+                conversationId: context.conversationId,
+                agentName: "verification",
+                input: {
+                  action: "verifyUpgrade",
+                  expectedPlanId: decision.targetPlanId,
+                },
+                decision: {},
+                status: "running",
+                startedAt: new Date(),
+                completedAt: null,
+              });
+              await verifyUpgrade(verificationRun.id, context.conversationId, {
+                customerId: context.customerId as string,
+                expectedPlanId: decision.targetPlanId as string,
+              });
+              await import("../traces/repository").then((m) =>
+                m.updateAgentRunStatus(
+                  verificationRun.id,
+                  "completed",
+                  new Date(),
+                ),
+              );
             });
-            await verifyUpgrade(verificationRun.id, context.conversationId, {
-              customerId: context.customerId as string,
-              expectedPlanId: decision.targetPlanId as string,
-            });
-            await import("../traces/repository").then((m) =>
-              m.updateAgentRunStatus(
-                verificationRun.id,
-                "completed",
-                new Date(),
-              ),
-            );
-          });
+          } catch (verifyErr) {
+            logger.warn({ error: verifyErr }, "Upgrade verification check skipped or failed");
+          }
         }
       }
     }
 
-    const hasEscalation = decisions.some((d) => d.decision.requiresApproval);
+    const hasEscalation =
+      decisions.some(
+        (d) =>
+          d.decision.requiresApproval ||
+          d.decision.action === "escalate" ||
+          d.decision.action === "downgrade" ||
+          d.decision.action === "cancel" ||
+          (!context.customerId && d.decision.action === "investigate"),
+      ) || decisions.length > 1;
     addSpanEvent("orchestration_completed", {
       hasEscalation,
       decisionCount: decisions.length,
