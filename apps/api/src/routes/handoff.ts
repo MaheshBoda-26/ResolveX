@@ -1,13 +1,13 @@
-import { FastifyPluginAsync } from 'fastify';
-import { z } from 'zod';
+import { FastifyPluginAsync } from "fastify";
+import { z } from "zod";
 import {
   generateCaseBrief,
   getHandoffById,
   listPendingHandoffs,
   acceptHandoff,
   completeHandoff,
-} from '../handoff/caseBrief';
-import { toFastifySchema } from '../lib/fastify-schema';
+} from "../handoff/caseBrief";
+import { toFastifySchema } from "../lib/fastify-schema";
 
 // Extract nested object schemas to avoid Zod v4 type inference issues
 const CustomerSchema = z.object({
@@ -19,17 +19,17 @@ const CustomerSchema = z.object({
 });
 
 const IntentSchema = z.object({
-  type: z.enum(['billing', 'subscription', 'general']),
+  type: z.enum(["billing", "subscription", "general"]),
   confidence: z.number(),
   entities: z.record(z.string(), z.unknown()),
 });
 
 const TaskSchema = z.object({
   id: z.string().uuid(),
-  agent: z.enum(['triage', 'billing', 'subscription']),
+  agent: z.enum(["triage", "billing", "subscription"]),
   type: z.string(),
   payload: z.record(z.string(), z.unknown()),
-  priority: z.enum(['high', 'normal', 'low']),
+  priority: z.enum(["high", "normal", "low"]),
 });
 
 const IssueSchema = z.object({
@@ -79,7 +79,7 @@ const CompletedActionSchema = z.object({
   type: z.string(),
   action: z.string(),
   amount: z.number().optional(),
-  result: z.enum(['success', 'failed', 'escalated']),
+  result: z.enum(["success", "failed", "escalated"]),
   timestamp: z.string().datetime(),
 });
 
@@ -93,16 +93,18 @@ const HandoffResponseSchema = z.object({
   completedActions: z.array(CompletedActionSchema),
   reason: z.string(),
   recommendedAction: z.string(),
-  status: z.enum(['pending', 'accepted', 'completed', 'cancelled']),
+  status: z.enum(["pending", "accepted", "completed", "cancelled"]),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 }) as any;
 
 const HandoffListResponseSchema = z.array(HandoffResponseSchema) as any;
 
-const HandoffParamsSchema = toFastifySchema(z.object({
-  id: z.string().uuid(),
-}));
+const HandoffParamsSchema = toFastifySchema(
+  z.object({
+    id: z.string().uuid(),
+  }),
+);
 
 const AcceptHandoffBodySchema = z.object({
   operatorId: z.string().min(1),
@@ -113,7 +115,7 @@ const CompleteHandoffBodySchema = z.object({
 }) as any;
 
 export const handoffRoutes: FastifyPluginAsync = async (app) => {
-  app.get('/', {
+  app.get("/", {
     schema: {
       response: {
         200: toFastifySchema(HandoffListResponseSchema),
@@ -125,32 +127,40 @@ export const handoffRoutes: FastifyPluginAsync = async (app) => {
     },
   });
 
-  app.get('/:id', {
+  app.get("/:id", {
     schema: {
       params: HandoffParamsSchema,
       response: {
         200: toFastifySchema(HandoffResponseSchema),
-        404: toFastifySchema(z.object({ error: z.string(), statusCode: z.number() })),
+        404: toFastifySchema(
+          z.object({ error: z.string(), statusCode: z.number() }),
+        ),
       },
     },
     async handler(request, reply) {
       const { id } = request.params as { id: string };
       const handoff = await getHandoffById(id);
       if (!handoff) {
-        return reply.status(404).send({ error: 'Handoff not found', statusCode: 404 });
+        return reply
+          .status(404)
+          .send({ error: "Handoff not found", statusCode: 404 });
       }
       return reply.send(handoff);
     },
   });
 
-  app.patch('/:id/accept', {
+  app.patch("/:id/accept", {
     schema: {
       params: HandoffParamsSchema,
       body: toFastifySchema(AcceptHandoffBodySchema),
       response: {
         200: toFastifySchema(HandoffResponseSchema),
-        404: toFastifySchema(z.object({ error: z.string(), statusCode: z.number() })),
-        400: toFastifySchema(z.object({ error: z.string(), statusCode: z.number() })),
+        404: toFastifySchema(
+          z.object({ error: z.string(), statusCode: z.number() }),
+        ),
+        400: toFastifySchema(
+          z.object({ error: z.string(), statusCode: z.number() }),
+        ),
       },
     },
     async handler(request, reply) {
@@ -158,20 +168,26 @@ export const handoffRoutes: FastifyPluginAsync = async (app) => {
       const { operatorId } = request.body as { operatorId: string };
       const handoff = await acceptHandoff(id, operatorId);
       if (!handoff) {
-        return reply.status(404).send({ error: 'Handoff not found', statusCode: 404 });
+        return reply
+          .status(404)
+          .send({ error: "Handoff not found", statusCode: 404 });
       }
       return reply.send(handoff);
     },
   });
 
-  app.patch('/:id/complete', {
+  app.patch("/:id/complete", {
     schema: {
       params: HandoffParamsSchema,
       body: toFastifySchema(CompleteHandoffBodySchema),
       response: {
         200: toFastifySchema(HandoffResponseSchema),
-        404: toFastifySchema(z.object({ error: z.string(), statusCode: z.number() })),
-        400: toFastifySchema(z.object({ error: z.string(), statusCode: z.number() })),
+        404: toFastifySchema(
+          z.object({ error: z.string(), statusCode: z.number() }),
+        ),
+        400: toFastifySchema(
+          z.object({ error: z.string(), statusCode: z.number() }),
+        ),
       },
     },
     async handler(request, reply) {
@@ -179,7 +195,9 @@ export const handoffRoutes: FastifyPluginAsync = async (app) => {
       const { resolution } = request.body as { resolution: string };
       const handoff = await completeHandoff(id, resolution);
       if (!handoff) {
-        return reply.status(404).send({ error: 'Handoff not found', statusCode: 404 });
+        return reply
+          .status(404)
+          .send({ error: "Handoff not found", statusCode: 404 });
       }
       return reply.send(handoff);
     },

@@ -1,0 +1,18 @@
+pre-commit:
+  commands:
+    typecheck:
+      run: npm run typecheck
+      glob: "*.{ts,tsx}"
+    lint:
+      run: npm run lint
+      glob: "*.{ts,tsx}"
+    format:
+      run: npm run format
+      glob: "*.{ts,tsx,json,md}"
+
+pre-push:
+  commands:
+    test:
+      run: npm test
+    build:
+      run: npm run build

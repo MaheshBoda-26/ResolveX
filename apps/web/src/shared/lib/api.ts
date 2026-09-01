@@ -1,26 +1,29 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 export class ApiError extends Error {
   status: number;
   constructor(message: string, status: number) {
     super(message);
     this.status = status;
-    this.name = 'ApiError';
+    this.name = "ApiError";
   }
 }
 
-export async function fetchJson<T>(path: string, options?: RequestInit): Promise<T> {
+export async function fetchJson<T>(
+  path: string,
+  options?: RequestInit,
+): Promise<T> {
   const requestHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...options?.headers as Record<string, string>,
+    "Content-Type": "application/json",
+    ...(options?.headers as Record<string, string>),
   };
 
   // Add auth token if available
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem("auth_token");
   if (token) {
-    requestHeaders['Authorization'] = `Bearer ${token}`;
+    requestHeaders["Authorization"] = `Bearer ${token}`;
   }
 
   const res = await fetch(`${API_URL}${path}`, {
@@ -30,7 +33,7 @@ export async function fetchJson<T>(path: string, options?: RequestInit): Promise
 
   // Log API calls in development
   if (import.meta.env.DEV) {
-    console.log(`[API] ${options?.method || 'GET'} ${path}`, {
+    console.log(`[API] ${options?.method || "GET"} ${path}`, {
       status: res.status,
       ok: res.ok,
     });
@@ -46,7 +49,7 @@ export async function fetchJson<T>(path: string, options?: RequestInit): Promise
 
 export interface Message {
   id: string;
-  role: 'user' | 'assistant' | 'system';
+  role: "user" | "assistant" | "system";
   content: string;
   createdAt: string;
   runId?: string;
@@ -56,7 +59,7 @@ export interface AgentTrace {
   id: string;
   agent: string;
   action: string;
-  status: 'pending' | 'running' | 'success' | 'failed' | 'escalated';
+  status: "pending" | "running" | "success" | "failed" | "escalated";
   duration?: number;
   input?: unknown;
   output?: unknown;
@@ -81,7 +84,7 @@ export interface ChatResponse {
   runId: string;
 }
 
-export type HandoffStatus = 'pending' | 'accepted' | 'completed';
+export type HandoffStatus = "pending" | "accepted" | "completed";
 
 export interface Handoff {
   id: string;
@@ -95,7 +98,7 @@ export interface Handoff {
   issueSummary: string;
   originalRequest: string;
   reason: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  priority: "low" | "medium" | "high" | "critical";
   createdAt: string;
   updatedAt: string;
   status: HandoffStatus;
@@ -108,7 +111,7 @@ export interface Handoff {
 
 export interface Evidence {
   id: string;
-  type: 'transaction' | 'policy' | 'communication' | 'document';
+  type: "transaction" | "policy" | "communication" | "document";
   description: string;
   data: Record<string, unknown>;
   collectedAt: string;
@@ -128,27 +131,28 @@ export interface CompletedAction {
   action: string;
   description: string;
   performedAt: string;
-  verificationStatus: 'verified' | 'pending' | 'failed';
+  verificationStatus: "verified" | "pending" | "failed";
   verificationDetails?: string;
 }
 
 export interface HandoffFilters {
   status?: HandoffStatus;
-  priority?: Handoff['priority'];
+  priority?: Handoff["priority"];
   search?: string;
 }
 
 export interface HandoffSort {
-  field: 'createdAt' | 'priority' | 'customer';
-  direction: 'asc' | 'desc';
+  field: "createdAt" | "priority" | "customer";
+  direction: "asc" | "desc";
 }
 
 export type { HandoffStatus as HandoffStatusExport };
 
 export function useConversation(conversationId: string | undefined) {
   return useQuery({
-    queryKey: ['conversation', conversationId],
-    queryFn: () => fetchJson<Conversation>(`/api/conversations/${conversationId}`),
+    queryKey: ["conversation", conversationId],
+    queryFn: () =>
+      fetchJson<Conversation>(`/api/conversations/${conversationId}`),
     enabled: !!conversationId,
   });
 }
@@ -157,22 +161,27 @@ export function useSendMessage() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (req: ChatRequest) =>
-      fetchJson<ChatResponse>('/api/agent/process', {
-        method: 'POST',
+      fetchJson<ChatResponse>("/api/agent/process", {
+        method: "POST",
         body: JSON.stringify(req),
       }),
     onMutate: async (req) => {
-      await queryClient.cancelQueries({ queryKey: ['conversation', req.conversationId] });
-      const previousConversation = queryClient.getQueryData<Conversation>(['conversation', req.conversationId]);
+      await queryClient.cancelQueries({
+        queryKey: ["conversation", req.conversationId],
+      });
+      const previousConversation = queryClient.getQueryData<Conversation>([
+        "conversation",
+        req.conversationId,
+      ]);
 
       if (previousConversation) {
         const optimisticMessage: Message = {
           id: `temp-${Date.now()}`,
-          role: 'user',
+          role: "user",
           content: req.message,
           createdAt: new Date().toISOString(),
         };
-        queryClient.setQueryData(['conversation', req.conversationId], {
+        queryClient.setQueryData(["conversation", req.conversationId], {
           ...previousConversation,
           messages: [...previousConversation.messages, optimisticMessage],
         });
@@ -182,26 +191,33 @@ export function useSendMessage() {
     },
     onError: (_err, _variables, context) => {
       if (context?.previousConversation) {
-        queryClient.setQueryData(['conversation', context.conversationId], context.previousConversation);
+        queryClient.setQueryData(
+          ["conversation", context.conversationId],
+          context.previousConversation,
+        );
       }
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['conversation', data.conversationId] });
-      queryClient.invalidateQueries({ queryKey: ['trace', data.runId] });
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({
+        queryKey: ["conversation", data.conversationId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["trace", data.runId] });
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
   });
 }
 
 export function useTrace(runId: string | undefined) {
   return useQuery({
-    queryKey: ['trace', runId],
+    queryKey: ["trace", runId],
     queryFn: () => fetchJson<AgentTrace[]>(`/api/traces/${runId}`),
     enabled: !!runId,
     refetchInterval: (query) => {
       const data = query.state.data;
       if (!data) return 1000;
-      const hasRunning = data.some((t) => t.status === 'running' || t.status === 'pending');
+      const hasRunning = data.some(
+        (t) => t.status === "running" || t.status === "pending",
+      );
       return hasRunning ? 1000 : false;
     },
   });
@@ -209,18 +225,21 @@ export function useTrace(runId: string | undefined) {
 
 export function useConversations() {
   return useQuery({
-    queryKey: ['conversations'],
-    queryFn: () => fetchJson<Conversation[]>('/api/conversations'),
+    queryKey: ["conversations"],
+    queryFn: () => fetchJson<Conversation[]>("/api/conversations"),
   });
 }
 
 export function useCreateConversation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => fetchJson<Conversation>('/api/conversations', { method: 'POST' }),
+    mutationFn: () =>
+      fetchJson<Conversation>("/api/conversations", { method: "POST" }),
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ['conversations'] });
-      const previousConversations = queryClient.getQueryData<Conversation[]>(['conversations']);
+      await queryClient.cancelQueries({ queryKey: ["conversations"] });
+      const previousConversations = queryClient.getQueryData<Conversation[]>([
+        "conversations",
+      ]);
 
       const optimisticConversation: Conversation = {
         id: `temp-${Date.now()}`,
@@ -230,42 +249,51 @@ export function useCreateConversation() {
       };
 
       if (previousConversations) {
-        queryClient.setQueryData(['conversations'], [optimisticConversation, ...previousConversations]);
+        queryClient.setQueryData(
+          ["conversations"],
+          [optimisticConversation, ...previousConversations],
+        );
       }
 
       return { previousConversations };
     },
     onError: (_err, _variables, context) => {
       if (context?.previousConversations) {
-        queryClient.setQueryData(['conversations'], context.previousConversations);
+        queryClient.setQueryData(
+          ["conversations"],
+          context.previousConversations,
+        );
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
   });
 }
 
-function serializeFilters(filters?: HandoffFilters, sort?: HandoffSort): string {
+function serializeFilters(
+  filters?: HandoffFilters,
+  sort?: HandoffSort,
+): string {
   const parts: string[] = [];
   if (filters?.status) parts.push(`status=${filters.status}`);
   if (filters?.priority) parts.push(`priority=${filters.priority}`);
   if (filters?.search) parts.push(`search=${filters.search}`);
   if (sort?.field) parts.push(`sortField=${sort.field}`);
   if (sort?.direction) parts.push(`sortDirection=${sort.direction}`);
-  return parts.join('&');
+  return parts.join("&");
 }
 
 export function useHandoffs(filters?: HandoffFilters, sort?: HandoffSort) {
   const params = new URLSearchParams();
-  if (filters?.status) params.set('status', filters.status);
-  if (filters?.priority) params.set('priority', filters.priority);
-  if (filters?.search) params.set('search', filters.search);
-  if (sort?.field) params.set('sortField', sort.field);
-  if (sort?.direction) params.set('sortDirection', sort.direction);
+  if (filters?.status) params.set("status", filters.status);
+  if (filters?.priority) params.set("priority", filters.priority);
+  if (filters?.search) params.set("search", filters.search);
+  if (sort?.field) params.set("sortField", sort.field);
+  if (sort?.direction) params.set("sortDirection", sort.direction);
 
   return useQuery({
-    queryKey: ['handoffs', serializeFilters(filters, sort)],
+    queryKey: ["handoffs", serializeFilters(filters, sort)],
     queryFn: () => fetchJson<Handoff[]>(`/api/handoffs?${params.toString()}`),
     refetchInterval: 10000,
   });
@@ -273,7 +301,7 @@ export function useHandoffs(filters?: HandoffFilters, sort?: HandoffSort) {
 
 export function useHandoff(handoffId: string | undefined) {
   return useQuery({
-    queryKey: ['handoff', handoffId],
+    queryKey: ["handoff", handoffId],
     queryFn: () => fetchJson<Handoff>(`/api/handoffs/${handoffId}`),
     enabled: !!handoffId,
     refetchInterval: 5000,
@@ -285,11 +313,11 @@ export function useAcceptHandoff() {
   return useMutation({
     mutationFn: (handoffId: string) =>
       fetchJson<Handoff>(`/api/handoffs/${handoffId}/accept`, {
-        method: 'POST',
+        method: "POST",
       }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['handoffs'] });
-      queryClient.invalidateQueries({ queryKey: ['handoff', data.id] });
+      queryClient.invalidateQueries({ queryKey: ["handoffs"] });
+      queryClient.invalidateQueries({ queryKey: ["handoff", data.id] });
     },
   });
 }
@@ -299,11 +327,11 @@ export function useCompleteHandoff() {
   return useMutation({
     mutationFn: (handoffId: string) =>
       fetchJson<Handoff>(`/api/handoffs/${handoffId}/complete`, {
-        method: 'POST',
+        method: "POST",
       }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['handoffs'] });
-      queryClient.invalidateQueries({ queryKey: ['handoff', data.id] });
+      queryClient.invalidateQueries({ queryKey: ["handoffs"] });
+      queryClient.invalidateQueries({ queryKey: ["handoff", data.id] });
     },
   });
 }
@@ -311,14 +339,20 @@ export function useCompleteHandoff() {
 export function useExecuteRefund() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ handoffId, amount }: { handoffId: string; amount: string }) =>
+    mutationFn: ({
+      handoffId,
+      amount,
+    }: {
+      handoffId: string;
+      amount: string;
+    }) =>
       fetchJson<Handoff>(`/api/handoffs/${handoffId}/execute-refund`, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({ amount }),
       }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['handoffs'] });
-      queryClient.invalidateQueries({ queryKey: ['handoff', data.id] });
+      queryClient.invalidateQueries({ queryKey: ["handoffs"] });
+      queryClient.invalidateQueries({ queryKey: ["handoff", data.id] });
     },
   });
 }
@@ -328,11 +362,11 @@ export function useRequestDocumentation() {
   return useMutation({
     mutationFn: (handoffId: string) =>
       fetchJson<Handoff>(`/api/handoffs/${handoffId}/request-docs`, {
-        method: 'POST',
+        method: "POST",
       }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['handoffs'] });
-      queryClient.invalidateQueries({ queryKey: ['handoff', data.id] });
+      queryClient.invalidateQueries({ queryKey: ["handoffs"] });
+      queryClient.invalidateQueries({ queryKey: ["handoff", data.id] });
     },
   });
 }

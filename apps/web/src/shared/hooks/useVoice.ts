@@ -1,39 +1,44 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { elevenLabsClient, VoiceState, VoiceCallbacks, ElevenLabsConfig } from '@/shared/lib/elevenlabs';
+import { useState, useCallback, useRef, useEffect } from "react";
+import {
+  elevenLabsClient,
+  VoiceState,
+  VoiceCallbacks,
+  ElevenLabsConfig,
+} from "@/shared/lib/elevenlabs";
 
 // ElevenLabs WebSocket message types
 export interface ElevenLabsUserTranscriptMessage {
-  type: 'user_transcript';
+  type: "user_transcript";
   transcript: string;
   is_final: boolean;
 }
 
 export interface ElevenLabsAgentResponseMessage {
-  type: 'agent_response';
+  type: "agent_response";
   text: string;
 }
 
 export interface ElevenLabsAgentResponseEndMessage {
-  type: 'agent_response_end';
+  type: "agent_response_end";
 }
 
 export interface ElevenLabsErrorMessage {
-  type: 'error';
+  type: "error";
   text: string;
 }
 
 export interface ElevenLabsPingMessage {
-  type: 'ping';
+  type: "ping";
   event_id: number;
 }
 
 export interface ElevenLabsPongMessage {
-  type: 'pong';
+  type: "pong";
   event_id: number;
 }
 
 export interface ElevenLabsAudioMessage {
-  type: 'audio';
+  type: "audio";
   audio: ArrayBuffer;
 }
 
@@ -68,7 +73,7 @@ export function useVoice({
   onAgentResponse,
   onError,
 }: UseVoiceOptions): UseVoiceReturn {
-  const [state, setState] = useState<VoiceState>('idle');
+  const [state, setState] = useState<VoiceState>("idle");
   const [audioLevel, setAudioLevel] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
   const callbacksRef = useRef<VoiceCallbacks>({});
@@ -86,7 +91,11 @@ export function useVoice({
       onStateChange: (newState) => {
         if (mountedRef.current) {
           setState(newState);
-          setIsConnected(newState === 'listening' || newState === 'processing' || newState === 'speaking');
+          setIsConnected(
+            newState === "listening" ||
+              newState === "processing" ||
+              newState === "speaking",
+          );
         }
       },
       onTranscript: (text, isFinal) => {
@@ -116,7 +125,7 @@ export function useVoice({
   }, [onTranscript, onAgentResponse, onError]);
 
   const start = useCallback(async () => {
-    if (state === 'connecting' || state === 'listening') return;
+    if (state === "connecting" || state === "listening") return;
     try {
       await elevenLabsClient.connect(config);
     } catch (error) {
@@ -129,7 +138,7 @@ export function useVoice({
   }, []);
 
   const toggle = useCallback(async () => {
-    if (state === 'idle' || state === 'error') {
+    if (state === "idle" || state === "error") {
       await start();
     } else {
       stop();

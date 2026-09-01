@@ -2,13 +2,13 @@ import {
   HandoffReason,
   HANDOFF_REASONS,
   AUTONOMY_THRESHOLDS,
-} from '@resolvex/shared';
-import type { BillingDecision, SubscriptionDecision } from '@resolvex/shared';
+} from "@resolvex/shared";
+import type { BillingDecision, SubscriptionDecision } from "@resolvex/shared";
 
 export interface EscalationContext {
   customerId?: string;
   refundAmount?: number;
-  actionType?: 'refund' | 'upgrade' | 'downgrade' | 'cancel' | 'investigate';
+  actionType?: "refund" | "upgrade" | "downgrade" | "cancel" | "investigate";
   policyException?: string;
   identityVerified?: boolean;
   accountStateConflict?: string;
@@ -30,9 +30,15 @@ function isHighValueRefund(amount: number): boolean {
   return amount > AUTONOMY_THRESHOLDS.REFUND_REVIEW_MAX;
 }
 
-function hasPolicyException(decision: BillingDecision | SubscriptionDecision, exception?: string): boolean {
+function hasPolicyException(
+  decision: BillingDecision | SubscriptionDecision,
+  exception?: string,
+): boolean {
   if (exception) return true;
-  if (decision.action === 'escalate' && decision.evidence.some(e => e.toLowerCase().includes('exception'))) {
+  if (
+    decision.action === "escalate" &&
+    decision.evidence.some((e) => e.toLowerCase().includes("exception"))
+  ) {
     return true;
   }
   return false;
@@ -50,11 +56,16 @@ function hasUnverifiedMutation(mutationVerified: boolean | undefined): boolean {
   return mutationVerified === false;
 }
 
-function hasUnsupportedWorkflow(workflowSupported: boolean | undefined): boolean {
+function hasUnsupportedWorkflow(
+  workflowSupported: boolean | undefined,
+): boolean {
   return workflowSupported === false;
 }
 
-function hasToolFailure(toolFailed: boolean | undefined, isIdempotent: boolean | undefined): boolean {
+function hasToolFailure(
+  toolFailed: boolean | undefined,
+  isIdempotent: boolean | undefined,
+): boolean {
   return toolFailed === true && isIdempotent !== true;
 }
 
@@ -64,9 +75,12 @@ function hasMissingInformation(missingFields: string[] | undefined): boolean {
 
 export function checkEscalationRules(
   decision: BillingDecision | SubscriptionDecision,
-  context: EscalationContext
+  context: EscalationContext,
 ): EscalationDecision {
-  if (context.refundAmount !== undefined && isHighValueRefund(context.refundAmount)) {
+  if (
+    context.refundAmount !== undefined &&
+    isHighValueRefund(context.refundAmount)
+  ) {
     return {
       shouldEscalate: true,
       reason: HANDOFF_REASONS.HIGH_VALUE_REFUND,
@@ -78,7 +92,9 @@ export function checkEscalationRules(
     return {
       shouldEscalate: true,
       reason: HANDOFF_REASONS.POLICY_EXCEPTION,
-      details: context.policyException || 'Policy exception detected in decision evidence',
+      details:
+        context.policyException ||
+        "Policy exception detected in decision evidence",
     };
   }
 
@@ -86,7 +102,7 @@ export function checkEscalationRules(
     return {
       shouldEscalate: true,
       reason: HANDOFF_REASONS.AMBIGUOUS_IDENTITY,
-      details: 'Customer identity could not be verified',
+      details: "Customer identity could not be verified",
     };
   }
 
@@ -94,7 +110,8 @@ export function checkEscalationRules(
     return {
       shouldEscalate: true,
       reason: HANDOFF_REASONS.CONFLICTING_ACCOUNT_STATE,
-      details: context.accountStateConflict || 'Conflicting account state detected',
+      details:
+        context.accountStateConflict || "Conflicting account state detected",
     };
   }
 
@@ -102,7 +119,7 @@ export function checkEscalationRules(
     return {
       shouldEscalate: true,
       reason: HANDOFF_REASONS.UNVERIFIED_MUTATION,
-      details: 'Mutation outcome could not be verified',
+      details: "Mutation outcome could not be verified",
     };
   }
 
@@ -110,7 +127,7 @@ export function checkEscalationRules(
     return {
       shouldEscalate: true,
       reason: HANDOFF_REASONS.UNSUPPORTED_WORKFLOW,
-      details: 'Requested workflow is not supported for autonomous execution',
+      details: "Requested workflow is not supported for autonomous execution",
     };
   }
 
@@ -118,7 +135,7 @@ export function checkEscalationRules(
     return {
       shouldEscalate: true,
       reason: HANDOFF_REASONS.TOOL_FAILURE,
-      details: `Non-idempotent tool failure: ${context.toolName || 'unknown tool'}`,
+      details: `Non-idempotent tool failure: ${context.toolName || "unknown tool"}`,
     };
   }
 
@@ -126,7 +143,7 @@ export function checkEscalationRules(
     return {
       shouldEscalate: true,
       reason: HANDOFF_REASONS.MISSING_INFORMATION,
-      details: `Missing required information: ${context.missingFields?.join(', ')}`,
+      details: `Missing required information: ${context.missingFields?.join(", ")}`,
     };
   }
 

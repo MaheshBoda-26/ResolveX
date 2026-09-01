@@ -1,128 +1,236 @@
-import { pgTable, uuid, text, timestamp, numeric, jsonb, vector, index } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  numeric,
+  jsonb,
+  vector,
+  index,
+} from "drizzle-orm/pg-core";
 
-export const customers = pgTable('customers', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: text('name').notNull(),
-  email: text('email').notNull().unique(),
-  planId: text('plan_id').notNull(),
-  status: text('status').notNull().default('active'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+export const customers = pgTable("customers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  planId: text("plan_id").notNull(),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
-export const transactions = pgTable('transactions', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  customerId: uuid('customer_id').references(() => customers.id).notNull(),
-  invoiceId: text('invoice_id').notNull(),
-  amount: numeric('amount', { precision: 10, scale: 2 }).notNull(),
-  currency: text('currency').notNull().default('USD'),
-  status: text('status').notNull().default('completed'),
-  chargedAt: timestamp('charged_at', { withTimezone: true }).notNull(),
-  metadata: jsonb('metadata').default({}),
-}, (table) => ({
-  transactions_customer_id_idx: index('transactions_customer_id_idx').on(table.customerId),
-  transactions_invoice_id_idx: index('transactions_invoice_id_idx').on(table.invoiceId),
-  transactions_customer_charged_idx: index('transactions_customer_charged_idx').on(table.customerId, table.chargedAt),
-}));
+export const transactions = pgTable(
+  "transactions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    customerId: uuid("customer_id")
+      .references(() => customers.id)
+      .notNull(),
+    invoiceId: text("invoice_id").notNull(),
+    amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
+    currency: text("currency").notNull().default("USD"),
+    status: text("status").notNull().default("completed"),
+    chargedAt: timestamp("charged_at", { withTimezone: true }).notNull(),
+    metadata: jsonb("metadata").default({}),
+  },
+  (table) => ({
+    transactions_customer_id_idx: index("transactions_customer_id_idx").on(
+      table.customerId,
+    ),
+    transactions_invoice_id_idx: index("transactions_invoice_id_idx").on(
+      table.invoiceId,
+    ),
+    transactions_customer_charged_idx: index(
+      "transactions_customer_charged_idx",
+    ).on(table.customerId, table.chargedAt),
+  }),
+);
 
-export const subscriptions = pgTable('subscriptions', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  customerId: uuid('customer_id').references(() => customers.id).notNull(),
-  planId: text('plan_id').notNull(),
-  status: text('status').notNull().default('active'),
-  price: numeric('price', { precision: 10, scale: 2 }).notNull(),
-  renewalAt: timestamp('renewal_at', { withTimezone: true }).notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (table) => ({
-  subscriptions_customer_id_idx: index('subscriptions_customer_id_idx').on(table.customerId),
-  subscriptions_customer_status_idx: index('subscriptions_customer_status_idx').on(table.customerId, table.status),
-}));
+export const subscriptions = pgTable(
+  "subscriptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    customerId: uuid("customer_id")
+      .references(() => customers.id)
+      .notNull(),
+    planId: text("plan_id").notNull(),
+    status: text("status").notNull().default("active"),
+    price: numeric("price", { precision: 10, scale: 2 }).notNull(),
+    renewalAt: timestamp("renewal_at", { withTimezone: true }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    subscriptions_customer_id_idx: index("subscriptions_customer_id_idx").on(
+      table.customerId,
+    ),
+    subscriptions_customer_status_idx: index(
+      "subscriptions_customer_status_idx",
+    ).on(table.customerId, table.status),
+  }),
+);
 
-export const knowledgeDocuments = pgTable('knowledge_documents', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  title: text('title').notNull(),
-  source: text('source').notNull(),
-  content: text('content').notNull(),
-  metadata: jsonb('metadata').default({}),
-  embedding: vector('embedding', { dimensions: 1536 }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+export const knowledgeDocuments = pgTable("knowledge_documents", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  source: text("source").notNull(),
+  content: text("content").notNull(),
+  metadata: jsonb("metadata").default({}),
+  embedding: vector("embedding", { dimensions: 1536 }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
-export const conversations = pgTable('conversations', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  customerId: uuid('customer_id').references(() => customers.id),
-  channel: text('channel').notNull(),
-  status: text('status').notNull().default('open'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (table) => ({
-  conversations_customer_id_idx: index('conversations_customer_id_idx').on(table.customerId),
-  conversations_status_idx: index('conversations_status_idx').on(table.status),
-}));
+export const conversations = pgTable(
+  "conversations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    customerId: uuid("customer_id").references(() => customers.id),
+    channel: text("channel").notNull(),
+    status: text("status").notNull().default("open"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    conversations_customer_id_idx: index("conversations_customer_id_idx").on(
+      table.customerId,
+    ),
+    conversations_status_idx: index("conversations_status_idx").on(
+      table.status,
+    ),
+  }),
+);
 
-export const agentRuns = pgTable('agent_runs', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  conversationId: uuid('conversation_id').references(() => conversations.id).notNull(),
-  agentName: text('agent_name').notNull(),
-  input: jsonb('input').notNull(),
-  decision: jsonb('decision').notNull(),
-  status: text('status').notNull().default('pending'),
-  startedAt: timestamp('started_at', { withTimezone: true }).defaultNow().notNull(),
-  completedAt: timestamp('completed_at', { withTimezone: true }),
-}, (table) => ({
-  agent_runs_conversation_id_idx: index('agent_runs_conversation_id_idx').on(table.conversationId),
-  agent_runs_status_idx: index('agent_runs_status_idx').on(table.status),
-}));
+export const agentRuns = pgTable(
+  "agent_runs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    conversationId: uuid("conversation_id")
+      .references(() => conversations.id)
+      .notNull(),
+    agentName: text("agent_name").notNull(),
+    input: jsonb("input").notNull(),
+    decision: jsonb("decision").notNull(),
+    status: text("status").notNull().default("pending"),
+    startedAt: timestamp("started_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (table) => ({
+    agent_runs_conversation_id_idx: index("agent_runs_conversation_id_idx").on(
+      table.conversationId,
+    ),
+    agent_runs_status_idx: index("agent_runs_status_idx").on(table.status),
+  }),
+);
 
-export const toolCalls = pgTable('tool_calls', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  agentRunId: uuid('agent_run_id').references(() => agentRuns.id).notNull(),
-  toolName: text('tool_name').notNull(),
-  arguments: jsonb('arguments').notNull(),
-  result: jsonb('result'),
-  status: text('status').notNull().default('pending'),
-  latencyMs: numeric('latency_ms', { precision: 10, scale: 0 }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (table) => ({
-  tool_calls_agent_run_id_idx: index('tool_calls_agent_run_id_idx').on(table.agentRunId),
-  tool_calls_tool_name_idx: index('tool_calls_tool_name_idx').on(table.toolName),
-}));
+export const toolCalls = pgTable(
+  "tool_calls",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    agentRunId: uuid("agent_run_id")
+      .references(() => agentRuns.id)
+      .notNull(),
+    toolName: text("tool_name").notNull(),
+    arguments: jsonb("arguments").notNull(),
+    result: jsonb("result"),
+    status: text("status").notNull().default("pending"),
+    latencyMs: numeric("latency_ms", { precision: 10, scale: 0 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    tool_calls_agent_run_id_idx: index("tool_calls_agent_run_id_idx").on(
+      table.agentRunId,
+    ),
+    tool_calls_tool_name_idx: index("tool_calls_tool_name_idx").on(
+      table.toolName,
+    ),
+  }),
+);
 
-export const verifications = pgTable('verifications', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  conversationId: uuid('conversation_id').references(() => conversations.id).notNull(),
-  actionType: text('action_type').notNull(),
-  expectedState: jsonb('expected_state').notNull(),
-  observedState: jsonb('observed_state'),
-  status: text('status').notNull().default('pending'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (table) => ({
-  verifications_conversation_id_idx: index('verifications_conversation_id_idx').on(table.conversationId),
-  verifications_action_type_idx: index('verifications_action_type_idx').on(table.actionType),
-}));
+export const verifications = pgTable(
+  "verifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    conversationId: uuid("conversation_id")
+      .references(() => conversations.id)
+      .notNull(),
+    actionType: text("action_type").notNull(),
+    expectedState: jsonb("expected_state").notNull(),
+    observedState: jsonb("observed_state"),
+    status: text("status").notNull().default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    verifications_conversation_id_idx: index(
+      "verifications_conversation_id_idx",
+    ).on(table.conversationId),
+    verifications_action_type_idx: index("verifications_action_type_idx").on(
+      table.actionType,
+    ),
+  }),
+);
 
-export const handoffs = pgTable('handoffs', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  conversationId: uuid('conversation_id').references(() => conversations.id).notNull(),
-  reason: text('reason').notNull(),
-  evidence: jsonb('evidence').notNull(),
-  recommendedAction: text('recommended_action').notNull(),
-  status: text('status').notNull().default('pending'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (table) => ({
-  handoffs_conversation_id_idx: index('handoffs_conversation_id_idx').on(table.conversationId),
-  handoffs_status_idx: index('handoffs_status_idx').on(table.status),
-}));
+export const handoffs = pgTable(
+  "handoffs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    conversationId: uuid("conversation_id")
+      .references(() => conversations.id)
+      .notNull(),
+    reason: text("reason").notNull(),
+    evidence: jsonb("evidence").notNull(),
+    recommendedAction: text("recommended_action").notNull(),
+    status: text("status").notNull().default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    handoffs_conversation_id_idx: index("handoffs_conversation_id_idx").on(
+      table.conversationId,
+    ),
+    handoffs_status_idx: index("handoffs_status_idx").on(table.status),
+  }),
+);
 
-export const evaluations = pgTable('evaluations', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  caseId: text('case_id').notNull(),
-  input: jsonb('input').notNull(),
-  expectedOutcome: jsonb('expected_outcome').notNull(),
-  actualOutcome: jsonb('actual_outcome'),
-  status: text('status').notNull().default('pending'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (table) => ({
-  evaluations_case_id_idx: index('evaluations_case_id_idx').on(table.caseId),
-  evaluations_status_idx: index('evaluations_status_idx').on(table.status),
-}));
+export const evaluations = pgTable(
+  "evaluations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    caseId: text("case_id").notNull(),
+    input: jsonb("input").notNull(),
+    expectedOutcome: jsonb("expected_outcome").notNull(),
+    actualOutcome: jsonb("actual_outcome"),
+    status: text("status").notNull().default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    evaluations_case_id_idx: index("evaluations_case_id_idx").on(table.caseId),
+    evaluations_status_idx: index("evaluations_status_idx").on(table.status),
+  }),
+);
+
+export const seedVersions = pgTable("seed_versions", {
+  version: text("version").primaryKey(),
+  appliedAt: timestamp("applied_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});

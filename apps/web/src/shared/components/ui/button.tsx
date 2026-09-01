@@ -1,31 +1,46 @@
-'use client';
+"use client";
 
-import { forwardRef, ButtonHTMLAttributes } from 'react';
-import { cn } from '@/shared/utils/utils';
+import { forwardRef, ButtonHTMLAttributes } from "react";
+import { cn } from "@/shared/utils/utils";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'destructive' | 'outline' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: "primary" | "secondary" | "destructive" | "outline" | "ghost";
+  size?: "sm" | "md" | "lg";
   loading?: boolean;
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', size = 'md', loading, disabled, children, ...props }, ref) => {
+  (
+    {
+      className,
+      variant = "primary",
+      size = "md",
+      loading,
+      disabled,
+      children,
+      ...props
+    },
+    ref,
+  ) => {
     const baseStyles =
-      'inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
+      "inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none";
 
     const variants = {
-      primary: 'bg-brand-primary text-white hover:bg-brand-primary-hover h-button',
-      secondary: 'bg-surface-default border border-border-default text-text-primary hover:bg-secondary-soft h-button',
-      destructive: 'bg-error-default text-white hover:bg-error-default/90 h-button',
-      outline: 'border border-border-default bg-transparent hover:bg-secondary-soft h-button',
-      ghost: 'bg-transparent hover:bg-secondary-soft h-button',
+      primary:
+        "bg-brand-primary text-white hover:bg-brand-primary-hover h-button",
+      secondary:
+        "bg-surface-default border border-border-default text-text-primary hover:bg-secondary-soft h-button",
+      destructive:
+        "bg-error-default text-white hover:bg-error-default/90 h-button",
+      outline:
+        "border border-border-default bg-transparent hover:bg-secondary-soft h-button",
+      ghost: "bg-transparent hover:bg-secondary-soft h-button",
     };
 
     const sizes = {
-      sm: 'h-8 px-3 text-small',
-      md: 'h-button px-4 text-body-medium',
-      lg: 'h-12 px-6 text-body-large',
+      sm: "h-8 px-3 text-small",
+      md: "h-button px-4 text-body-medium",
+      lg: "h-12 px-6 text-body-large",
     };
 
     return (
@@ -61,9 +76,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {children}
       </button>
     );
-  }
+  },
 );
 
-Button.displayName = 'Button';
+Button.displayName = "Button";
 
 export { Button };

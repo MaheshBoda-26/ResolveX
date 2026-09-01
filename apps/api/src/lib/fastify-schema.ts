@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Convert Zod v4 schema to Fastify-compatible JSON Schema
@@ -6,6 +6,6 @@ import { z } from 'zod';
  */
 export function toFastifySchema<T extends z.ZodTypeAny>(schema: T): object {
   const json = schema.toJSONSchema();
-  delete json['$schema'];
+  delete json["$schema"];
   return json;
 }

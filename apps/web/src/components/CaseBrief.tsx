@@ -1,13 +1,31 @@
-'use client';
+"use client";
 
-import { useState, memo } from 'react';
-import { ChevronDown, ChevronUp, AlertCircle, CheckCircle, XCircle, Clock, User, Mail, CreditCard, Shield, FileText, Loader2 } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
-import { Badge } from '@/shared/components/ui/badge';
-import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui/card';
-import { Separator } from '@/shared/components/ui/separator';
-import { cn } from '@/shared/utils/utils';
-import { Handoff, HandoffStatus, Evidence } from '@/shared/lib/api';
+import { useState, memo } from "react";
+import {
+  ChevronDown,
+  ChevronUp,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  Clock,
+  User,
+  Mail,
+  CreditCard,
+  Shield,
+  FileText,
+  Loader2,
+} from "lucide-react";
+import { Button } from "@/shared/components/ui/button";
+import { Badge } from "@/shared/components/ui/badge";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/shared/components/ui/card";
+import { Separator } from "@/shared/components/ui/separator";
+import { cn } from "@/shared/utils/utils";
+import { Handoff, HandoffStatus, Evidence } from "@/shared/lib/api";
 
 interface CollapsibleSectionProps {
   title: string;
@@ -16,7 +34,12 @@ interface CollapsibleSectionProps {
   defaultOpen?: boolean;
 }
 
-function CollapsibleSection({ title, icon, children, defaultOpen = true }: CollapsibleSectionProps) {
+function CollapsibleSection({
+  title,
+  icon,
+  children,
+  defaultOpen = true,
+}: CollapsibleSectionProps) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="border border-border-default rounded-lg overflow-hidden">
@@ -27,47 +50,73 @@ function CollapsibleSection({ title, icon, children, defaultOpen = true }: Colla
       >
         {icon}
         <span>{title}</span>
-        <span className="ml-auto">{open ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}</span>
+        <span className="ml-auto">
+          {open ? (
+            <ChevronUp className="h-5 w-5" />
+          ) : (
+            <ChevronDown className="h-5 w-5" />
+          )}
+        </span>
       </button>
-      <div className={cn(open ? 'block' : 'hidden')}>
+      <div className={cn(open ? "block" : "hidden")}>
         <div className="p-4 border-t border-border-default">{children}</div>
       </div>
     </div>
   );
 }
 
-const InfoRow = memo(function InfoRow({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
+const InfoRow = memo(function InfoRow({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string;
+  icon?: React.ReactNode;
+}) {
   return (
     <div className="flex items-start gap-3 py-2">
-      {icon && <span className="h-5 w-5 text-text-muted flex-shrink-0 mt-0.5">{icon}</span>}
+      {icon && (
+        <span className="h-5 w-5 text-text-muted flex-shrink-0 mt-0.5">
+          {icon}
+        </span>
+      )}
       <div className="flex-1 min-w-0">
         <div className="text-caption text-text-muted">{label}</div>
-        <div className="text-body-medium text-text-primary truncate">{value}</div>
+        <div className="text-body-medium text-text-primary truncate">
+          {value}
+        </div>
       </div>
     </div>
   );
 });
 
-const EvidenceCard = memo(function EvidenceCard({ evidence }: { evidence: Evidence }) {
-  const typeIcons: Record<Evidence['type'], React.ReactNode> = {
+const EvidenceCard = memo(function EvidenceCard({
+  evidence,
+}: {
+  evidence: Evidence;
+}) {
+  const typeIcons: Record<Evidence["type"], React.ReactNode> = {
     transaction: <CreditCard className="h-4 w-4" />,
     policy: <FileText className="h-4 w-4" />,
     communication: <Mail className="h-4 w-4" />,
     document: <Shield className="h-4 w-4" />,
   };
 
-  const typeLabels: Record<Evidence['type'], string> = {
-    transaction: 'Transaction',
-    policy: 'Policy',
-    communication: 'Communication',
-    document: 'Document',
+  const typeLabels: Record<Evidence["type"], string> = {
+    transaction: "Transaction",
+    policy: "Policy",
+    communication: "Communication",
+    document: "Document",
   };
 
   return (
     <div className="p-3 bg-surface-default border border-border-default rounded-lg">
       <div className="flex items-center gap-2 mb-2">
         {typeIcons[evidence.type]}
-        <Badge variant="secondary" className="capitalize">{typeLabels[evidence.type]}</Badge>
+        <Badge variant="secondary" className="capitalize">
+          {typeLabels[evidence.type]}
+        </Badge>
         <span className="ml-auto text-caption text-text-muted">
           {evidence.verified ? (
             <span className="flex items-center gap-1 text-success-default">
@@ -80,9 +129,13 @@ const EvidenceCard = memo(function EvidenceCard({ evidence }: { evidence: Eviden
           )}
         </span>
       </div>
-      <p className="text-body-medium text-text-primary">{evidence.description}</p>
+      <p className="text-body-medium text-text-primary">
+        {evidence.description}
+      </p>
       <details className="mt-2">
-        <summary className="text-caption text-text-muted cursor-pointer hover:text-text-primary">View details</summary>
+        <summary className="text-caption text-text-muted cursor-pointer hover:text-text-primary">
+          View details
+        </summary>
         <pre className="mt-2 p-2 bg-background-default rounded text-caption overflow-auto text-text-secondary max-h-40">
           {JSON.stringify(evidence.data, null, 2)}
         </pre>
@@ -91,7 +144,11 @@ const EvidenceCard = memo(function EvidenceCard({ evidence }: { evidence: Eviden
   );
 });
 
-const PolicyExcerptCard = memo(function PolicyExcerptCard({ excerpt }: { excerpt: Handoff['policyExcerpts'][0] }) {
+const PolicyExcerptCard = memo(function PolicyExcerptCard({
+  excerpt,
+}: {
+  excerpt: Handoff["policyExcerpts"][0];
+}) {
   return (
     <div className="p-3 bg-surface-default border border-border-default rounded-lg">
       <div className="flex items-start justify-between gap-2 mb-2">
@@ -101,12 +158,18 @@ const PolicyExcerptCard = memo(function PolicyExcerptCard({ excerpt }: { excerpt
         </div>
         <Badge variant="info">{excerpt.relevantSection}</Badge>
       </div>
-      <p className="text-body-medium text-text-secondary bg-background-default p-3 rounded border border-border-default">{excerpt.excerpt}</p>
+      <p className="text-body-medium text-text-secondary bg-background-default p-3 rounded border border-border-default">
+        {excerpt.excerpt}
+      </p>
     </div>
   );
 });
 
-const CompletedActionCard = memo(function CompletedActionCard({ action }: { action: Handoff['completedActions'][0] }) {
+const CompletedActionCard = memo(function CompletedActionCard({
+  action,
+}: {
+  action: Handoff["completedActions"][0];
+}) {
   const statusIcons = {
     verified: <CheckCircle className="h-4 w-4 text-success-default" />,
     pending: <Clock className="h-4 w-4 text-warning-default" />,
@@ -114,23 +177,33 @@ const CompletedActionCard = memo(function CompletedActionCard({ action }: { acti
   };
 
   const statusLabels = {
-    verified: 'Verified',
-    pending: 'Pending',
-    failed: 'Failed',
+    verified: "Verified",
+    pending: "Pending",
+    failed: "Failed",
   };
 
   return (
     <div className="p-3 bg-surface-default border border-border-default rounded-lg">
       <div className="flex items-start gap-3">
-        <div className="flex-shrink-0">{statusIcons[action.verificationStatus]}</div>
+        <div className="flex-shrink-0">
+          {statusIcons[action.verificationStatus]}
+        </div>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-text-primary">{action.action}</span>
-            <Badge variant="secondary">{statusLabels[action.verificationStatus]}</Badge>
+            <span className="font-medium text-text-primary">
+              {action.action}
+            </span>
+            <Badge variant="secondary">
+              {statusLabels[action.verificationStatus]}
+            </Badge>
           </div>
-          <p className="text-body-medium text-text-secondary mt-1">{action.description}</p>
+          <p className="text-body-medium text-text-secondary mt-1">
+            {action.description}
+          </p>
           <div className="mt-2 flex items-center gap-2 text-caption text-text-muted">
-            <span>Performed: {new Date(action.performedAt).toLocaleString()}</span>
+            <span>
+              Performed: {new Date(action.performedAt).toLocaleString()}
+            </span>
             {action.verificationDetails && (
               <>
                 <Separator className="h-4" orientation="vertical" />
@@ -157,23 +230,38 @@ export function CaseBrief({
   isAccepting: boolean;
   isCompleting: boolean;
 }) {
-  const statusColors: Record<HandoffStatus, { bg: string; text: string; border: string }> = {
-    pending: { bg: 'bg-warning-soft', text: 'text-warning-default', border: 'border-warning-default' },
-    accepted: { bg: 'bg-info-soft', text: 'text-info-default', border: 'border-info-default' },
-    completed: { bg: 'bg-success-soft', text: 'text-success-default', border: 'border-success-default' },
+  const statusColors: Record<
+    HandoffStatus,
+    { bg: string; text: string; border: string }
+  > = {
+    pending: {
+      bg: "bg-warning-soft",
+      text: "text-warning-default",
+      border: "border-warning-default",
+    },
+    accepted: {
+      bg: "bg-info-soft",
+      text: "text-info-default",
+      border: "border-info-default",
+    },
+    completed: {
+      bg: "bg-success-soft",
+      text: "text-success-default",
+      border: "border-success-default",
+    },
   };
 
-  const priorityColors: Record<Handoff['priority'], string> = {
-    critical: 'bg-error-soft text-error-default border-error-default',
-    high: 'bg-warning-soft text-warning-default border-warning-default',
-    medium: 'bg-info-soft text-info-default border-info-default',
-    low: 'bg-secondary-soft text-secondary-default border-secondary-default',
+  const priorityColors: Record<Handoff["priority"], string> = {
+    critical: "bg-error-soft text-error-default border-error-default",
+    high: "bg-warning-soft text-warning-default border-warning-default",
+    medium: "bg-info-soft text-info-default border-info-default",
+    low: "bg-secondary-soft text-secondary-default border-secondary-default",
   };
 
   const statusLabels: Record<HandoffStatus, string> = {
-    pending: 'Pending Review',
-    accepted: 'In Progress',
-    completed: 'Completed',
+    pending: "Pending Review",
+    accepted: "In Progress",
+    completed: "Completed",
   };
 
   return (
@@ -182,13 +270,27 @@ export function CaseBrief({
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <h1 className="text-h2 font-bold text-text-primary">Case Brief</h1>
-          <p className="text-body text-text-muted mt-1">Handoff #{handoff.id.slice(0, 8)}</p>
+          <p className="text-body text-text-muted mt-1">
+            Handoff #{handoff.id.slice(0, 8)}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className={cn('px-3 py-1 rounded-full text-caption font-medium border', priorityColors[handoff.priority])}>
+          <span
+            className={cn(
+              "px-3 py-1 rounded-full text-caption font-medium border",
+              priorityColors[handoff.priority],
+            )}
+          >
             {handoff.priority.toUpperCase()}
           </span>
-          <span className={cn('px-3 py-1 rounded-full text-caption font-medium border', statusColors[handoff.status].border, statusColors[handoff.status].bg, statusColors[handoff.status].text)}>
+          <span
+            className={cn(
+              "px-3 py-1 rounded-full text-caption font-medium border",
+              statusColors[handoff.status].border,
+              statusColors[handoff.status].bg,
+              statusColors[handoff.status].text,
+            )}
+          >
             {statusLabels[handoff.status]}
           </span>
         </div>
@@ -204,10 +306,26 @@ export function CaseBrief({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <InfoRow label="Name" value={handoff.customer.name} icon={<User className="h-4 w-4" />} />
-            <InfoRow label="Email" value={handoff.customer.email} icon={<Mail className="h-4 w-4" />} />
-            <InfoRow label="Plan" value={handoff.customer.plan} icon={<CreditCard className="h-4 w-4" />} />
-            <InfoRow label="Status" value={handoff.customer.status} icon={<Shield className="h-4 w-4" />} />
+            <InfoRow
+              label="Name"
+              value={handoff.customer.name}
+              icon={<User className="h-4 w-4" />}
+            />
+            <InfoRow
+              label="Email"
+              value={handoff.customer.email}
+              icon={<Mail className="h-4 w-4" />}
+            />
+            <InfoRow
+              label="Plan"
+              value={handoff.customer.plan}
+              icon={<CreditCard className="h-4 w-4" />}
+            />
+            <InfoRow
+              label="Status"
+              value={handoff.customer.status}
+              icon={<Shield className="h-4 w-4" />}
+            />
           </div>
         </CardContent>
       </Card>
@@ -222,26 +340,45 @@ export function CaseBrief({
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <div className="text-caption text-text-muted mb-1">Issue Summary</div>
-            <p className="text-body-medium text-text-primary">{handoff.issueSummary}</p>
+            <div className="text-caption text-text-muted mb-1">
+              Issue Summary
+            </div>
+            <p className="text-body-medium text-text-primary">
+              {handoff.issueSummary}
+            </p>
           </div>
           <div>
-            <div className="text-caption text-text-muted mb-1">Original Request</div>
-            <p className="text-body-medium text-text-primary bg-background-default p-4 rounded border border-border-default whitespace-pre-wrap">{handoff.originalRequest}</p>
+            <div className="text-caption text-text-muted mb-1">
+              Original Request
+            </div>
+            <p className="text-body-medium text-text-primary bg-background-default p-4 rounded border border-border-default whitespace-pre-wrap">
+              {handoff.originalRequest}
+            </p>
           </div>
           <div>
-            <div className="text-caption text-text-muted mb-1">Escalation Reason</div>
-            <p className="text-body-medium text-text-primary bg-background-default p-4 rounded border border-border-default">{handoff.escalationReason}</p>
+            <div className="text-caption text-text-muted mb-1">
+              Escalation Reason
+            </div>
+            <p className="text-body-medium text-text-primary bg-background-default p-4 rounded border border-border-default">
+              {handoff.escalationReason}
+            </p>
           </div>
           <div>
-            <div className="text-caption text-text-muted mb-1">Recommended Next Action</div>
-            <p className="text-body-medium text-text-primary bg-accent-soft p-4 rounded border border-accent-default">{handoff.recommendedNextAction}</p>
+            <div className="text-caption text-text-muted mb-1">
+              Recommended Next Action
+            </div>
+            <p className="text-body-medium text-text-primary bg-accent-soft p-4 rounded border border-accent-default">
+              {handoff.recommendedNextAction}
+            </p>
           </div>
         </CardContent>
       </Card>
 
       {/* Evidence */}
-      <CollapsibleSection title="Evidence Collected" icon={<FileText className="h-5 w-5" />}>
+      <CollapsibleSection
+        title="Evidence Collected"
+        icon={<FileText className="h-5 w-5" />}
+      >
         {handoff.evidence.length === 0 ? (
           <p className="text-body text-text-muted">No evidence collected</p>
         ) : (
@@ -254,7 +391,10 @@ export function CaseBrief({
       </CollapsibleSection>
 
       {/* Policy Excerpts */}
-      <CollapsibleSection title="Relevant Policy Excerpts" icon={<Shield className="h-5 w-5" />}>
+      <CollapsibleSection
+        title="Relevant Policy Excerpts"
+        icon={<Shield className="h-5 w-5" />}
+      >
         {handoff.policyExcerpts.length === 0 ? (
           <p className="text-body text-text-muted">No policy excerpts</p>
         ) : (
@@ -267,7 +407,10 @@ export function CaseBrief({
       </CollapsibleSection>
 
       {/* Completed Actions */}
-      <CollapsibleSection title="Completed Actions" icon={<CheckCircle className="h-5 w-5" />}>
+      <CollapsibleSection
+        title="Completed Actions"
+        icon={<CheckCircle className="h-5 w-5" />}
+      >
         {handoff.completedActions.length === 0 ? (
           <p className="text-body text-text-muted">No actions completed</p>
         ) : (
@@ -283,7 +426,7 @@ export function CaseBrief({
       <Card>
         <CardContent className="pt-0">
           <div className="flex flex-col sm:flex-row gap-3 p-4 border-t border-border-default">
-            {handoff.status === 'pending' && (
+            {handoff.status === "pending" && (
               <Button
                 size="lg"
                 className="flex-1"
@@ -296,11 +439,12 @@ export function CaseBrief({
                     Accepting...
                   </>
                 ) : (
-                  'Accept Handoff'
+                  "Accept Handoff"
                 )}
               </Button>
             )}
-            {(handoff.status === 'accepted' || handoff.status === 'pending') && (
+            {(handoff.status === "accepted" ||
+              handoff.status === "pending") && (
               <Button
                 size="lg"
                 variant="destructive"
@@ -314,11 +458,11 @@ export function CaseBrief({
                     Completing...
                   </>
                 ) : (
-                  'Mark Complete'
+                  "Mark Complete"
                 )}
               </Button>
             )}
-            {handoff.status === 'completed' && (
+            {handoff.status === "completed" && (
               <div className="flex-1 text-center text-success-default font-medium py-2">
                 <CheckCircle className="h-5 w-5 mx-auto mb-1" />
                 Case Completed

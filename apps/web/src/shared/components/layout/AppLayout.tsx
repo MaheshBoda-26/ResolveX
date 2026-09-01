@@ -1,6 +1,6 @@
-import { useState, ReactNode } from 'react';
-import { Header } from './Header';
-import { Sidebar } from './Sidebar';
+import { useState, ReactNode } from "react";
+import { Header } from "./Header";
+import { Sidebar } from "./Sidebar";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -11,7 +11,9 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background text-on-surface flex flex-col font-sans">
-      <Header onToggleMobileSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)} />
+      <Header
+        onToggleMobileSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+      />
       <Sidebar
         mobileOpen={mobileSidebarOpen}
         onCloseMobile={() => setMobileSidebarOpen(false)}

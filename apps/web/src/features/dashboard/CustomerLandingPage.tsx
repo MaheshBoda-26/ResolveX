@@ -1,22 +1,22 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export function CustomerLandingPage() {
-  const [issueText, setIssueText] = useState('');
+  const [issueText, setIssueText] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<string[]>([]);
   const navigate = useNavigate();
 
   const handleStartResolution = (prompt?: string) => {
     const textToSend = prompt || issueText;
     if (!textToSend.trim()) return;
-    navigate('/chat', { state: { initialMessage: textToSend } });
+    navigate("/chat", { state: { initialMessage: textToSend } });
   };
 
   const suggestedRequests = [
-    'I was charged twice for Order #84920 ($120.00)',
-    'Upgrade my subscription to Enterprise tier',
-    'Missing item in my recent express delivery',
-    'Request refund for delayed service',
+    "I was charged twice for Order #84920 ($120.00)",
+    "Upgrade my subscription to Enterprise tier",
+    "Missing item in my recent express delivery",
+    "Request refund for delayed service",
   ];
 
   return (
@@ -27,14 +27,17 @@ export function CustomerLandingPage() {
           Tell us what went wrong. We'll work on the resolution.
         </h1>
         <p className="text-base text-on-surface-variant max-w-lg mx-auto">
-          Our autonomous AI engine quickly understands, investigates, and resolves your issues with transparent, policy-grounded decisions.
+          Our autonomous AI engine quickly understands, investigates, and
+          resolves your issues with transparent, policy-grounded decisions.
         </p>
       </div>
 
       {/* Bento Grid / Interaction Card */}
       <div className="w-full bg-surface-container-lowest border border-outline-variant/60 rounded-2xl p-6 md:p-8 shadow-sm flex flex-col gap-6">
         <h2 className="text-xl font-bold text-on-surface flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary text-[22px]">help_center</span>
+          <span className="material-symbols-outlined text-primary text-[22px]">
+            help_center
+          </span>
           How can we help you today?
         </h2>
 
@@ -49,9 +52,18 @@ export function CustomerLandingPage() {
           />
 
           <div className="flex justify-between items-center px-4 py-3 border-t border-outline-variant/40 bg-surface-bright">
-            <label htmlFor="file-upload" className="flex items-center gap-1.5 text-on-surface-variant hover:text-primary cursor-pointer transition-colors text-xs font-medium">
-              <span className="material-symbols-outlined text-[18px]">attachment</span>
-              <span>{attachedFiles.length > 0 ? `${attachedFiles.length} attached` : 'Attach files'}</span>
+            <label
+              htmlFor="file-upload"
+              className="flex items-center gap-1.5 text-on-surface-variant hover:text-primary cursor-pointer transition-colors text-xs font-medium"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                attachment
+              </span>
+              <span>
+                {attachedFiles.length > 0
+                  ? `${attachedFiles.length} attached`
+                  : "Attach files"}
+              </span>
               <input
                 type="file"
                 multiple
@@ -59,7 +71,9 @@ export function CustomerLandingPage() {
                 id="file-upload"
                 onChange={(e) => {
                   if (e.target.files) {
-                    setAttachedFiles(Array.from(e.target.files).map((f) => f.name));
+                    setAttachedFiles(
+                      Array.from(e.target.files).map((f) => f.name),
+                    );
                   }
                 }}
               />
@@ -72,7 +86,9 @@ export function CustomerLandingPage() {
               type="button"
             >
               Start Resolution
-              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              <span className="material-symbols-outlined text-[16px]">
+                arrow_forward
+              </span>
             </button>
           </div>
         </div>
@@ -102,26 +118,44 @@ export function CustomerLandingPage() {
       {/* Trust Items */}
       <div className="w-full mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="flex items-center gap-3 p-4 rounded-xl border border-outline-variant/30 bg-surface-bright shadow-2xs">
-          <span className="material-symbols-outlined text-primary text-[24px]">gavel</span>
+          <span className="material-symbols-outlined text-primary text-[24px]">
+            gavel
+          </span>
           <div>
-            <div className="text-xs font-bold text-on-surface">Policy Grounded</div>
-            <div className="text-[11px] text-on-surface-variant">Validated against company rules</div>
+            <div className="text-xs font-bold text-on-surface">
+              Policy Grounded
+            </div>
+            <div className="text-[11px] text-on-surface-variant">
+              Validated against company rules
+            </div>
           </div>
         </div>
 
         <div className="flex items-center gap-3 p-4 rounded-xl border border-outline-variant/30 bg-surface-bright shadow-2xs">
-          <span className="material-symbols-outlined text-primary text-[24px]">verified</span>
+          <span className="material-symbols-outlined text-primary text-[24px]">
+            verified
+          </span>
           <div>
-            <div className="text-xs font-bold text-on-surface">Actions Verified</div>
-            <div className="text-[11px] text-on-surface-variant">API post-checks & ledger audit</div>
+            <div className="text-xs font-bold text-on-surface">
+              Actions Verified
+            </div>
+            <div className="text-[11px] text-on-surface-variant">
+              API post-checks & ledger audit
+            </div>
           </div>
         </div>
 
         <div className="flex items-center gap-3 p-4 rounded-xl border border-outline-variant/30 bg-surface-bright shadow-2xs">
-          <span className="material-symbols-outlined text-primary text-[24px]">support_agent</span>
+          <span className="material-symbols-outlined text-primary text-[24px]">
+            support_agent
+          </span>
           <div>
-            <div className="text-xs font-bold text-on-surface">Human Escalation</div>
-            <div className="text-[11px] text-on-surface-variant">Seamless agent takeover if needed</div>
+            <div className="text-xs font-bold text-on-surface">
+              Human Escalation
+            </div>
+            <div className="text-[11px] text-on-surface-variant">
+              Seamless agent takeover if needed
+            </div>
           </div>
         </div>
       </div>

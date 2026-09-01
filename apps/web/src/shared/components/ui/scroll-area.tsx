@@ -1,17 +1,20 @@
-'use client';
+"use client";
 
-import { HTMLAttributes, forwardRef } from 'react';
-import { cn } from '@/shared/utils/utils';
+import { HTMLAttributes, forwardRef } from "react";
+import { cn } from "@/shared/utils/utils";
 
 const ScrollArea = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border-default', className)}
+      className={cn(
+        "overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border-default",
+        className,
+      )}
       {...props}
     />
-  )
+  ),
 );
-ScrollArea.displayName = 'ScrollArea';
+ScrollArea.displayName = "ScrollArea";
 
 export { ScrollArea };

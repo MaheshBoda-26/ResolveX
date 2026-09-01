@@ -1,5 +1,4 @@
-// Test setup file for web app
-import { vi } from 'vitest';
+import { vi, beforeAll, afterAll } from 'vitest';
 import '@testing-library/jest-dom';
 
 // Mock environment variables

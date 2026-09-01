@@ -1,12 +1,12 @@
-import { FastifyPluginAsync } from 'fastify';
-import { z } from 'zod';
-import { ChatRequestSchema, TriageResultSchema } from '@resolvex/shared';
-import { triageMessage } from '../agents/triage';
-import { createConversation, createTriageAgentRun } from '../db/conversations';
-import { toFastifySchema } from '../lib/fastify-schema';
+import { FastifyPluginAsync } from "fastify";
+import { z } from "zod";
+import { ChatRequestSchema, TriageResultSchema } from "@resolvex/shared";
+import { triageMessage } from "../agents/triage";
+import { createConversation, createTriageAgentRun } from "../db/conversations";
+import { toFastifySchema } from "../lib/fastify-schema";
 
 export const triageRoutes: FastifyPluginAsync = async (app) => {
-  app.post('/triage', {
+  app.post("/triage", {
     schema: {
       body: toFastifySchema(ChatRequestSchema),
       response: {
@@ -19,11 +19,11 @@ export const triageRoutes: FastifyPluginAsync = async (app) => {
       let conversationId = body.conversationId;
 
       if (!conversationId) {
-        const conversation = await createConversation(body.customerId ?? null, body.channel);
+        const conversation = await createConversation(
+          body.customerId ?? null,
+          body.channel,
+        );
         conversationId = conversation.id;
-      } else {
-        // Ensure conversationId is defined after the conditional
-        conversationId = conversationId;
       }
 
       const result = await triageMessage(body);

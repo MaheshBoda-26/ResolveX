@@ -1,6 +1,6 @@
-import { Link, useLocation } from 'react-router-dom';
-import { useTheme } from '@/shared/lib/theme';
-import { useState } from 'react';
+import { Link, useLocation } from "react-router-dom";
+import { useTheme } from "@/shared/lib/theme";
+import { useState } from "react";
 
 interface HeaderProps {
   onToggleMobileSidebar?: () => void;
@@ -9,11 +9,15 @@ interface HeaderProps {
 export function Header({ onToggleMobileSidebar }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   const isActive = (path: string) => {
-    if (path === '/' && (location.pathname === '/' || location.pathname === '/dashboard')) return true;
-    return location.pathname.startsWith(path) && path !== '/';
+    if (
+      path === "/" &&
+      (location.pathname === "/" || location.pathname === "/dashboard")
+    )
+      return true;
+    return location.pathname.startsWith(path) && path !== "/";
   };
 
   return (
@@ -27,8 +31,14 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
         >
           <span className="material-symbols-outlined">menu</span>
         </button>
-        <Link to="/" className="flex items-center gap-2 font-bold text-xl text-primary dark:text-primary-fixed-dim hover:opacity-90 transition-opacity">
-          <span className="material-symbols-outlined text-primary dark:text-primary-fixed-dim" style={{ fontVariationSettings: "'FILL' 1" }}>
+        <Link
+          to="/"
+          className="flex items-center gap-2 font-bold text-xl text-primary dark:text-primary-fixed-dim hover:opacity-90 transition-opacity"
+        >
+          <span
+            className="material-symbols-outlined text-primary dark:text-primary-fixed-dim"
+            style={{ fontVariationSettings: "'FILL' 1" }}
+          >
             support_agent
           </span>
           <span>ResolveX</span>
@@ -40,32 +50,39 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
         <Link
           to="/"
           className={`px-3 py-1 rounded text-xs font-medium flex items-center gap-1 transition-colors ${
-            isActive('/')
-              ? 'text-primary font-bold border-b-2 border-primary dark:text-primary-fixed-dim'
-              : 'text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest'
+            isActive("/")
+              ? "text-primary font-bold border-b-2 border-primary dark:text-primary-fixed-dim"
+              : "text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest"
           }`}
         >
-          <span className="material-symbols-outlined text-[18px]">dashboard</span> Operations
+          <span className="material-symbols-outlined text-[18px]">
+            dashboard
+          </span>{" "}
+          Operations
         </Link>
         <Link
           to="/chat"
           className={`px-3 py-1 rounded text-xs font-medium flex items-center gap-1 transition-colors ${
-            isActive('/chat')
-              ? 'text-primary font-bold border-b-2 border-primary dark:text-primary-fixed-dim'
-              : 'text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest'
+            isActive("/chat")
+              ? "text-primary font-bold border-b-2 border-primary dark:text-primary-fixed-dim"
+              : "text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest"
           }`}
         >
-          <span className="material-symbols-outlined text-[18px]">chat</span> Support Chat
+          <span className="material-symbols-outlined text-[18px]">chat</span>{" "}
+          Support Chat
         </Link>
         <Link
           to="/support"
           className={`px-3 py-1 rounded text-xs font-medium flex items-center gap-1 transition-colors ${
-            isActive('/support')
-              ? 'text-primary font-bold border-b-2 border-primary dark:text-primary-fixed-dim'
-              : 'text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest'
+            isActive("/support")
+              ? "text-primary font-bold border-b-2 border-primary dark:text-primary-fixed-dim"
+              : "text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest"
           }`}
         >
-          <span className="material-symbols-outlined text-[18px]">contact_support</span> Customer Portal
+          <span className="material-symbols-outlined text-[18px]">
+            contact_support
+          </span>{" "}
+          Customer Portal
         </Link>
       </div>
 
@@ -90,7 +107,9 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
           className="p-1.5 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors rounded-full relative"
           title="Notifications"
         >
-          <span className="material-symbols-outlined text-[20px]">notifications</span>
+          <span className="material-symbols-outlined text-[20px]">
+            notifications
+          </span>
           <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full"></span>
         </button>
 
@@ -98,10 +117,12 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
         <button
           onClick={toggleTheme}
           className="p-1.5 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors rounded-full"
-          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          title={
+            theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"
+          }
         >
           <span className="material-symbols-outlined text-[20px]">
-            {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+            {theme === "dark" ? "light_mode" : "dark_mode"}
           </span>
         </button>
 

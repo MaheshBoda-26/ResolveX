@@ -1,4 +1,4 @@
-import { env } from '../lib/env.js';
+import { env } from "../lib/env.js";
 
 const EMBEDDING_DIMENSIONS = 1536;
 const EMBEDDING_CACHE_SIZE = 1000;
@@ -41,7 +41,9 @@ export interface EmbeddingResult {
  * Falls back to deterministic hash if neither is available
  * Uses in-memory LRU cache for performance
  */
-export async function generateEmbedding(text: string): Promise<EmbeddingResult> {
+export async function generateEmbedding(
+  text: string,
+): Promise<EmbeddingResult> {
   const cached = getCachedEmbedding(text);
   if (cached) return cached;
 
@@ -66,18 +68,21 @@ export function getEmbeddingCacheStats(): { size: number; maxSize: number } {
   return { size: embeddingCache.size, maxSize: EMBEDDING_CACHE_SIZE };
 }
 
-async function generateOpenAIEmbedding(text: string, apiKey: string): Promise<EmbeddingResult> {
+async function generateOpenAIEmbedding(
+  text: string,
+  apiKey: string,
+): Promise<EmbeddingResult> {
   try {
-    const response = await fetch('https://api.openai.com/v1/embeddings', {
-      method: 'POST',
+    const response = await fetch("https://api.openai.com/v1/embeddings", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: 'text-embedding-3-small',
+        model: "text-embedding-3-small",
         input: text,
-        encoding_format: 'float',
+        encoding_format: "float",
       }),
       signal: AbortSignal.timeout(10000),
     });
@@ -86,28 +91,34 @@ async function generateOpenAIEmbedding(text: string, apiKey: string): Promise<Em
       throw new Error(`Embedding API error: ${response.status}`);
     }
 
-    const data = await response.json() as { data: Array<{ embedding: number[] }>; usage: { total_tokens: number } };
+    const data = (await response.json()) as {
+      data: Array<{ embedding: number[] }>;
+      usage: { total_tokens: number };
+    };
     const embedding = data.data[0]?.embedding;
     return {
       embedding: embedding ?? new Array(EMBEDDING_DIMENSIONS).fill(0),
       tokens: data.usage?.total_tokens ?? estimateTokens(text),
     };
   } catch (error) {
-    console.error('OpenAI embedding failed, falling back to local:', error);
+    console.error("OpenAI embedding failed, falling back to local:", error);
     return generateLocalEmbedding(text);
   }
 }
 
 async function generateLocalEmbedding(text: string): Promise<EmbeddingResult> {
   try {
-    const { pipeline } = await import('@xenova/transformers');
+    const { pipeline } = await import("@xenova/transformers");
 
-    const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-    const output = await extractor(text, { pooling: 'mean', normalize: true });
+    const extractor = await pipeline(
+      "feature-extraction",
+      "Xenova/all-MiniLM-L6-v2",
+    );
+    const output = await extractor(text, { pooling: "mean", normalize: true });
 
     const data = output.data;
     if (!data) {
-      throw new Error('No embedding data returned');
+      throw new Error("No embedding data returned");
     }
 
     return {
@@ -115,7 +126,7 @@ async function generateLocalEmbedding(text: string): Promise<EmbeddingResult> {
       tokens: estimateTokens(text),
     };
   } catch (error) {
-    console.warn('Local embedding failed, using hash fallback:', error);
+    console.warn("Local embedding failed, using hash fallback:", error);
     return hashEmbedding(text);
   }
 }
@@ -126,7 +137,7 @@ function hashEmbedding(text: string): EmbeddingResult {
 
   let hash = 0;
   for (let i = 0; i < text.length; i++) {
-    hash = ((hash << 5) - hash) + text.charCodeAt(i);
+    hash = (hash << 5) - hash + text.charCodeAt(i);
     hash |= 0;
   }
 
@@ -148,8 +159,8 @@ function hashEmbedding(text: string): EmbeddingResult {
 }
 
 function mulberry32(a: number) {
-  return function() {
-    let t = a += 0x6D2B79F5;
+  return function () {
+    let t = (a += 0x6d2b79f5);
     t = Math.imul(t ^ (t >>> 15), t | 1);
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
@@ -165,7 +176,7 @@ function estimateTokens(text: string): number {
  */
 export function cosineSimilarity(vec1: number[], vec2: number[]): number {
   if (vec1.length !== vec2.length) {
-    throw new Error('Vectors must have same dimensions');
+    throw new Error("Vectors must have same dimensions");
   }
 
   let dotProduct = 0;

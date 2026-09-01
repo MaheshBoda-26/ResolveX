@@ -1,13 +1,13 @@
-import { db } from '../db/client';
-import { verifications, toolCalls } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { db } from "../db/client";
+import { verifications, toolCalls } from "../db/schema";
+import { eq } from "drizzle-orm";
 import {
   getCustomer,
   getTransactions,
   getSubscription,
   verifyCustomerState as freshworksVerifyCustomerState,
-} from '../actions/freshworks';
-import type { Customer, Transaction, Subscription } from '@resolvex/shared';
+} from "../actions/freshworks";
+import type { Customer, Transaction, Subscription } from "@resolvex/shared";
 
 export interface RefundVerificationInput {
   customerId: string;
@@ -37,7 +37,7 @@ async function createVerificationRecord(
   actionType: string,
   expectedState: Record<string, unknown>,
   observedState: Record<string, unknown> | null,
-  status: 'verified' | 'mismatch' | 'failed'
+  status: "verified" | "mismatch" | "failed",
 ): Promise<void> {
   await db.insert(verifications).values({
     conversationId: conversationId as any,
@@ -51,27 +51,28 @@ async function createVerificationRecord(
 export async function verifyRefund(
   agentRunId: string,
   conversationId: string,
-  input: RefundVerificationInput
+  input: RefundVerificationInput,
 ): Promise<VerificationResult> {
   const startTime = Date.now();
 
   try {
-    const transactions = await getTransactions(agentRunId, { customerId: input.customerId });
+    const transactions = await getTransactions(agentRunId, {
+      customerId: input.customerId,
+    });
 
-    const refundTx = transactions.find(t =>
-      t.invoiceId === input.invoiceId &&
-      t.status === 'refunded'
+    const refundTx = transactions.find(
+      (t) => t.invoiceId === input.invoiceId && t.status === "refunded",
     );
 
     const expectedState = {
       invoiceId: input.invoiceId,
       refundAmount: input.expectedRefundAmount,
-      status: 'refunded',
+      status: "refunded",
     };
 
     let observedState: Record<string, unknown> = {
       invoiceId: input.invoiceId,
-      status: 'not_found',
+      status: "not_found",
     };
 
     if (refundTx) {
@@ -84,42 +85,43 @@ export async function verifyRefund(
       };
     }
 
-    const differences: Record<string, { expected: unknown; actual: unknown }> = {};
+    const differences: Record<string, { expected: unknown; actual: unknown }> =
+      {};
 
     if (refundTx) {
       if (Number(refundTx.amount) !== input.expectedRefundAmount) {
-        differences['refundAmount'] = {
+        differences["refundAmount"] = {
           expected: input.expectedRefundAmount,
-          actual: Number(refundTx.amount)
+          actual: Number(refundTx.amount),
         };
       }
-      if (refundTx.status !== 'refunded') {
-        differences['status'] = {
-          expected: 'refunded',
-          actual: refundTx.status
+      if (refundTx.status !== "refunded") {
+        differences["status"] = {
+          expected: "refunded",
+          actual: refundTx.status,
         };
       }
     } else {
-      differences['refundAmount'] = {
+      differences["refundAmount"] = {
         expected: input.expectedRefundAmount,
-        actual: null
+        actual: null,
       };
-      differences['status'] = {
-        expected: 'refunded',
-        actual: 'not_found'
+      differences["status"] = {
+        expected: "refunded",
+        actual: "not_found",
       };
     }
 
     const verified = Object.keys(differences).length === 0;
-    const status = verified ? 'verified' : 'mismatch';
+    const status = verified ? "verified" : "mismatch";
 
     await createVerificationRecord(
       agentRunId,
       conversationId,
-      'refund',
+      "refund",
       expectedState,
       observedState,
-      status
+      status,
     );
 
     return { verified, differences, observedState };
@@ -127,10 +129,10 @@ export async function verifyRefund(
     await createVerificationRecord(
       agentRunId,
       conversationId,
-      'refund',
+      "refund",
       { invoiceId: input.invoiceId, refundAmount: input.expectedRefundAmount },
       null,
-      'failed'
+      "failed",
     );
     throw error;
   }
@@ -139,11 +141,15 @@ export async function verifyRefund(
 export async function verifyUpgrade(
   agentRunId: string,
   conversationId: string,
-  input: UpgradeVerificationInput
+  input: UpgradeVerificationInput,
 ): Promise<VerificationResult> {
   try {
-    const customer = await getCustomer(agentRunId, { customerId: input.customerId });
-    const subscription = await getSubscription(agentRunId, { customerId: input.customerId });
+    const customer = await getCustomer(agentRunId, {
+      customerId: input.customerId,
+    });
+    const subscription = await getSubscription(agentRunId, {
+      customerId: input.customerId,
+    });
 
     const expectedState = {
       customerPlanId: input.expectedPlanId,
@@ -157,32 +163,33 @@ export async function verifyUpgrade(
       subscriptionId: subscription?.id ?? null,
     };
 
-    const differences: Record<string, { expected: unknown; actual: unknown }> = {};
+    const differences: Record<string, { expected: unknown; actual: unknown }> =
+      {};
 
     if (customer?.planId !== input.expectedPlanId) {
-      differences['customerPlanId'] = {
+      differences["customerPlanId"] = {
         expected: input.expectedPlanId,
-        actual: customer?.planId ?? null
+        actual: customer?.planId ?? null,
       };
     }
 
     if (subscription?.planId !== input.expectedPlanId) {
-      differences['subscriptionPlanId'] = {
+      differences["subscriptionPlanId"] = {
         expected: input.expectedPlanId,
-        actual: subscription?.planId ?? null
+        actual: subscription?.planId ?? null,
       };
     }
 
     const verified = Object.keys(differences).length === 0;
-    const status = verified ? 'verified' : 'mismatch';
+    const status = verified ? "verified" : "mismatch";
 
     await createVerificationRecord(
       agentRunId,
       conversationId,
-      'upgrade',
+      "upgrade",
       expectedState,
       observedState,
-      status
+      status,
     );
 
     return { verified, differences, observedState };
@@ -190,10 +197,10 @@ export async function verifyUpgrade(
     await createVerificationRecord(
       agentRunId,
       conversationId,
-      'upgrade',
+      "upgrade",
       { expectedPlanId: input.expectedPlanId },
       null,
-      'failed'
+      "failed",
     );
     throw error;
   }
@@ -202,7 +209,7 @@ export async function verifyUpgrade(
 export async function verifyCustomerState(
   agentRunId: string,
   conversationId: string,
-  input: CustomerStateVerificationInput
+  input: CustomerStateVerificationInput,
 ): Promise<VerificationResult> {
   try {
     // Delegate to Freshworks verifyCustomerState which already does the comparison
@@ -211,15 +218,15 @@ export async function verifyCustomerState(
       expectedState: input.expectedState,
     });
 
-    const status = result.verified ? 'verified' : 'mismatch';
+    const status = result.verified ? "verified" : "mismatch";
 
     await createVerificationRecord(
       agentRunId,
       conversationId,
-      'customer_state',
+      "customer_state",
       input.expectedState,
       result.observedState,
-      status
+      status,
     );
 
     return {
@@ -231,32 +238,32 @@ export async function verifyCustomerState(
     await createVerificationRecord(
       agentRunId,
       conversationId,
-      'customer_state',
+      "customer_state",
       input.expectedState,
       null,
-      'failed'
+      "failed",
     );
     throw error;
   }
 }
 
-export async function getVerificationHistory(
-  conversationId: string
-): Promise<Array<{
-  id: string;
-  actionType: string;
-  expectedState: Record<string, unknown>;
-  observedState: Record<string, unknown> | null;
-  status: string;
-  createdAt: Date;
-}>> {
+export async function getVerificationHistory(conversationId: string): Promise<
+  Array<{
+    id: string;
+    actionType: string;
+    expectedState: Record<string, unknown>;
+    observedState: Record<string, unknown> | null;
+    status: string;
+    createdAt: Date;
+  }>
+> {
   const results = await db
     .select()
     .from(verifications)
     .where(eq(verifications.conversationId, conversationId as any))
     .orderBy(verifications.createdAt);
 
-  return results.map(r => ({
+  return results.map((r) => ({
     id: r.id,
     actionType: r.actionType,
     expectedState: r.expectedState as Record<string, unknown>,

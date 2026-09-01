@@ -1,50 +1,71 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { Search, Filter, ChevronUp, ChevronDown, ArrowUpDown } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
-import { Badge, BadgeProps } from '@/shared/components/ui/badge';
-import { Card, CardContent } from '@/shared/components/ui/card';
-import { Input } from '@/shared/components/ui/input';
-import { Separator } from '@/shared/components/ui/separator';
-import { cn } from '@/shared/utils/utils';
-import { useHandoffs, Handoff, HandoffFilters, HandoffSort, HandoffStatus } from '@/shared/lib/api';
+import { useState, useMemo } from "react";
+import {
+  Search,
+  Filter,
+  ChevronUp,
+  ChevronDown,
+  ArrowUpDown,
+} from "lucide-react";
+import { Button } from "@/shared/components/ui/button";
+import { Badge, BadgeProps } from "@/shared/components/ui/badge";
+import { Card, CardContent } from "@/shared/components/ui/card";
+import { Input } from "@/shared/components/ui/input";
+import { Separator } from "@/shared/components/ui/separator";
+import { cn } from "@/shared/utils/utils";
+import {
+  useHandoffs,
+  Handoff,
+  HandoffFilters,
+  HandoffSort,
+  HandoffStatus,
+} from "@/shared/lib/api";
 
-const STATUS_COLORS: Record<HandoffStatus, 'warning' | 'info' | 'success'> = {
-  pending: 'warning',
-  accepted: 'info',
-  completed: 'success',
+const STATUS_COLORS: Record<HandoffStatus, "warning" | "info" | "success"> = {
+  pending: "warning",
+  accepted: "info",
+  completed: "success",
 };
 
-function PriorityBadge({ priority }: { priority: Handoff['priority'] }) {
-  const colors: Record<Handoff['priority'], BadgeProps['variant']> = {
-    critical: 'error',
-    high: 'warning',
-    medium: 'info',
-    low: 'default',
+function PriorityBadge({ priority }: { priority: Handoff["priority"] }) {
+  const colors: Record<Handoff["priority"], BadgeProps["variant"]> = {
+    critical: "error",
+    high: "warning",
+    medium: "info",
+    low: "default",
   };
-  return <Badge variant={colors[priority]} className="capitalize">{priority}</Badge>;
+  return (
+    <Badge variant={colors[priority]} className="capitalize">
+      {priority}
+    </Badge>
+  );
 }
 
 function StatusBadge({ status }: { status: HandoffStatus }) {
   const labels: Record<HandoffStatus, string> = {
-    pending: 'Pending',
-    accepted: 'Accepted',
-    completed: 'Completed',
+    pending: "Pending",
+    accepted: "Accepted",
+    completed: "Completed",
   };
   return <Badge variant={STATUS_COLORS[status]}>{labels[status]}</Badge>;
 }
 
 interface SortableHeaderProps {
   label: string;
-  field: HandoffSort['field'];
+  field: HandoffSort["field"];
   currentSort: HandoffSort;
-  onSort: (field: HandoffSort['field']) => void;
+  onSort: (field: HandoffSort["field"]) => void;
 }
 
-function SortableHeader({ label, field, currentSort, onSort }: SortableHeaderProps) {
+function SortableHeader({
+  label,
+  field,
+  currentSort,
+  onSort,
+}: SortableHeaderProps) {
   const isActive = currentSort.field === field;
-  const direction = isActive ? currentSort.direction : 'asc';
+  const direction = isActive ? currentSort.direction : "asc";
   return (
     <th
       className="px-4 py-3 text-left text-small font-medium text-text-secondary cursor-pointer hover:text-text-primary select-none"
@@ -52,9 +73,12 @@ function SortableHeader({ label, field, currentSort, onSort }: SortableHeaderPro
     >
       <div className="flex items-center gap-1">
         {label}
-        {isActive && (
-          direction === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
-        )}
+        {isActive &&
+          (direction === "asc" ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          ))}
         {!isActive && <ArrowUpDown className="h-4 w-4 text-text-muted" />}
       </div>
     </th>
@@ -73,14 +97,22 @@ function HandoffRow({ handoff, onClick }: HandoffRowProps) {
       onClick={onClick}
     >
       <td className="px-4 py-3">
-        <div className="font-medium text-text-primary">{handoff.customer.name}</div>
-        <div className="text-caption text-text-muted">{handoff.customer.email}</div>
+        <div className="font-medium text-text-primary">
+          {handoff.customer.name}
+        </div>
+        <div className="text-caption text-text-muted">
+          {handoff.customer.email}
+        </div>
       </td>
       <td className="px-4 py-3 max-w-xs">
-        <div className="text-body-medium text-text-primary line-clamp-1">{handoff.issueSummary}</div>
+        <div className="text-body-medium text-text-primary line-clamp-1">
+          {handoff.issueSummary}
+        </div>
       </td>
       <td className="px-4 py-3 max-w-xs hidden md:table-cell">
-        <div className="text-body-medium text-text-secondary line-clamp-1">{handoff.reason}</div>
+        <div className="text-body-medium text-text-secondary line-clamp-1">
+          {handoff.reason}
+        </div>
       </td>
       <td className="px-4 py-3 whitespace-nowrap">
         <PriorityBadge priority={handoff.priority} />
@@ -95,17 +127,30 @@ function HandoffRow({ handoff, onClick }: HandoffRowProps) {
   );
 }
 
-export function HandoffList({ onSelect }: { onSelect: (handoff: Handoff) => void }) {
+export function HandoffList({
+  onSelect,
+}: {
+  onSelect: (handoff: Handoff) => void;
+}) {
   const [filters, setFilters] = useState<HandoffFilters>({});
-  const [sort, setSort] = useState<HandoffSort>({ field: 'createdAt', direction: 'desc' });
-  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<HandoffSort>({
+    field: "createdAt",
+    direction: "desc",
+  });
+  const [search, setSearch] = useState("");
 
-  const { data: handoffs, isLoading, error, refetch } = useHandoffs(filters, sort);
+  const {
+    data: handoffs,
+    isLoading,
+    error,
+    refetch,
+  } = useHandoffs(filters, sort);
 
-  const handleSort = (field: HandoffSort['field']) => {
+  const handleSort = (field: HandoffSort["field"]) => {
     setSort((prev) => ({
       field,
-      direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc',
+      direction:
+        prev.field === field && prev.direction === "asc" ? "desc" : "asc",
     }));
   };
 
@@ -120,7 +165,7 @@ export function HandoffList({ onSelect }: { onSelect: (handoff: Handoff) => void
           h.customer.name.toLowerCase().includes(lowerSearch) ||
           h.customer.email.toLowerCase().includes(lowerSearch) ||
           h.issueSummary.toLowerCase().includes(lowerSearch) ||
-          h.reason.toLowerCase().includes(lowerSearch)
+          h.reason.toLowerCase().includes(lowerSearch),
       );
     }
 
@@ -133,7 +178,10 @@ export function HandoffList({ onSelect }: { onSelect: (handoff: Handoff) => void
         <CardContent className="p-6">
           <div className="space-y-3">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-16 bg-secondary-soft rounded-lg animate-pulse" />
+              <div
+                key={i}
+                className="h-16 bg-secondary-soft rounded-lg animate-pulse"
+              />
             ))}
           </div>
         </CardContent>
@@ -171,8 +219,13 @@ export function HandoffList({ onSelect }: { onSelect: (handoff: Handoff) => void
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setFilters((prev) => ({ ...prev, status: 'pending' }))}
-              className={cn(filters.status === 'pending' && 'bg-brand-primary-soft text-brand-primary border-brand-primary')}
+              onClick={() =>
+                setFilters((prev) => ({ ...prev, status: "pending" }))
+              }
+              className={cn(
+                filters.status === "pending" &&
+                  "bg-brand-primary-soft text-brand-primary border-brand-primary",
+              )}
             >
               <Filter className="h-4 w-4 mr-1" />
               Pending
@@ -180,16 +233,26 @@ export function HandoffList({ onSelect }: { onSelect: (handoff: Handoff) => void
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setFilters((prev) => ({ ...prev, status: 'accepted' }))}
-              className={cn(filters.status === 'accepted' && 'bg-brand-primary-soft text-brand-primary border-brand-primary')}
+              onClick={() =>
+                setFilters((prev) => ({ ...prev, status: "accepted" }))
+              }
+              className={cn(
+                filters.status === "accepted" &&
+                  "bg-brand-primary-soft text-brand-primary border-brand-primary",
+              )}
             >
               Accepted
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setFilters((prev) => ({ ...prev, status: 'completed' }))}
-              className={cn(filters.status === 'completed' && 'bg-brand-primary-soft text-brand-primary border-brand-primary')}
+              onClick={() =>
+                setFilters((prev) => ({ ...prev, status: "completed" }))
+              }
+              className={cn(
+                filters.status === "completed" &&
+                  "bg-brand-primary-soft text-brand-primary border-brand-primary",
+              )}
             >
               Completed
             </Button>
@@ -205,18 +268,51 @@ export function HandoffList({ onSelect }: { onSelect: (handoff: Handoff) => void
         <table className="w-full text-left">
           <thead className="sticky top-0 bg-surface-default/80 backdrop-blur-sm z-10">
             <tr className="border-b border-border-default">
-              <SortableHeader label="Customer" field="customer" currentSort={sort} onSort={handleSort} />
-              <SortableHeader label="Issue Summary" field="customer" currentSort={sort} onSort={handleSort} />
-              <SortableHeader label="Reason" field="customer" currentSort={sort} onSort={handleSort} />
-              <SortableHeader label="Priority" field="priority" currentSort={sort} onSort={handleSort} />
-              <SortableHeader label="Created" field="createdAt" currentSort={sort} onSort={handleSort} />
-              <SortableHeader label="Status" field="customer" currentSort={sort} onSort={handleSort} />
+              <SortableHeader
+                label="Customer"
+                field="customer"
+                currentSort={sort}
+                onSort={handleSort}
+              />
+              <SortableHeader
+                label="Issue Summary"
+                field="customer"
+                currentSort={sort}
+                onSort={handleSort}
+              />
+              <SortableHeader
+                label="Reason"
+                field="customer"
+                currentSort={sort}
+                onSort={handleSort}
+              />
+              <SortableHeader
+                label="Priority"
+                field="priority"
+                currentSort={sort}
+                onSort={handleSort}
+              />
+              <SortableHeader
+                label="Created"
+                field="createdAt"
+                currentSort={sort}
+                onSort={handleSort}
+              />
+              <SortableHeader
+                label="Status"
+                field="customer"
+                currentSort={sort}
+                onSort={handleSort}
+              />
             </tr>
           </thead>
           <tbody>
             {filteredHandoffs.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-text-muted">
+                <td
+                  colSpan={6}
+                  className="px-4 py-12 text-center text-text-muted"
+                >
                   No handoffs found
                 </td>
               </tr>

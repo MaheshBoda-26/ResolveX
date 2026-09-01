@@ -1,8 +1,20 @@
-import { db } from '../db/client';
-import { handoffs, conversations, agentRuns, toolCalls, verifications, customers } from '../db/schema';
-import { eq, and, inArray } from 'drizzle-orm';
-import type { TriageResult, BillingDecision, SubscriptionDecision, Verification } from '@resolvex/shared';
-import { HandoffReason, HANDOFF_REASONS } from '@resolvex/shared';
+import { db } from "../db/client";
+import {
+  handoffs,
+  conversations,
+  agentRuns,
+  toolCalls,
+  verifications,
+  customers,
+} from "../db/schema";
+import { eq, and, inArray } from "drizzle-orm";
+import type {
+  TriageResult,
+  BillingDecision,
+  SubscriptionDecision,
+  Verification,
+} from "@resolvex/shared";
+import { HandoffReason, HANDOFF_REASONS } from "@resolvex/shared";
 
 export interface Handoff {
   id: string;
@@ -16,8 +28,8 @@ export interface Handoff {
   };
   issue: {
     summary: string;
-    intents: TriageResult['intents'];
-    tasks: TriageResult['tasks'];
+    intents: TriageResult["intents"];
+    tasks: TriageResult["tasks"];
   };
   evidence: {
     billingDecisions: BillingDecision[];
@@ -43,12 +55,12 @@ export interface Handoff {
     type: string;
     action: string;
     amount?: number;
-    result: 'success' | 'failed' | 'escalated';
+    result: "success" | "failed" | "escalated";
     timestamp: Date;
   }>;
   reason: HandoffReason;
   recommendedAction: string;
-  status: 'pending' | 'accepted' | 'completed' | 'cancelled';
+  status: "pending" | "accepted" | "completed" | "cancelled";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -98,33 +110,37 @@ async function getCustomerFromConversation(conversationId: string): Promise<{
   };
 }
 
-async function getAgentRunsForConversation(conversationId: string): Promise<Array<{
-  agentName: string;
-  decision: Record<string, unknown>;
-}>> {
+async function getAgentRunsForConversation(conversationId: string): Promise<
+  Array<{
+    agentName: string;
+    decision: Record<string, unknown>;
+  }>
+> {
   const runs = await db
     .select()
     .from(agentRuns)
     .where(eq(agentRuns.conversationId, conversationId as any));
 
-  return runs.map(r => ({
+  return runs.map((r) => ({
     agentName: r.agentName,
     decision: r.decision as Record<string, unknown>,
   }));
 }
 
-async function getToolCallsForConversation(conversationId: string): Promise<Array<{
-  toolName: string;
-  arguments: Record<string, unknown>;
-  result: Record<string, unknown> | null;
-  status: string;
-}>> {
+async function getToolCallsForConversation(conversationId: string): Promise<
+  Array<{
+    toolName: string;
+    arguments: Record<string, unknown>;
+    result: Record<string, unknown> | null;
+    status: string;
+  }>
+> {
   const runs = await db
     .select({ id: agentRuns.id })
     .from(agentRuns)
     .where(eq(agentRuns.conversationId, conversationId as any));
 
-  const runIds = runs.map(r => r.id);
+  const runIds = runs.map((r) => r.id);
   if (runIds.length === 0) return [];
 
   const calls = await db
@@ -132,7 +148,7 @@ async function getToolCallsForConversation(conversationId: string): Promise<Arra
     .from(toolCalls)
     .where(inArray(toolCalls.agentRunId, runIds as any));
 
-  return calls.map(c => ({
+  return calls.map((c) => ({
     toolName: c.toolName,
     arguments: c.arguments as Record<string, unknown>,
     result: c.result as Record<string, unknown> | null,
@@ -140,18 +156,20 @@ async function getToolCallsForConversation(conversationId: string): Promise<Arra
   }));
 }
 
-async function getVerificationsForConversation(conversationId: string): Promise<Array<{
-  actionType: string;
-  expectedState: Record<string, unknown>;
-  observedState: Record<string, unknown> | null;
-  status: string;
-}>> {
+async function getVerificationsForConversation(conversationId: string): Promise<
+  Array<{
+    actionType: string;
+    expectedState: Record<string, unknown>;
+    observedState: Record<string, unknown> | null;
+    status: string;
+  }>
+> {
   const results = await db
     .select()
     .from(verifications)
     .where(eq(verifications.conversationId, conversationId as any));
 
-  return results.map(v => ({
+  return results.map((v) => ({
     actionType: v.actionType,
     expectedState: v.expectedState as Record<string, unknown>,
     observedState: v.observedState as Record<string, unknown> | null,
@@ -159,13 +177,22 @@ async function getVerificationsForConversation(conversationId: string): Promise<
   }));
 }
 
-export async function generateCaseBrief(input: GenerateCaseBriefInput): Promise<Handoff> {
-  const { conversationId, triageResult, specialistDecisions, verificationResults, escalationReason } = input;
+export async function generateCaseBrief(
+  input: GenerateCaseBriefInput,
+): Promise<Handoff> {
+  const {
+    conversationId,
+    triageResult,
+    specialistDecisions,
+    verificationResults,
+    escalationReason,
+  } = input;
 
   const customer = await getCustomerFromConversation(conversationId);
   const agentRunsData = await getAgentRunsForConversation(conversationId);
   const toolCallsData = await getToolCallsForConversation(conversationId);
-  const verificationsData = await getVerificationsForConversation(conversationId);
+  const verificationsData =
+    await getVerificationsForConversation(conversationId);
 
   const billingDecisions = specialistDecisions.billing || [];
   const subscriptionDecisions = specialistDecisions.subscription || [];
@@ -179,18 +206,18 @@ export async function generateCaseBrief(input: GenerateCaseBriefInput): Promise<
   }> = [];
 
   for (const decision of [...billingDecisions, ...subscriptionDecisions]) {
-    if ('policyReferences' in decision) {
+    if ("policyReferences" in decision) {
       for (const ref of decision.policyReferences) {
         policyReferences.add(ref);
       }
     }
-    if ('evidence' in decision) {
+    if ("evidence" in decision) {
       for (const evidence of decision.evidence) {
-        if (evidence.toLowerCase().includes('autonomy gate')) {
+        if (evidence.toLowerCase().includes("autonomy gate")) {
           autonomyGateResults.push({
-            agent: 'unknown',
+            agent: "unknown",
             action: decision.action,
-            allowed: evidence.includes('approved'),
+            allowed: evidence.includes("approved"),
             reason: evidence,
           });
         }
@@ -198,45 +225,55 @@ export async function generateCaseBrief(input: GenerateCaseBriefInput): Promise<
     }
   }
 
-  const completedActions: Handoff['completedActions'] = [];
+  const completedActions: Handoff["completedActions"] = [];
   for (const decision of [...billingDecisions, ...subscriptionDecisions]) {
-    if (decision.action !== 'none' && decision.action !== 'investigate' && decision.action !== 'escalate') {
-      const amount = 'amount' in decision ? decision.amount : undefined;
+    if (
+      decision.action !== "none" &&
+      decision.action !== "investigate" &&
+      decision.action !== "escalate"
+    ) {
+      const amount = "amount" in decision ? decision.amount : undefined;
       completedActions.push({
-        type: billingDecisions.includes(decision as BillingDecision) ? 'billing' : 'subscription',
+        type: billingDecisions.includes(decision as BillingDecision)
+          ? "billing"
+          : "subscription",
         action: decision.action,
         amount,
-        result: decision.requiresApproval ? 'escalated' : 'success',
+        result: decision.requiresApproval ? "escalated" : "success",
         timestamp: new Date(),
       });
     }
   }
 
-  let recommendedAction = 'Review case and take appropriate action';
+  let recommendedAction = "Review case and take appropriate action";
   switch (escalationReason) {
     case HANDOFF_REASONS.HIGH_VALUE_REFUND:
-      recommendedAction = 'Approve or deny high-value refund request';
+      recommendedAction = "Approve or deny high-value refund request";
       break;
     case HANDOFF_REASONS.POLICY_EXCEPTION:
-      recommendedAction = 'Evaluate policy exception and authorize if warranted';
+      recommendedAction =
+        "Evaluate policy exception and authorize if warranted";
       break;
     case HANDOFF_REASONS.AMBIGUOUS_IDENTITY:
-      recommendedAction = 'Verify customer identity through additional channels';
+      recommendedAction =
+        "Verify customer identity through additional channels";
       break;
     case HANDOFF_REASONS.CONFLICTING_ACCOUNT_STATE:
-      recommendedAction = 'Resolve conflicting account state and reconcile records';
+      recommendedAction =
+        "Resolve conflicting account state and reconcile records";
       break;
     case HANDOFF_REASONS.UNVERIFIED_MUTATION:
-      recommendedAction = 'Manually verify mutation outcome and correct if needed';
+      recommendedAction =
+        "Manually verify mutation outcome and correct if needed";
       break;
     case HANDOFF_REASONS.UNSUPPORTED_WORKFLOW:
-      recommendedAction = 'Handle workflow manually or escalate to engineering';
+      recommendedAction = "Handle workflow manually or escalate to engineering";
       break;
     case HANDOFF_REASONS.TOOL_FAILURE:
-      recommendedAction = 'Retry failed operation or execute manually';
+      recommendedAction = "Retry failed operation or execute manually";
       break;
     case HANDOFF_REASONS.MISSING_INFORMATION:
-      recommendedAction = 'Collect missing information from customer';
+      recommendedAction = "Collect missing information from customer";
       break;
   }
 
@@ -244,11 +281,11 @@ export async function generateCaseBrief(input: GenerateCaseBriefInput): Promise<
     id: crypto.randomUUID(),
     conversationId,
     customer: customer || {
-      id: 'unknown',
-      name: 'Unknown',
-      email: 'unknown@example.com',
-      planId: 'unknown',
-      status: 'unknown',
+      id: "unknown",
+      name: "Unknown",
+      email: "unknown@example.com",
+      planId: "unknown",
+      status: "unknown",
     },
     issue: {
       summary: triageResult.summary,
@@ -268,7 +305,7 @@ export async function generateCaseBrief(input: GenerateCaseBriefInput): Promise<
     completedActions,
     reason: escalationReason,
     recommendedAction,
-    status: 'pending',
+    status: "pending",
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -278,13 +315,15 @@ export async function generateCaseBrief(input: GenerateCaseBriefInput): Promise<
     reason: escalationReason,
     evidence: handoff as any,
     recommendedAction,
-    status: 'pending',
+    status: "pending",
   } as any);
 
   return handoff;
 }
 
-export async function getHandoffById(handoffId: string): Promise<Handoff | null> {
+export async function getHandoffById(
+  handoffId: string,
+): Promise<Handoff | null> {
   const result = await db
     .select()
     .from(handoffs)
@@ -300,23 +339,26 @@ export async function listPendingHandoffs(): Promise<Handoff[]> {
   const results = await db
     .select()
     .from(handoffs)
-    .where(eq(handoffs.status, 'pending'))
+    .where(eq(handoffs.status, "pending"))
     .orderBy(handoffs.createdAt);
 
-  return results.map(r => r.evidence as unknown as Handoff);
+  return results.map((r) => r.evidence as unknown as Handoff);
 }
 
-export async function acceptHandoff(handoffId: string, operatorId: string): Promise<Handoff | null> {
+export async function acceptHandoff(
+  handoffId: string,
+  operatorId: string,
+): Promise<Handoff | null> {
   const handoff = await getHandoffById(handoffId);
   if (!handoff) return null;
 
-  handoff.status = 'accepted';
+  handoff.status = "accepted";
   handoff.updatedAt = new Date();
 
   await db
     .update(handoffs)
     .set({
-      status: 'accepted',
+      status: "accepted",
       evidence: handoff as any,
     } as any)
     .where(eq(handoffs.id, handoffId as any));
@@ -324,23 +366,26 @@ export async function acceptHandoff(handoffId: string, operatorId: string): Prom
   return handoff;
 }
 
-export async function completeHandoff(handoffId: string, resolution: string): Promise<Handoff | null> {
+export async function completeHandoff(
+  handoffId: string,
+  resolution: string,
+): Promise<Handoff | null> {
   const handoff = await getHandoffById(handoffId);
   if (!handoff) return null;
 
-  handoff.status = 'completed';
+  handoff.status = "completed";
   handoff.updatedAt = new Date();
   handoff.completedActions.push({
-    type: 'handoff',
-    action: 'resolved',
-    result: 'success',
+    type: "handoff",
+    action: "resolved",
+    result: "success",
     timestamp: new Date(),
   });
 
   await db
     .update(handoffs)
     .set({
-      status: 'completed',
+      status: "completed",
       evidence: handoff as any,
     } as any)
     .where(eq(handoffs.id, handoffId as any));

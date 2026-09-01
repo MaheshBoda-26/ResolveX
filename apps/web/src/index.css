@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @theme {
   --color-primary-fixed: #ffddb6;
@@ -50,22 +50,22 @@
   --color-surface-dim: #d3daef;
 
   /* Legacy brand colors for backward compatibility */
-  --color-brand-primary: #D98F16;
-  --color-brand-primary-hover: #B87510;
-  --color-brand-primary-soft: #F8E7C6;
-  --color-brand-primary-dark-soft: #3A2A12;
+  --color-brand-primary: #d98f16;
+  --color-brand-primary-hover: #b87510;
+  --color-brand-primary-soft: #f8e7c6;
+  --color-brand-primary-dark-soft: #3a2a12;
 
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  --font-display: 'Inter', sans-serif;
-  --font-h1: 'Inter', sans-serif;
-  --font-h2: 'Inter', sans-serif;
-  --font-h3: 'Inter', sans-serif;
-  --font-body-lg: 'Inter', sans-serif;
-  --font-body-sm: 'Inter', sans-serif;
-  --font-label: 'Inter', sans-serif;
-  --font-caption: 'Inter', sans-serif;
-  --font-trace: 'JetBrains Mono', monospace;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-display: "Inter", sans-serif;
+  --font-h1: "Inter", sans-serif;
+  --font-h2: "Inter", sans-serif;
+  --font-h3: "Inter", sans-serif;
+  --font-body-lg: "Inter", sans-serif;
+  --font-body-sm: "Inter", sans-serif;
+  --font-label: "Inter", sans-serif;
+  --font-caption: "Inter", sans-serif;
+  --font-trace: "JetBrains Mono", monospace;
 
   --spacing-sidebar_width: 260px;
   --spacing-table_row_height: 48px;
@@ -104,7 +104,7 @@ body {
 
 /* Material Symbols Outlined Icon Custom Styling */
 .material-symbols-outlined {
-  font-family: 'Material Symbols Outlined';
+  font-family: "Material Symbols Outlined";
   font-weight: normal;
   font-style: normal;
   font-size: 24px;
@@ -115,13 +115,13 @@ body {
   white-space: nowrap;
   word-wrap: normal;
   direction: ltr;
-  -webkit-font-feature-settings: 'liga';
+  -webkit-font-feature-settings: "liga";
   -webkit-font-smoothing: antialiased;
 }
 
 /* Custom Wireframe Component Styles */
 .timeline-line-done {
-  border-color: #D98F16;
+  border-color: #d98f16;
 }
 
 .timeline-line-pending {
@@ -148,7 +148,7 @@ body {
 
 .input-glow:focus-within {
   box-shadow: 0 0 0 2px rgba(217, 143, 22, 0.2);
-  border-color: #D98F16;
+  border-color: #d98f16;
 }
 
 .scrollbar-hide::-webkit-scrollbar {

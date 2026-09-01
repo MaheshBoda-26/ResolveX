@@ -1,7 +1,7 @@
-import { db } from '../db/client';
-import { knowledgeDocuments } from '../db/schema';
-import { generateEmbedding } from './embedding';
-import { chunkText, TextChunk } from './chunk';
+import { db } from "../db/client";
+import { knowledgeDocuments } from "../db/schema";
+import { generateEmbedding } from "./embedding";
+import { chunkText, TextChunk } from "./chunk";
 
 export interface AddKnowledgeDocumentOptions {
   title: string;
@@ -16,12 +16,23 @@ export interface AddKnowledgeDocumentOptions {
 }
 
 export async function addKnowledgeDocument(
-  options: AddKnowledgeDocumentOptions
+  options: AddKnowledgeDocumentOptions,
 ): Promise<void> {
-  const { title, source, content, metadata = {}, chunk: shouldChunk = false, chunkOptions = {} } = options;
+  const {
+    title,
+    source,
+    content,
+    metadata = {},
+    chunk: shouldChunk = false,
+    chunkOptions = {},
+  } = options;
 
   if (shouldChunk) {
-    const chunks: TextChunk[] = chunkText(content, { maxTokens: 500, overlapTokens: 50, ...chunkOptions });
+    const chunks: TextChunk[] = chunkText(content, {
+      maxTokens: 500,
+      overlapTokens: 50,
+      ...chunkOptions,
+    });
     for (const chunk of chunks) {
       const embedding = await generateEmbedding(chunk.text);
 
@@ -29,7 +40,11 @@ export async function addKnowledgeDocument(
         title: chunks.length > 1 ? `${title} (Part ${chunk.index + 1})` : title,
         source,
         content: chunk.text,
-        metadata: { ...metadata, chunkIndex: chunk.index, totalChunks: chunks.length },
+        metadata: {
+          ...metadata,
+          chunkIndex: chunk.index,
+          totalChunks: chunks.length,
+        },
         embedding: embedding.embedding as any,
       } as any);
     }

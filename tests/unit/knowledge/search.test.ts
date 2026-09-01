@@ -173,7 +173,7 @@ describe('Knowledge Search Unit Tests', () => {
 });
 
 // Test cosineSimilarity in isolation (no external deps)
-const actualEmbedding = await vi.importActual('../../../apps/api/src/knowledge/embedding');
+const actualEmbedding = await vi.importActual<typeof import('../../../apps/api/src/knowledge/embedding')>('../../../apps/api/src/knowledge/embedding');
 
 describe('cosineSimilarity (Pure Function)', () => {
   const { cosineSimilarity } = actualEmbedding;

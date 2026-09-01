@@ -1,4 +1,4 @@
-export type HandoffStatus = 'pending' | 'accepted' | 'completed';
+export type HandoffStatus = "pending" | "accepted" | "completed";
 
 export interface Handoff {
   id: string;
@@ -12,7 +12,7 @@ export interface Handoff {
   issueSummary: string;
   originalRequest: string;
   reason: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  priority: "low" | "medium" | "high" | "critical";
   createdAt: string;
   updatedAt: string;
   status: HandoffStatus;
@@ -25,7 +25,7 @@ export interface Handoff {
 
 export interface Evidence {
   id: string;
-  type: 'transaction' | 'policy' | 'communication' | 'document';
+  type: "transaction" | "policy" | "communication" | "document";
   description: string;
   data: Record<string, unknown>;
   collectedAt: string;
@@ -45,17 +45,17 @@ export interface CompletedAction {
   action: string;
   description: string;
   performedAt: string;
-  verificationStatus: 'verified' | 'pending' | 'failed';
+  verificationStatus: "verified" | "pending" | "failed";
   verificationDetails?: string;
 }
 
 export interface HandoffFilters {
   status?: HandoffStatus;
-  priority?: Handoff['priority'];
+  priority?: Handoff["priority"];
   search?: string;
 }
 
 export interface HandoffSort {
-  field: 'createdAt' | 'priority' | 'customer';
-  direction: 'asc' | 'desc';
+  field: "createdAt" | "priority" | "customer";
+  direction: "asc" | "desc";
 }

@@ -1,16 +1,16 @@
-import { FastifyPluginAsync } from 'fastify';
-import { z } from 'zod';
+import { FastifyPluginAsync } from "fastify";
+import { z } from "zod";
 import {
   SubscriptionDecisionSchema,
   SubscriptionDecision,
   ChatRequestSchema,
-} from '@resolvex/shared';
-import { processSubscriptionTask } from '../agents/subscription';
-import { createAgentRun, createToolCall } from '../db/conversations';
-import { toFastifySchema } from '../lib/fastify-schema';
+} from "@resolvex/shared";
+import { processSubscriptionTask } from "../agents/subscription";
+import { createAgentRun, createToolCall } from "../db/conversations";
+import { toFastifySchema } from "../lib/fastify-schema";
 
 const SubscriptionTaskSchema = z.object({
-  type: z.enum(['upgrade', 'downgrade', 'cancel']),
+  type: z.enum(["upgrade", "downgrade", "cancel"]),
   payload: z.object({
     customerId: z.uuid(),
     targetPlanId: z.string().optional(),
@@ -24,7 +24,7 @@ const SubscriptionRouteRequestSchema = z.object({
 });
 
 export const subscriptionRoutes: FastifyPluginAsync = async (app) => {
-  app.post('/subscription', {
+  app.post("/subscription", {
     schema: {
       body: toFastifySchema(SubscriptionRouteRequestSchema),
       response: {
@@ -32,15 +32,17 @@ export const subscriptionRoutes: FastifyPluginAsync = async (app) => {
       },
     },
     async handler(request, reply) {
-      const body = request.body as z.infer<typeof SubscriptionRouteRequestSchema>;
+      const body = request.body as z.infer<
+        typeof SubscriptionRouteRequestSchema
+      >;
       const { task, conversationId } = body;
 
       const agentRun = await createAgentRun(
         conversationId,
-        'subscription',
+        "subscription",
         task,
-        { status: 'processing' },
-        'running'
+        { status: "processing" },
+        "running",
       );
 
       try {
@@ -48,28 +50,30 @@ export const subscriptionRoutes: FastifyPluginAsync = async (app) => {
 
         await createAgentRun(
           conversationId,
-          'subscription',
+          "subscription",
           task,
           decision,
-          'completed'
+          "completed",
         );
 
         return reply.send(decision);
       } catch (error) {
         const errorDecision = SubscriptionDecisionSchema.parse({
-          action: 'escalate',
-          eligibility: 'requires_review',
-          evidence: [`Processing error: ${error instanceof Error ? error.message : 'Unknown error'}`],
-          policyReferences: ['POL-SYS-001'],
+          action: "escalate",
+          eligibility: "requires_review",
+          evidence: [
+            `Processing error: ${error instanceof Error ? error.message : "Unknown error"}`,
+          ],
+          policyReferences: ["POL-SYS-001"],
           requiresApproval: true,
         });
 
         await createAgentRun(
           conversationId,
-          'subscription',
+          "subscription",
           task,
           errorDecision,
-          'failed'
+          "failed",
         );
 
         return reply.send(errorDecision);

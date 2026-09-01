@@ -1,18 +1,35 @@
-import { FastifyPluginAsync } from 'fastify';
-import { z } from 'zod';
-import { ChatRequestSchema, ChatResponseSchema, TriageResultSchema, HandoffReason, HANDOFF_REASONS } from '@resolvex/shared';
-import type { BillingDecision, SubscriptionDecision } from '@resolvex/shared';
-import { triageMessage } from '../agents/triage';
-import { orchestrateWorkflow, createAgentContext, type SpecialistDecision } from '../agents/orchestrator';
-import { createConversation, createAgentRun, createTriageAgentRun } from '../db/conversations';
-import { createAgentRun as createTraceRun, updateAgentRunStatus } from '../traces/repository';
-import { generateCaseBrief } from '../handoff/caseBrief';
-import { toFastifySchema } from '../lib/fastify-schema';
-import { withTracing, addSpanEvent } from '../lib/telemetry.js';
-import { createRequestLogger, logAgentOperation } from '../lib/logging.js';
+import { FastifyPluginAsync } from "fastify";
+import { z } from "zod";
+import {
+  ChatRequestSchema,
+  ChatResponseSchema,
+  TriageResultSchema,
+  HandoffReason,
+  HANDOFF_REASONS,
+} from "@resolvex/shared";
+import type { BillingDecision, SubscriptionDecision } from "@resolvex/shared";
+import { triageMessage } from "../agents/triage";
+import {
+  orchestrateWorkflow,
+  createAgentContext,
+  type SpecialistDecision,
+} from "../agents/orchestrator";
+import {
+  createConversation,
+  createAgentRun,
+  createTriageAgentRun,
+} from "../db/conversations";
+import {
+  createAgentRun as createTraceRun,
+  updateAgentRunStatus,
+} from "../traces/repository";
+import { generateCaseBrief } from "../handoff/caseBrief";
+import { toFastifySchema } from "../lib/fastify-schema";
+import { withTracing, addSpanEvent } from "../lib/telemetry.js";
+import { createRequestLogger, logAgentOperation } from "../lib/logging.js";
 
 export const agentRoutes: FastifyPluginAsync = async (app) => {
-  app.post('/agent/process', {
+  app.post("/agent/process", {
     schema: {
       body: toFastifySchema(ChatRequestSchema),
       response: {
@@ -20,33 +37,36 @@ export const agentRoutes: FastifyPluginAsync = async (app) => {
       },
     },
     async handler(request, reply) {
-      return withTracing('agent/process', async (span) => {
+      return withTracing("agent/process", async (span) => {
         const body = request.body as z.infer<typeof ChatRequestSchema>;
         const traceId = crypto.randomUUID();
 
-        span.setAttribute('traceId', traceId);
-        span.setAttribute('customerId', body.customerId ?? 'unknown');
-        span.setAttribute('channel', body.channel);
+        span.setAttribute("traceId", traceId);
+        span.setAttribute("customerId", body.customerId ?? "unknown");
+        span.setAttribute("channel", body.channel);
 
         const logger = createRequestLogger(traceId);
-        logAgentOperation(logger, 'agent/process', 'started');
+        logAgentOperation(logger, "agent/process", "started");
 
         let conversationId = body.conversationId;
 
         if (!conversationId) {
-          const conversation = await createConversation(body.customerId ?? null, body.channel);
+          const conversation = await createConversation(
+            body.customerId ?? null,
+            body.channel,
+          );
           conversationId = conversation.id;
-          addSpanEvent('conversation_created', { conversationId });
+          addSpanEvent("conversation_created", { conversationId });
         }
 
-        span.setAttribute('conversationId', conversationId);
+        span.setAttribute("conversationId", conversationId);
 
         const traceRun = await createTraceRun({
           conversationId,
-          agentName: 'triage',
+          agentName: "triage",
           input: body as Record<string, unknown>,
           decision: {},
-          status: 'running',
+          status: "running",
           startedAt: new Date(),
           completedAt: null,
         });
@@ -57,41 +77,63 @@ export const agentRoutes: FastifyPluginAsync = async (app) => {
 
         const context = createAgentContext(body, conversationId, traceId);
 
-        const orchestratorResult = await orchestrateWorkflow(triageResult, body, context);
+        const orchestratorResult = await orchestrateWorkflow(
+          triageResult,
+          body,
+          context,
+        );
 
-        const finalStatus = orchestratorResult.status === 'completed' ? 'completed' :
-                            orchestratorResult.status === 'escalated' ? 'escalated' : 'error';
+        const finalStatus =
+          orchestratorResult.status === "completed"
+            ? "completed"
+            : orchestratorResult.status === "escalated"
+              ? "escalated"
+              : "error";
 
-        addSpanEvent('orchestration_completed', { finalStatus, decisionCount: orchestratorResult.decisions.length });
+        addSpanEvent("orchestration_completed", {
+          finalStatus,
+          decisionCount: orchestratorResult.decisions.length,
+        });
 
         // If escalated, create a handoff
-        if (orchestratorResult.status === 'escalated') {
-          await withTracing('generateCaseBrief', async (handoffSpan) => {
-            handoffSpan.setAttribute('conversationId', conversationId);
-            handoffSpan.setAttribute('traceId', traceId);
+        if (orchestratorResult.status === "escalated") {
+          await withTracing("generateCaseBrief", async (handoffSpan) => {
+            handoffSpan.setAttribute("conversationId", conversationId);
+            handoffSpan.setAttribute("traceId", traceId);
 
             const billingDecisions = orchestratorResult.decisions
-              .filter((d): d is SpecialistDecision & { decision: BillingDecision } => d.agent === 'billing')
-              .map(d => d.decision);
+              .filter(
+                (d): d is SpecialistDecision & { decision: BillingDecision } =>
+                  d.agent === "billing",
+              )
+              .map((d) => d.decision);
             const subscriptionDecisions = orchestratorResult.decisions
-              .filter((d): d is SpecialistDecision & { decision: SubscriptionDecision } => d.agent === 'subscription')
-              .map(d => d.decision);
+              .filter(
+                (
+                  d,
+                ): d is SpecialistDecision & {
+                  decision: SubscriptionDecision;
+                } => d.agent === "subscription",
+              )
+              .map((d) => d.decision);
 
-            const hasHighValueRefund = billingDecisions.some(d =>
-              d.action === 'refund' && (d.amount ?? 0) > 500
+            const hasHighValueRefund = billingDecisions.some(
+              (d) => d.action === "refund" && (d.amount ?? 0) > 500,
             );
 
-            const hasPolicyException = billingDecisions.some(d => d.action === 'escalate') ||
-                                       subscriptionDecisions.some(d => d.action === 'escalate');
+            const hasPolicyException =
+              billingDecisions.some((d) => d.action === "escalate") ||
+              subscriptionDecisions.some((d) => d.action === "escalate");
 
-            let escalationReason: HandoffReason = HANDOFF_REASONS.POLICY_EXCEPTION;
+            let escalationReason: HandoffReason =
+              HANDOFF_REASONS.POLICY_EXCEPTION;
             if (hasHighValueRefund) {
               escalationReason = HANDOFF_REASONS.HIGH_VALUE_REFUND;
             } else if (hasPolicyException) {
               escalationReason = HANDOFF_REASONS.POLICY_EXCEPTION;
             }
 
-            handoffSpan.setAttribute('escalationReason', escalationReason);
+            handoffSpan.setAttribute("escalationReason", escalationReason);
 
             await generateCaseBrief({
               conversationId,
@@ -106,14 +148,24 @@ export const agentRoutes: FastifyPluginAsync = async (app) => {
           });
         }
 
-        await createAgentRun(conversationId, 'triage', { ...body, traceId }, {
-          triageResult,
-          decisions: orchestratorResult.decisions,
-          status: finalStatus,
-        }, finalStatus === 'completed' ? 'completed' : 'failed');
+        await createAgentRun(
+          conversationId,
+          "triage",
+          { ...body, traceId },
+          {
+            triageResult,
+            decisions: orchestratorResult.decisions,
+            status: finalStatus,
+          },
+          finalStatus === "completed" ? "completed" : "failed",
+        );
 
         // Update the trace run with final status
-        await updateAgentRunStatus(traceRun.id, finalStatus === 'completed' ? 'completed' : 'failed', new Date());
+        await updateAgentRunStatus(
+          traceRun.id,
+          finalStatus === "completed" ? "completed" : "failed",
+          new Date(),
+        );
 
         const response = {
           conversationId,
@@ -122,7 +174,10 @@ export const agentRoutes: FastifyPluginAsync = async (app) => {
           traceId,
         };
 
-        logAgentOperation(logger, 'agent/process', 'completed', { finalStatus, conversationId });
+        logAgentOperation(logger, "agent/process", "completed", {
+          finalStatus,
+          conversationId,
+        });
         return reply.send(response);
       });
     },
@@ -131,19 +186,21 @@ export const agentRoutes: FastifyPluginAsync = async (app) => {
 
 function generateResponseMessage(
   triageResult: z.infer<typeof TriageResultSchema>,
-  orchestratorResult: Awaited<ReturnType<typeof orchestrateWorkflow>>
+  orchestratorResult: Awaited<ReturnType<typeof orchestrateWorkflow>>,
 ): string {
-  const intents = triageResult.intents.map(i => i.type).join(', ');
-  const hasEscalation = orchestratorResult.decisions.some(d => d.decision.requiresApproval);
+  const intents = triageResult.intents.map((i) => i.type).join(", ");
+  const hasEscalation = orchestratorResult.decisions.some(
+    (d) => d.decision.requiresApproval,
+  );
 
   if (hasEscalation) {
     return `I've analyzed your request (intents: ${intents}) and routed it to our specialists. Some actions require human review, so I've escalated those for approval. Our team will follow up shortly.`;
   }
 
   const completedActions = orchestratorResult.decisions
-    .filter(d => !d.decision.requiresApproval)
-    .map(d => `${d.agent}: ${d.decision.action}`)
-    .join('; ');
+    .filter((d) => !d.decision.requiresApproval)
+    .map((d) => `${d.agent}: ${d.decision.action}`)
+    .join("; ");
 
   if (completedActions) {
     return `I've processed your request (intents: ${intents}). Actions completed: ${completedActions}.`;

@@ -1,7 +1,7 @@
-import { db } from '../db/client';
-import { knowledgeDocuments } from '../db/schema';
-import { sql, desc } from 'drizzle-orm';
-import { cosineDistance } from 'drizzle-orm';
+import { db } from "../db/client";
+import { knowledgeDocuments } from "../db/schema";
+import { sql, desc } from "drizzle-orm";
+import { cosineDistance } from "drizzle-orm";
 
 export interface KnowledgeSearchResult {
   answer: string;
@@ -17,21 +17,22 @@ export interface KnowledgeSearchResult {
 const EMBEDDING_DIMENSIONS = 1536;
 
 async function generateEmbedding(text: string): Promise<number[]> {
-  const apiKey = process.env['OPENAI_API_KEY'] || process.env['EMBEDDING_API_KEY'];
+  const apiKey =
+    process.env["OPENAI_API_KEY"] || process.env["EMBEDDING_API_KEY"];
   if (!apiKey) {
-    console.warn('No embedding API key configured, using zero vector');
+    console.warn("No embedding API key configured, using zero vector");
     return new Array(EMBEDDING_DIMENSIONS).fill(0);
   }
 
   try {
-    const response = await fetch('https://api.openai.com/v1/embeddings', {
-      method: 'POST',
+    const response = await fetch("https://api.openai.com/v1/embeddings", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: 'text-embedding-3-small',
+        model: "text-embedding-3-small",
         input: text,
       }),
       signal: AbortSignal.timeout(10000),
@@ -41,15 +42,20 @@ async function generateEmbedding(text: string): Promise<number[]> {
       throw new Error(`Embedding API error: ${response.status}`);
     }
 
-    const data = await response.json() as { data: Array<{ embedding: number[] }> };
+    const data = (await response.json()) as {
+      data: Array<{ embedding: number[] }>;
+    };
     return data.data[0]?.embedding ?? new Array(EMBEDDING_DIMENSIONS).fill(0);
   } catch (error) {
-    console.error('Embedding generation failed:', error);
+    console.error("Embedding generation failed:", error);
     return new Array(EMBEDDING_DIMENSIONS).fill(0);
   }
 }
 
-export async function searchKnowledge(query: string, limit = 5): Promise<KnowledgeSearchResult> {
+export async function searchKnowledge(
+  query: string,
+  limit = 5,
+): Promise<KnowledgeSearchResult> {
   const embedding = await generateEmbedding(query);
 
   const results = await db
@@ -59,21 +65,26 @@ export async function searchKnowledge(query: string, limit = 5): Promise<Knowled
       source: knowledgeDocuments.source,
       content: knowledgeDocuments.content,
       metadata: knowledgeDocuments.metadata,
-      score: sql<number>`1 - ${cosineDistance(knowledgeDocuments.embedding, embedding)}`.as('similarity'),
+      score:
+        sql<number>`1 - ${cosineDistance(knowledgeDocuments.embedding, embedding)}`.as(
+          "similarity",
+        ),
     })
     .from(knowledgeDocuments)
     .where(sql`${knowledgeDocuments.embedding} IS NOT NULL`)
-    .orderBy(desc(sql`1 - ${cosineDistance(knowledgeDocuments.embedding, embedding)}`))
+    .orderBy(
+      desc(sql`1 - ${cosineDistance(knowledgeDocuments.embedding, embedding)}`),
+    )
     .limit(limit);
 
   if (results.length === 0) {
     return {
-      answer: 'No relevant policy documents found for this query.',
+      answer: "No relevant policy documents found for this query.",
       sources: [],
     };
   }
 
-  const sources = results.map(r => ({
+  const sources = results.map((r) => ({
     id: r.id.toString(),
     title: r.title,
     source: r.source,
@@ -81,7 +92,7 @@ export async function searchKnowledge(query: string, limit = 5): Promise<Knowled
     score: Number(r.score),
   }));
 
-  const context = sources.map(s => `[${s.title}]: ${s.content}`).join('\n\n');
+  const context = sources.map((s) => `[${s.title}]: ${s.content}`).join("\n\n");
 
   const answer = await generateAnswer(query, context);
 
@@ -89,27 +100,28 @@ export async function searchKnowledge(query: string, limit = 5): Promise<Knowled
 }
 
 async function generateAnswer(query: string, context: string): Promise<string> {
-  const apiKey = process.env['OPENAI_API_KEY'] || process.env['LLM_API_KEY'];
+  const apiKey = process.env["OPENAI_API_KEY"] || process.env["LLM_API_KEY"];
   if (!apiKey) {
     return `Based on the available policy documents:\n\n${context}\n\n(Configure LLM_API_KEY for synthesized answers)`;
   }
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: "gpt-4o-mini",
         messages: [
           {
-            role: 'system',
-            content: 'You are a policy expert for a subscription billing company. Answer the user question based only on the provided context. If the context does not contain enough information, say so. Be concise and cite sources.',
+            role: "system",
+            content:
+              "You are a policy expert for a subscription billing company. Answer the user question based only on the provided context. If the context does not contain enough information, say so. Be concise and cite sources.",
           },
           {
-            role: 'user',
+            role: "user",
             content: `Question: ${query}\n\nContext:\n${context}`,
           },
         ],
@@ -123,10 +135,12 @@ async function generateAnswer(query: string, context: string): Promise<string> {
       throw new Error(`LLM API error: ${response.status}`);
     }
 
-    const data = await response.json() as { choices: Array<{ message: { content: string } }> };
-    return data.choices[0]?.message?.content ?? 'Unable to generate answer';
+    const data = (await response.json()) as {
+      choices: Array<{ message: { content: string } }>;
+    };
+    return data.choices[0]?.message?.content ?? "Unable to generate answer";
   } catch (error) {
-    console.error('Answer generation failed:', error);
+    console.error("Answer generation failed:", error);
     return `Based on the available policy documents:\n\n${context}\n\n(Error generating synthesized answer)`;
   }
 }
@@ -135,7 +149,7 @@ export async function addKnowledgeDocument(
   title: string,
   source: string,
   content: string,
-  metadata: Record<string, unknown> = {}
+  metadata: Record<string, unknown> = {},
 ): Promise<void> {
   const embedding = await generateEmbedding(content);
 

@@ -25,7 +25,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "format": "prettier --write src"
   },
   "dependencies": {
     "zod": "^4.0.0"

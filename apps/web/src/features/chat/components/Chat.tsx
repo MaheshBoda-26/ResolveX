@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect, FormEvent } from 'react';
-import { Send } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
-import { ScrollArea } from '@/shared/components/ui/scroll-area';
-import { Separator } from '@/shared/components/ui/separator';
-import { cn } from '@/shared/utils/utils';
-import { useSendMessage, Message } from '@/shared/lib/api';
-import DOMPurify from 'dompurify';
-import { VoiceInput } from '@/features/chat/components/VoiceInput';
-import { createElevenLabsConfig } from '@/shared/lib/elevenlabs';
+import { useState, useRef, useEffect, FormEvent } from "react";
+import { Send } from "lucide-react";
+import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
+import { ScrollArea } from "@/shared/components/ui/scroll-area";
+import { Separator } from "@/shared/components/ui/separator";
+import { cn } from "@/shared/utils/utils";
+import { useSendMessage, Message } from "@/shared/lib/api";
+import DOMPurify from "dompurify";
+import { VoiceInput } from "@/features/chat/components/VoiceInput";
+import { createElevenLabsConfig } from "@/shared/lib/elevenlabs";
 
 interface ChatProps {
   conversationId: string | undefined;
@@ -19,7 +19,7 @@ interface ChatProps {
 }
 
 export function Chat({ conversationId, onConversationCreated }: ChatProps) {
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -27,7 +27,7 @@ export function Chat({ conversationId, onConversationCreated }: ChatProps) {
   const sendMutation = useSendMessage();
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   useEffect(() => {
@@ -39,8 +39,21 @@ export function Chat({ conversationId, onConversationCreated }: ChatProps) {
 
   const sanitizeContent = (content: string): string => {
     return DOMPurify.sanitize(content, {
-      ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'code', 'pre', 'br', 'p', 'ul', 'ol', 'li'],
-      ALLOWED_ATTR: ['href', 'target', 'rel'],
+      ALLOWED_TAGS: [
+        "b",
+        "i",
+        "em",
+        "strong",
+        "a",
+        "code",
+        "pre",
+        "br",
+        "p",
+        "ul",
+        "ol",
+        "li",
+      ],
+      ALLOWED_ATTR: ["href", "target", "rel"],
     });
   };
 
@@ -50,14 +63,14 @@ export function Chat({ conversationId, onConversationCreated }: ChatProps) {
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
-      role: 'user',
+      role: "user",
       content: message,
       createdAt: new Date().toISOString(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
     const currentMessage = message;
-    setMessage('');
+    setMessage("");
 
     try {
       const response = await sendMutation.mutateAsync({
@@ -67,7 +80,7 @@ export function Chat({ conversationId, onConversationCreated }: ChatProps) {
 
       const assistantMessage: Message = {
         ...response.message,
-        role: 'assistant',
+        role: "assistant",
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -78,8 +91,8 @@ export function Chat({ conversationId, onConversationCreated }: ChatProps) {
     } catch (error) {
       const errorMessage: Message = {
         id: crypto.randomUUID(),
-        role: 'assistant',
-        content: 'Sorry, something went wrong. Please try again.',
+        role: "assistant",
+        content: "Sorry, something went wrong. Please try again.",
         createdAt: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -88,51 +101,94 @@ export function Chat({ conversationId, onConversationCreated }: ChatProps) {
 
   return (
     <div className="flex flex-col h-full bg-background-default dark:bg-background-dark">
-      <ScrollArea ref={scrollAreaRef} className="flex-1 p-6 space-y-4" role="log" aria-live="polite" aria-label="Chat messages">
+      <ScrollArea
+        ref={scrollAreaRef}
+        className="flex-1 p-6 space-y-4"
+        role="log"
+        aria-live="polite"
+        aria-label="Chat messages"
+      >
         {messages.map((msg) => (
           <div
             key={msg.id}
             className={cn(
-              'flex gap-3 max-w-[800px] mx-auto w-full',
-              msg.role === 'user' && 'flex-row-reverse'
+              "flex gap-3 max-w-[800px] mx-auto w-full",
+              msg.role === "user" && "flex-row-reverse",
             )}
           >
             <div
               className={cn(
-                'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-caption font-medium',
-                msg.role === 'user'
-                  ? 'bg-brand-primary text-white'
-                  : 'bg-secondary-soft text-text-secondary dark:bg-secondary-default'
+                "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-caption font-medium",
+                msg.role === "user"
+                  ? "bg-brand-primary text-white"
+                  : "bg-secondary-soft text-text-secondary dark:bg-secondary-default",
               )}
               aria-hidden="true"
             >
-              {msg.role === 'user' ? 'U' : 'A'}
+              {msg.role === "user" ? "U" : "A"}
             </div>
             <div
               className={cn(
-                'max-w-[calc(100%-40px)] rounded-card px-4 py-3',
-                msg.role === 'user'
-                  ? 'bg-brand-primary text-white rounded-br-none'
-                  : 'bg-surface-default dark:bg-surface-dark border border-border-default dark:border-border-dark rounded-bl-none'
+                "max-w-[calc(100%-40px)] rounded-card px-4 py-3",
+                msg.role === "user"
+                  ? "bg-brand-primary text-white rounded-br-none"
+                  : "bg-surface-default dark:bg-surface-dark border border-border-default dark:border-border-dark rounded-bl-none",
               )}
             >
-              <p className="text-body whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: sanitizeContent(msg.content) }} />
-              <p className={cn('mt-1 text-caption', msg.role === 'user' ? 'text-brand-primary-soft' : 'text-text-muted')}>
-                {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              <p
+                className="text-body whitespace-pre-wrap"
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeContent(msg.content),
+                }}
+              />
+              <p
+                className={cn(
+                  "mt-1 text-caption",
+                  msg.role === "user"
+                    ? "text-brand-primary-soft"
+                    : "text-text-muted",
+                )}
+              >
+                {new Date(msg.createdAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </p>
             </div>
           </div>
         ))}
         {sendMutation.isPending && (
-          <div className="flex gap-3 max-w-[800px] mx-auto w-full" aria-live="polite">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-caption font-medium bg-secondary-soft text-text-secondary dark:bg-secondary-default" aria-hidden="true">
+          <div
+            className="flex gap-3 max-w-[800px] mx-auto w-full"
+            aria-live="polite"
+          >
+            <div
+              className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-caption font-medium bg-secondary-soft text-text-secondary dark:bg-secondary-default"
+              aria-hidden="true"
+            >
               A
             </div>
             <div className="max-w-[calc(100%-40px)] rounded-card bg-surface-default dark:bg-surface-dark border border-border-default dark:border-border-dark rounded-bl-none px-4 py-3">
-              <div className="flex gap-1 items-center" role="status" aria-label="AI is typing">
-                <span className="w-2 h-2 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} aria-hidden="true" />
-                <span className="w-2 h-2 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: '150ms' }} aria-hidden="true" />
-                <span className="w-2 h-2 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: '300ms' }} aria-hidden="true" />
+              <div
+                className="flex gap-1 items-center"
+                role="status"
+                aria-label="AI is typing"
+              >
+                <span
+                  className="w-2 h-2 bg-text-muted rounded-full animate-bounce"
+                  style={{ animationDelay: "0ms" }}
+                  aria-hidden="true"
+                />
+                <span
+                  className="w-2 h-2 bg-text-muted rounded-full animate-bounce"
+                  style={{ animationDelay: "150ms" }}
+                  aria-hidden="true"
+                />
+                <span
+                  className="w-2 h-2 bg-text-muted rounded-full animate-bounce"
+                  style={{ animationDelay: "300ms" }}
+                  aria-hidden="true"
+                />
               </div>
             </div>
           </div>
@@ -153,7 +209,7 @@ export function Chat({ conversationId, onConversationCreated }: ChatProps) {
             aria-label="Message input"
           />
           <VoiceInput
-            config={createElevenLabsConfig('agent_01')}
+            config={createElevenLabsConfig("agent_01")}
             onTranscript={(text, isFinal) => {
               if (isFinal && text.trim()) {
                 setMessage(text);
@@ -161,7 +217,12 @@ export function Chat({ conversationId, onConversationCreated }: ChatProps) {
             }}
             className="h-control"
           />
-          <Button type="submit" disabled={!message.trim() || sendMutation.isPending} className="h-control" aria-label="Send message">
+          <Button
+            type="submit"
+            disabled={!message.trim() || sendMutation.isPending}
+            className="h-control"
+            aria-label="Send message"
+          >
             <Send className="h-5 w-5" />
           </Button>
         </div>

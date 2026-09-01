@@ -2,11 +2,11 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from '@/lib/theme';
-import { Header } from '@/components/layout/Header';
-import { Sidebar } from '@/components/layout/Sidebar';
-import { OperationsDashboardPage } from '@/pages/OperationsDashboardPage';
-import { ResolutionTimeline } from '@/components/ResolutionTimeline';
+import { ThemeProvider } from '@/shared/lib/theme';
+import { Header } from '@/shared/components/layout/Header';
+import { Sidebar } from '@/shared/components/layout/Sidebar';
+import { OperationsDashboardPage } from '@/features/dashboard/OperationsDashboardPage';
+import { ResolutionTimeline } from '@/features/trace/components/ResolutionTimeline';
 
 const queryClient = new QueryClient();
 

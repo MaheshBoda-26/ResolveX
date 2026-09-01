@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Volume2, Loader2 } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
-import { cn } from '@/shared/utils/utils';
-import { useVoice, UseVoiceOptions } from '@/shared/hooks/useVoice';
+import { useState, useEffect, useRef } from "react";
+import { Mic, MicOff, Volume2, Loader2 } from "lucide-react";
+import { Button } from "@/shared/components/ui/button";
+import { cn } from "@/shared/utils/utils";
+import { useVoice, UseVoiceOptions } from "@/shared/hooks/useVoice";
 
-interface VoiceInputProps extends Omit<UseVoiceOptions, 'config'> {
-  config: UseVoiceOptions['config'];
+interface VoiceInputProps extends Omit<UseVoiceOptions, "config"> {
+  config: UseVoiceOptions["config"];
   className?: string;
   onTranscriptFinal?: (text: string) => void;
 }
@@ -19,12 +19,12 @@ export function VoiceInput({
   onError,
   className,
 }: VoiceInputProps) {
-  const {
-    state,
-    audioLevel,
-    start,
-    stop,
-  } = useVoice({ config, onTranscript, onAgentResponse, onError });
+  const { state, audioLevel, start, stop } = useVoice({
+    config,
+    onTranscript,
+    onAgentResponse,
+    onError,
+  });
 
   const [showVisualizer, setShowVisualizer] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -33,7 +33,11 @@ export function VoiceInput({
   const liveRegionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (state === 'listening' || state === 'processing' || state === 'speaking') {
+    if (
+      state === "listening" ||
+      state === "processing" ||
+      state === "speaking"
+    ) {
       setShowVisualizer(true);
       animateVisualizer();
     } else {
@@ -54,7 +58,7 @@ export function VoiceInput({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const width = canvas.width;
@@ -76,8 +80,8 @@ export function VoiceInput({
       const y = height - barHeight;
 
       const gradient = ctx.createLinearGradient(0, height, 0, y);
-      gradient.addColorStop(0, 'hsl(220, 90%, 60%)');
-      gradient.addColorStop(1, 'hsl(260, 90%, 70%)');
+      gradient.addColorStop(0, "hsl(220, 90%, 60%)");
+      gradient.addColorStop(1, "hsl(260, 90%, 70%)");
 
       ctx.fillStyle = gradient;
       ctx.fillRect(x, y, barWidth * 0.8, barHeight);
@@ -88,40 +92,40 @@ export function VoiceInput({
 
   const getStateLabel = () => {
     switch (state) {
-      case 'idle':
-        return 'Click to start voice input';
-      case 'connecting':
-        return 'Connecting to voice service...';
-      case 'listening':
-        return 'Listening... speak now';
-      case 'processing':
-        return 'Processing your speech...';
-      case 'speaking':
-        return 'Agent is responding...';
-      case 'error':
-        return 'Voice input error - click to retry';
+      case "idle":
+        return "Click to start voice input";
+      case "connecting":
+        return "Connecting to voice service...";
+      case "listening":
+        return "Listening... speak now";
+      case "processing":
+        return "Processing your speech...";
+      case "speaking":
+        return "Agent is responding...";
+      case "error":
+        return "Voice input error - click to retry";
       default:
-        return '';
+        return "";
     }
   };
 
   const getButtonVariant = () => {
     switch (state) {
-      case 'listening':
-      case 'processing':
-      case 'speaking':
-        return 'destructive' as const;
-      case 'connecting':
-        return 'secondary' as const;
-      case 'error':
-        return 'outline' as const;
+      case "listening":
+      case "processing":
+      case "speaking":
+        return "destructive" as const;
+      case "connecting":
+        return "secondary" as const;
+      case "error":
+        return "outline" as const;
       default:
-        return 'secondary' as const;
+        return "secondary" as const;
     }
   };
 
   const handleClick = async () => {
-    if (state === 'idle' || state === 'error') {
+    if (state === "idle" || state === "error") {
       await start();
     } else {
       stop();
@@ -129,7 +133,7 @@ export function VoiceInput({
   };
 
   return (
-    <div className={cn('relative flex flex-col items-center gap-3', className)}>
+    <div className={cn("relative flex flex-col items-center gap-3", className)}>
       {/* Live region for screen readers */}
       <div
         ref={liveRegionRef}
@@ -144,26 +148,39 @@ export function VoiceInput({
           variant={getButtonVariant()}
           size="lg"
           className={cn(
-            'h-16 w-16 rounded-full transition-all duration-200',
-            state === 'listening' && 'animate-pulse shadow-lg shadow-brand-primary/30',
-            state === 'processing' && 'animate-spin',
-            state === 'speaking' && 'animate-pulse shadow-lg shadow-brand-secondary/30',
+            "h-16 w-16 rounded-full transition-all duration-200",
+            state === "listening" &&
+              "animate-pulse shadow-lg shadow-brand-primary/30",
+            state === "processing" && "animate-spin",
+            state === "speaking" &&
+              "animate-pulse shadow-lg shadow-brand-secondary/30",
           )}
           aria-label={getStateLabel()}
-          aria-pressed={state !== 'idle' && state !== 'error'}
-          disabled={state === 'connecting'}
+          aria-pressed={state !== "idle" && state !== "error"}
+          disabled={state === "connecting"}
         >
-          {state === 'connecting' && (
+          {state === "connecting" && (
             <Loader2 className="h-6 w-6 animate-spin" aria-hidden="true" />
           )}
-          {state === 'listening' && <Mic className="h-6 w-6" aria-hidden="true" />}
-          {state === 'processing' && <Loader2 className="h-6 w-6 animate-spin" aria-hidden="true" />}
-          {state === 'speaking' && <Volume2 className="h-6 w-6" aria-hidden="true" />}
-          {(state === 'idle' || state === 'error') && <MicOff className="h-6 w-6" aria-hidden="true" />}
+          {state === "listening" && (
+            <Mic className="h-6 w-6" aria-hidden="true" />
+          )}
+          {state === "processing" && (
+            <Loader2 className="h-6 w-6 animate-spin" aria-hidden="true" />
+          )}
+          {state === "speaking" && (
+            <Volume2 className="h-6 w-6" aria-hidden="true" />
+          )}
+          {(state === "idle" || state === "error") && (
+            <MicOff className="h-6 w-6" aria-hidden="true" />
+          )}
         </Button>
 
         {showVisualizer && (
-          <div className="absolute inset-0 rounded-full border-2 border-brand-primary/30 animate-pulse pointer-events-none" aria-hidden="true" />
+          <div
+            className="absolute inset-0 rounded-full border-2 border-brand-primary/30 animate-pulse pointer-events-none"
+            aria-hidden="true"
+          />
         )}
       </div>
 
@@ -171,7 +188,10 @@ export function VoiceInput({
         ref={canvasRef}
         width={120}
         height={40}
-        className={cn('rounded-lg bg-surface-default dark:bg-surface-dark', !showVisualizer && 'hidden')}
+        className={cn(
+          "rounded-lg bg-surface-default dark:bg-surface-dark",
+          !showVisualizer && "hidden",
+        )}
         aria-hidden="true"
       />
 
@@ -179,8 +199,11 @@ export function VoiceInput({
         {getStateLabel()}
       </p>
 
-      {state === 'listening' && (
-        <div className="flex items-center gap-1 text-caption text-brand-primary" aria-live="polite">
+      {state === "listening" && (
+        <div
+          className="flex items-center gap-1 text-caption text-brand-primary"
+          aria-live="polite"
+        >
           <span className="relative flex h-2 w-2" aria-hidden="true">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-primary opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-primary" />

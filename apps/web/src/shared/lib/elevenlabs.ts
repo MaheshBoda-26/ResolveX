@@ -1,4 +1,4 @@
-import { VOICE_DEFAULTS } from '@resolvex/shared';
+import { VOICE_DEFAULTS } from "@resolvex/shared";
 
 export interface ElevenLabsConfig {
   agentId: string;
@@ -15,7 +15,8 @@ export interface VoiceEventHandlers {
   onAudioLevel?: (level: number) => void;
 }
 
-export type VoiceState = 'idle' | 'connecting' | 'listening' | 'processing' | 'speaking' | 'error';
+export type VoiceState =
+  "idle" | "connecting" | "listening" | "processing" | "speaking" | "error";
 
 export interface VoiceCallbacks {
   onStateChange?: (state: VoiceState) => void;
@@ -38,7 +39,7 @@ class ElevenLabsClient {
   private source: MediaStreamAudioSourceNode | null = null;
   private _config: ElevenLabsConfig | null = null;
   private callbacks: VoiceCallbacks = {};
-  private state: VoiceState = 'idle';
+  private state: VoiceState = "idle";
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 3;
 
@@ -56,9 +57,9 @@ class ElevenLabsClient {
    * Backend should call ElevenLabs API to generate signed token
    */
   private async getEphemeralToken(agentId: string): Promise<string> {
-    const response = await fetch('/api/voice/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch("/api/voice/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ agentId }),
     });
 
@@ -73,7 +74,7 @@ class ElevenLabsClient {
 
   async connect(config: ElevenLabsConfig): Promise<void> {
     this._config = config;
-    this.setState('connecting');
+    this.setState("connecting");
 
     try {
       this.mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -99,7 +100,8 @@ class ElevenLabsClient {
             sum += val * val;
           }
         }
-        const level = inputData.length > 0 ? Math.sqrt(sum / inputData.length) : 0;
+        const level =
+          inputData.length > 0 ? Math.sqrt(sum / inputData.length) : 0;
         this.callbacks.onAudioLevel?.(level);
 
         if (this.ws?.readyState === WebSocket.OPEN) {
@@ -123,11 +125,11 @@ class ElevenLabsClient {
       const wsUrl = `wss://api.elevenlabs.io/v1/convai/conversation?token=${encodeURIComponent(token)}`;
       this.ws = new WebSocket(wsUrl);
 
-      this.ws.binaryType = 'arraybuffer';
+      this.ws.binaryType = "arraybuffer";
 
       this.ws.onopen = () => {
         this.reconnectAttempts = 0;
-        this.setState('listening');
+        this.setState("listening");
       };
 
       this.ws.onmessage = (event) => {
@@ -141,45 +143,53 @@ class ElevenLabsClient {
       };
 
       this.ws.onerror = () => {
-        this.callbacks.onError?.(new Error('WebSocket error'));
+        this.callbacks.onError?.(new Error("WebSocket error"));
       };
 
       this.ws.onclose = () => {
         this.cleanup();
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
           this.reconnectAttempts++;
-          setTimeout(() => this.connect(this._config!), 1000 * this.reconnectAttempts);
+          setTimeout(
+            () => this.connect(this._config!),
+            1000 * this.reconnectAttempts,
+          );
         } else {
-          this.setState('error');
+          this.setState("error");
         }
       };
     } catch (error) {
-      this.setState('error');
+      this.setState("error");
       this.callbacks.onError?.(error as Error);
       throw error;
     }
   }
 
   private handleMessage(data: unknown) {
-    const msg = data as { type: string; text?: string; transcript?: string; is_final?: boolean };
+    const msg = data as {
+      type: string;
+      text?: string;
+      transcript?: string;
+      is_final?: boolean;
+    };
 
     switch (msg.type) {
-      case 'user_transcript':
+      case "user_transcript":
         if (msg.transcript) {
           this.callbacks.onTranscript?.(msg.transcript, msg.is_final ?? false);
         }
         break;
-      case 'agent_response':
+      case "agent_response":
         if (msg.text) {
-          this.setState('speaking');
+          this.setState("speaking");
           this.callbacks.onAgentText?.(msg.text);
         }
         break;
-      case 'agent_response_end':
-        this.setState('listening');
+      case "agent_response_end":
+        this.setState("listening");
         break;
-      case 'error':
-        this.callbacks.onError?.(new Error(msg.text || 'Unknown error'));
+      case "error":
+        this.callbacks.onError?.(new Error(msg.text || "Unknown error"));
         break;
     }
   }
@@ -200,7 +210,7 @@ class ElevenLabsClient {
 
   disconnect(): void {
     this.cleanup();
-    this.setState('idle');
+    this.setState("idle");
   }
 
   private cleanup(): void {
@@ -212,12 +222,12 @@ class ElevenLabsClient {
       this.source.disconnect();
       this.source = null;
     }
-    if (this.audioContext && this.audioContext.state !== 'closed') {
+    if (this.audioContext && this.audioContext.state !== "closed") {
       this.audioContext.close();
       this.audioContext = null;
     }
     if (this.mediaStream) {
-      this.mediaStream.getTracks().forEach(track => track.stop());
+      this.mediaStream.getTracks().forEach((track) => track.stop());
       this.mediaStream = null;
     }
     if (this.ws) {
@@ -237,7 +247,10 @@ class ElevenLabsClient {
 
 export const elevenLabsClient = new ElevenLabsClient();
 
-export function createElevenLabsConfig(agentId: string, _apiKey?: string): ElevenLabsConfig {
+export function createElevenLabsConfig(
+  agentId: string,
+  _apiKey?: string,
+): ElevenLabsConfig {
   return {
     agentId,
     model: VOICE_DEFAULTS.MODEL,

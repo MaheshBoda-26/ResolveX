@@ -13,7 +13,7 @@ import {
   AgentName,
   AgentState,
   createCorrelationId,
-} from './types';
+} from "./types";
 
 interface PendingRequest<T = unknown> {
   resolve: (value: ResponseMessage<T>) => void;
@@ -31,7 +31,8 @@ export class InMemoryMessageBus implements MessageBus {
   private subscribers: Map<AgentName, Subscriber<unknown>[]> = new Map();
   private pendingRequests: Map<string, PendingRequest> = new Map();
   private agentStates: Map<AgentName, AgentState> = new Map();
-  private stateListeners: Map<AgentName, Set<(state: AgentState) => void>> = new Map();
+  private stateListeners: Map<AgentName, Set<(state: AgentState) => void>> =
+    new Map();
 
   private readonly maxRetries = 3;
   private readonly baseRetryDelay = 1000;
@@ -42,10 +43,10 @@ export class InMemoryMessageBus implements MessageBus {
 
     for (const subscriber of subscribers) {
       try {
-        if (message.type === 'request') {
+        if (message.type === "request") {
           const result = subscriber.handler(message as RequestMessage<unknown>);
           if (result instanceof Promise) {
-            result.catch(err => {
+            result.catch((err) => {
               console.error(`Handler error for ${message.to}:`, err);
             });
           }
@@ -56,7 +57,10 @@ export class InMemoryMessageBus implements MessageBus {
     }
   }
 
-  subscribe<T>(agent: AgentName, handler: MessageHandler<T>): MessageSubscription {
+  subscribe<T>(
+    agent: AgentName,
+    handler: MessageHandler<T>,
+  ): MessageSubscription {
     const existing = this.subscribers.get(agent) ?? [];
     existing.push({ agent, handler: handler as MessageHandler<unknown> });
     this.subscribers.set(agent, existing);
@@ -64,7 +68,7 @@ export class InMemoryMessageBus implements MessageBus {
     const subscription: MessageSubscription = {
       unsubscribe: () => {
         const subs = this.subscribers.get(agent) ?? [];
-        const idx = subs.findIndex(s => s.handler === handler);
+        const idx = subs.findIndex((s) => s.handler === handler);
         if (idx >= 0) {
           subs.splice(idx, 1);
         }
@@ -76,7 +80,7 @@ export class InMemoryMessageBus implements MessageBus {
   async request<TRequest, TResponse>(
     from: AgentName,
     to: AgentName,
-    payload: TRequest
+    payload: TRequest,
   ): Promise<ResponseMessage<TResponse>> {
     const correlationId = createCorrelationId();
 
@@ -91,7 +95,9 @@ export class InMemoryMessageBus implements MessageBus {
               const delay = this.baseRetryDelay * Math.pow(2, retries);
               setTimeout(() => attemptRequest(retries + 1), delay);
             } else {
-              reject(new Error(`Request timeout after ${this.maxRetries} retries`));
+              reject(
+                new Error(`Request timeout after ${this.maxRetries} retries`),
+              );
             }
           }
         }, this.requestTimeout);
@@ -108,7 +114,7 @@ export class InMemoryMessageBus implements MessageBus {
           correlationId,
           from,
           to,
-          type: 'request',
+          type: "request",
           payload,
           timestamp: new Date().toISOString(),
         };
@@ -129,7 +135,7 @@ export class InMemoryMessageBus implements MessageBus {
       if (response.success) {
         pending.resolve(response as ResponseMessage<unknown>);
       } else {
-        pending.reject(new Error(response.error ?? 'Request failed'));
+        pending.reject(new Error(response.error ?? "Request failed"));
       }
     }
   }
@@ -153,10 +159,13 @@ export class InMemoryMessageBus implements MessageBus {
   }
 
   getAgentState(agent: AgentName): AgentState {
-    return this.agentStates.get(agent) ?? 'idle';
+    return this.agentStates.get(agent) ?? "idle";
   }
 
-  onAgentStateChange(agent: AgentName, callback: (state: AgentState) => void): () => void {
+  onAgentStateChange(
+    agent: AgentName,
+    callback: (state: AgentState) => void,
+  ): () => void {
     const listeners = this.stateListeners.get(agent) ?? new Set();
     listeners.add(callback);
     this.stateListeners.set(agent, listeners);
@@ -169,7 +178,7 @@ export class InMemoryMessageBus implements MessageBus {
   shutdown(): void {
     for (const pending of this.pendingRequests.values()) {
       clearTimeout(pending.timeout);
-      pending.reject(new Error('Message bus shutting down'));
+      pending.reject(new Error("Message bus shutting down"));
     }
     this.pendingRequests.clear();
     this.subscribers.clear();

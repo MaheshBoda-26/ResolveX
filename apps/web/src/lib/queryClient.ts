@@ -1,6 +1,6 @@
-import { QueryClient } from '@tanstack/react-query';
-import { persistQueryClient } from '@tanstack/react-query-persist-client';
-import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
+import { QueryClient } from "@tanstack/react-query";
+import { persistQueryClient } from "@tanstack/react-query-persist-client";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,6 +21,6 @@ persistQueryClient({
   persister,
   maxAge: 1000 * 60 * 60 * 24, // 24 hours
   dehydrateOptions: {
-    shouldDehydrateQuery: (query) => query.state.status === 'success',
+    shouldDehydrateQuery: (query) => query.state.status === "success",
   },
 });

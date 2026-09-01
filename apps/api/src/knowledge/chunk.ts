@@ -12,13 +12,13 @@ export interface TextChunk {
 
 export function chunkText(
   text: string,
-  options: ChunkOptions = {}
+  options: ChunkOptions = {},
 ): TextChunk[] {
   const { maxTokens = 500, overlapTokens = 50 } = options;
 
   const sentences = text.split(/(?<=[.!?])\s+/);
   const chunks: TextChunk[] = [];
-  let currentChunk = '';
+  let currentChunk = "";
   let currentTokens = 0;
   let chunkIndex = 0;
   let charPosition = 0;
@@ -36,10 +36,10 @@ export function chunkText(
       });
 
       const overlapText = getOverlapText(currentChunk, overlapTokens);
-      currentChunk = overlapText + ' ' + sentence;
+      currentChunk = overlapText + " " + sentence;
       currentTokens = estimateTokens(currentChunk);
     } else {
-      currentChunk += (currentChunk ? ' ' : '') + sentence;
+      currentChunk += (currentChunk ? " " : "") + sentence;
       currentTokens += sentenceTokens;
     }
     charPosition += sentence.length + 1;
@@ -65,5 +65,5 @@ function estimateTokens(text: string): number {
 function getOverlapText(text: string, overlapTokens: number): string {
   const words = text.split(/\s+/);
   const overlapWords = Math.min(overlapTokens, words.length);
-  return words.slice(-overlapWords).join(' ');
+  return words.slice(-overlapWords).join(" ");
 }

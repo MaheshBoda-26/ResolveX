@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM"],
+    "strict": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./apps/web/src/*"],
+      "@resolvex/shared": ["./packages/shared/src/index.ts"],
+      "@resolvex/shared/*": ["./packages/shared/src/*"],
+      "@resolvex/api/*": ["./apps/api/src/*"]
+    }
+  },
+  "include": ["tests/**/*", "vitest.config.ts", "test-zod-shape.ts"]
+}
